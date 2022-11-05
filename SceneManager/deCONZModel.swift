@@ -17,6 +17,27 @@ struct deCONZLight: Codable, Hashable {
     var type: String?
 }
 
+struct deCONZScene: Codable {
+    var id: String?
+    var name: String?
+    var lights: [String]?
+}
+
+struct deCONZGroup: Codable {
+    var id: String?
+    var name: String?
+    var lights: [String]?
+    var scenes: [String]?
+    var devicemembership: [String]?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case lights
+        case devicemembership
+    }
+}
+
 // MARK: - deCONZ REST API Error Handling
 
 enum deCONZError: Error {
