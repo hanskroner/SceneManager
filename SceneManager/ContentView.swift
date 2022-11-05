@@ -146,6 +146,8 @@ class deCONZClientModel: ObservableObject {
     
     @Published var selectedSidebarItem: SidebarItem? = nil {
         didSet {
+            self.selectedSceneLight = nil
+            
             if (selectedSidebarItem == nil) {
                 Task {
                     await MainActor.run {
