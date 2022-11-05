@@ -38,7 +38,7 @@ struct deCONZGroup: Codable {
     }
 }
 
-struct deCONZLightState: Codable {
+struct deCONZLightState: Hashable, Codable {
     var id: String?
     var on: Bool?
     var bri: Int?
@@ -48,6 +48,25 @@ struct deCONZLightState: Codable {
     var x: Double?
     var y: Double?
     var xy: [Double]?
+    
+    var prettyPrint: String {
+        var buffer = "{\n"
+        buffer += "  \"bri\" : \(bri ?? 0),\n"
+        buffer += "  \"colormode\" : \"\(colormode ?? "")\",\n"
+        if let ct = ct {
+            buffer += "  \"ct\" : \(ct),\n"
+        }
+        buffer += "  \"on\" : \(on ?? false),\n"
+        buffer += "  \"transitiontime\" : \(transitiontime ?? 0)"
+        if let x = x, let y = y {
+            buffer += ",\n"
+            buffer += String(format: "  \"x\" : %06.4f,\n", x)
+            buffer += String(format: "  \"y\" : %06.4f", y)
+        }
+        buffer += "\n}"
+        
+        return buffer
+    }
 }
 
 // MARK: - deCONZ REST API Error Handling

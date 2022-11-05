@@ -245,13 +245,10 @@ class deCONZClientModel: ObservableObject {
             guard let lightID = Int(stringLightID),
                   let light = cacheLights[lightID],
                   let lightName = light.name,
-                  var lightState = sceneAttributes[lightID]
+                  let lightState = sceneAttributes[lightID]
             else { return }
             
-            lightState.id = nil
-            guard let jsonData = try? encoder.encode(lightState) else { return }
-            let stateString = String(data: jsonData, encoding: .utf8)!
-            
+            let stateString = lightState.prettyPrint
             updatedSceneLights.append(SceneLight(lightID: lightID, name: lightName, state: stateString))
         }
         
