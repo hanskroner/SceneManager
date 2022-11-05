@@ -58,4 +58,83 @@ actor deCONZClient: ObservableObject {
         let lightsResponse: [Int: deCONZLight] = try decoder.decode([Int : deCONZLight].self, from: data)
         return lightsResponse
     }
+    
+    // MARK: - deCONZ Groups REST API Methods
+    
+    func createGroup(name: String) async throws {
+        let group = deCONZGroup(name: name)
+        
+        let path = "/api/\(self.keyAPI)/groups/"
+        var request = request(forPath: path, using: .post)
+        encoder.outputFormatting = []
+        request.httpBody = try encoder.encode(group)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
+    }
+    
+    func getAllGroups() async throws -> ([Int: deCONZGroup], [Int: [Int: deCONZScene]]) {
+        struct SceneContainer: Decodable {
+            var scenes: [deCONZScene]
+        }
+        
+        let path = "/api/\(self.keyAPI)/groups/"
+        let request = request(forPath: path, using: .get)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
+        
+        // The response from the REST API bundles Scene information into the Group information. It avoids
+        // the need to make two separate requests to obtain the information, but ever so slightly ruins
+        // the consistency of the data structures used to hold the information, where Groups now hold
+        // the names of their Scenes, but not the names of their Lights.
+        // The code below separates Group and Scene information into their own containers, which are then
+        // returned by the function as a tuple. The Group information retains only the IDs of its Scenes,
+        // which is the same information it holds on its Lights. The Scene information is put in its own
+        // object, index by the Group they belong to.
+        
+        let tempGroups: [Int: deCONZGroup] = try decoder.decode([Int: deCONZGroup].self, from: data)
+        let tempScenes: [Int: SceneContainer] = try decoder.decode([Int: SceneContainer].self, from: data)
+        var groupsResponse = [Int: deCONZGroup]()
+        var scenesResponse = [Int: [Int: deCONZScene]]()
+        
+        for (key, group) in tempGroups {
+            guard let scenes = tempScenes[key]?.scenes else { continue }
+            
+            // Copy an array of Light IDs from 'Scenes' into 'Groups'
+            var groupCopy = group
+            groupCopy.scenes = scenes.map { $0.id! }
+            groupsResponse[key] = groupCopy
+            
+            // Copy an array of deCONZScene into the response
+            scenesResponse[key] = [Int: deCONZScene]()
+            for (scene) in scenes {
+                if let stringSceneID = scene.id, let sceneID = Int(stringSceneID) {
+                    scenesResponse[key]![sceneID] = scene
+                }
+            }
+        }
+        
+        return (groupsResponse, scenesResponse)
+    }
+    
+    func setGroupAttributes(groupID: Int, name: String? = nil, lights: [Int]? = nil) async throws {
+        let group = deCONZGroup(name: name, lights: lights?.map({ String($0) }))
+        
+        let path = "/api/\(self.keyAPI)/groups/\(groupID)/"
+        var request = request(forPath: path, using: .put)
+        encoder.outputFormatting = []
+        request.httpBody = try encoder.encode(group)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
+    }
+    
+    func deleteGroup(groupID: Int) async throws {
+        let path = "/api/\(self.keyAPI)/groups/\(groupID)/"
+        let request = request(forPath: path, using: .delete)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
+    }
 }
