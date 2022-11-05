@@ -40,54 +40,44 @@ struct SettingsView: View {
     }
 }
 
-struct SceneList: Identifiable, Hashable {
-    var id: String
-    var name: String
-    var children: [SceneList]?
-}
-
 struct ContentView: View {
-    @State private var selected: SceneList?
-    
     @SceneStorage("inspector") private var showInspector = false
     
-    @State private var items: [SceneList] = [
-        SceneList(id: "1", name: "Group 1", children: [
-            SceneList(id: "11", name: "Scene 1", children: nil),
-            SceneList(id: "12", name: "Scene 2", children: nil),
-            SceneList(id: "13", name: "Scene 3", children: nil)
-        ]),
-        SceneList(id: "2", name: "Group 2", children: [
-            SceneList(id: "21", name: "Scene 1", children: nil),
-            SceneList(id: "22", name: "Scene 2", children: nil),
-            SceneList(id: "23", name: "Scene 3", children: nil)
-        ]),
-        SceneList(id: "3", name: "Group 3", children: [
-            SceneList(id: "31", name: "Scene 1", children: nil),
-            SceneList(id: "32", name: "Scene 2", children: nil),
-            SceneList(id: "33", name: "Scene 3", children: nil)
-        ])
-    ]
+    @StateObject var viewModel = deCONZClientModel()
+    
+    @State private var selected: SidebarItem?
     
     var body: some View {
         NavigationSplitView {
             VStack(spacing: 0) {
                 List(selection: $selected) {
                     Section("Groups") {
-                        ForEach(items) { group in
-                            DisclosureGroup {
-                                ForEach(group.children!) { item in
-                                    NavigationLink(item.name, value: item)
+                        ForEach(viewModel.sidebarItems) { group in
+                            if let children = group.children {
+                                DisclosureGroup {
+                                    ForEach(children) { scene in
+                                        NavigationLink(scene.name, value: scene)
+                                            .contextMenu {
+                                                Button(action: { }, label: {
+                                                    Text("Rename Scene")
+                                                })
+                                                Button(action: { }, label: {
+                                                    Text("Delete Scene")
+                                                })
+                                            }
+                                    }
+                                } label: {
+                                    Text(group.name)
                                         .contextMenu {
                                             Button(action: { }, label: {
-                                                Text("Rename Scene")
+                                                Text("Rename Group")
                                             })
                                             Button(action: { }, label: {
-                                                Text("Delete Scene")
+                                                Text("Delete Group")
                                             })
                                         }
                                 }
-                            } label: {
+                            } else {
                                 Text(group.name)
                                     .contextMenu {
                                         Button(action: { }, label: {
@@ -127,8 +117,8 @@ struct ContentView: View {
             }
         } detail: {
             DetailView(item: $selected, showInspector: $showInspector)
-                .navigationTitle("Group Name")
-                .navigationSubtitle("Scene Name")
+                .navigationTitle(selected?.parentName ?? "Scene Manager")
+                .navigationSubtitle(selected?.name ?? "")
         }
         .frame(minWidth: 960, minHeight: 300)
         .background(Color(NSColor.gridColor))
@@ -136,6 +126,85 @@ struct ContentView: View {
             Button(action: { withAnimation { showInspector.toggle() }}) {
                 Label("Toggle Inspector", systemImage: "sidebar.right")
             }
+        }
+    }
+}
+
+struct SidebarItem: Identifiable, Hashable {
+    var id = UUID()
+    var name: String
+    var parentName: String?
+    
+    var children: [SidebarItem]?
+    
+    var groupID: Int?
+    var sceneID: Int?
+}
+
+class deCONZClientModel: ObservableObject {
+    private let deconzClient = deCONZClient()
+    
+    @Published private(set) var sidebarItems = [SidebarItem]()
+    
+    private var cacheLights: [Int: deCONZLight]?
+    private var cacheGroups: [Int: deCONZGroup]?
+    private var cacheScenes: [Int: [Int: deCONZScene]]?
+    
+    init() {
+        Task {
+            self.cacheLights = try await deconzClient.getAllLights()
+            (self.cacheGroups, self.cacheScenes) = try await deconzClient.getAllGroups()
+            
+            Task {
+                await refreshSidebarItems()
+            }
+        }
+    }
+    
+    private func refreshSidebarItems() async {
+        var updatedSidebarItems = [SidebarItem]()
+        
+        guard let cacheGroups = self.cacheGroups,
+              let cacheScenes = self.cacheScenes else { return }
+        
+        // Ignore Groups where 'devicemembership' is not empty
+        // These groups are created by switches or sensors and are not the kind we're looking for.
+        let filteredGroups = cacheGroups.filter({ $0.value.devicemembership?.isEmpty ?? true })
+        
+        for (_, group) in filteredGroups {
+            guard let groupName = group.name,
+                  let groupStringID = group.id,
+                  let groupID = Int(groupStringID),
+                  let scenes = group.scenes
+            else { return }
+            
+            var groupItem = SidebarItem(name: groupName, groupID: groupID)
+            
+            for (sceneStringID) in scenes {
+                guard let sceneID = Int(sceneStringID),
+                      let sceneName = cacheScenes[groupID]?[sceneID]?.name
+                else { return }
+                
+                let sceneItem = SidebarItem(name: sceneName, parentName: groupName, groupID: groupID, sceneID: sceneID)
+                
+                if (groupItem.children == nil) {
+                    groupItem.children = [SidebarItem]()
+                }
+                
+                groupItem.children!.append(sceneItem)
+            }
+            
+            // Sort Scene names alphabetically
+            groupItem.children = groupItem.children?.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+            updatedSidebarItems.append(groupItem)
+        }
+        
+        // Sort Group names alphabetically
+        updatedSidebarItems = updatedSidebarItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+        
+        let list = updatedSidebarItems
+        await MainActor.run {
+            self.sidebarItems = list
         }
     }
 }

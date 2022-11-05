@@ -13,7 +13,7 @@ struct LightList: Identifiable, Hashable {
 }
 
 struct DetailView: View {
-    @Binding var item: SceneList?
+    @Binding var item: SidebarItem?
     @Binding var showInspector: Bool
     
     @State private var textEditor = ""
