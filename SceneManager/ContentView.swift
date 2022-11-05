@@ -43,16 +43,14 @@ struct SettingsView: View {
 struct ContentView: View {
     @SceneStorage("inspector") private var showInspector = false
     
-    @StateObject var viewModel = deCONZClientModel()
-    
-    @State private var selected: SidebarItem?
+    @StateObject var deconzModel = deCONZClientModel()
     
     var body: some View {
         NavigationSplitView {
             VStack(spacing: 0) {
-                List(selection: $selected) {
+                List(selection: $deconzModel.selectedSidebarItem) {
                     Section("Groups") {
-                        ForEach(viewModel.sidebarItems) { group in
+                        ForEach(deconzModel.sidebarItems) { group in
                             if let children = group.children {
                                 DisclosureGroup {
                                     ForEach(children) { scene in
@@ -116,9 +114,9 @@ struct ContentView: View {
                 }
             }
         } detail: {
-            DetailView(item: $selected, showInspector: $showInspector)
-                .navigationTitle(selected?.parentName ?? "Scene Manager")
-                .navigationSubtitle(selected?.name ?? "")
+            DetailView(deconzModel: deconzModel, showInspector: $showInspector)
+                .navigationTitle(deconzModel.selectedSidebarItem?.parentName ?? "Scene Manager")
+                .navigationSubtitle(deconzModel.selectedSidebarItem?.name ?? "No Scene Selected")
         }
         .frame(minWidth: 960, minHeight: 300)
         .background(Color(NSColor.gridColor))
@@ -144,7 +142,30 @@ struct SidebarItem: Identifiable, Hashable {
 class deCONZClientModel: ObservableObject {
     private let deconzClient = deCONZClient()
     
+    private let encoder = JSONEncoder()
+    
+    @Published var selectedSidebarItem: SidebarItem? = nil {
+        didSet {
+            if (selectedSidebarItem == nil) {
+                Task {
+                    await MainActor.run {
+                        self.sceneLights = [SceneLight]()
+                    }
+                }
+            }
+            
+            if let groupID = selectedSidebarItem?.groupID, let sceneID = selectedSidebarItem?.sceneID {
+                Task {
+                    await self.updateSceneLights(forGroupID: groupID, sceneID: sceneID)
+                }
+            }
+        }
+    }
+    
+    @Published var selectedSceneLight: SceneLight? = nil
+    
     @Published private(set) var sidebarItems = [SidebarItem]()
+    @Published private(set) var sceneLights = [SceneLight]()
     
     private var cacheLights: [Int: deCONZLight]?
     private var cacheGroups: [Int: deCONZGroup]?
@@ -200,11 +221,42 @@ class deCONZClientModel: ObservableObject {
         }
         
         // Sort Group names alphabetically
-        updatedSidebarItems = updatedSidebarItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
-        
-        let list = updatedSidebarItems
+        let list = updatedSidebarItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
         await MainActor.run {
             self.sidebarItems = list
+        }
+    }
+    
+    func updateSceneLights(forGroupID groupID: Int, sceneID: Int) async {
+        var updatedSceneLights = [SceneLight]()
+        
+        let sceneAttributes = try? await deconzClient.getSceneAttributes(groupID: groupID, sceneID: sceneID)
+        
+        guard let cacheLights = self.cacheLights,
+              let cacheGroups = self.cacheGroups,
+              let sceneAttributes = sceneAttributes
+        else { return }
+        
+        encoder.outputFormatting = [.sortedKeys, .prettyPrinted]
+        
+        for (stringLightID) in cacheGroups[groupID]?.lights ?? [] {
+            guard let lightID = Int(stringLightID),
+                  let light = cacheLights[lightID],
+                  let lightName = light.name,
+                  var lightState = sceneAttributes[lightID]
+            else { return }
+            
+            lightState.id = nil
+            guard let jsonData = try? encoder.encode(lightState) else { return }
+            let stateString = String(data: jsonData, encoding: .utf8)!
+            
+            updatedSceneLights.append(SceneLight(lightID: lightID, name: lightName, state: stateString))
+        }
+        
+        // Sort Light names alphabetically
+        let list = updatedSceneLights.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+        await MainActor.run {
+            self.sceneLights = list
         }
     }
 }
