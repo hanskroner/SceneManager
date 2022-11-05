@@ -14,6 +14,29 @@ struct DetailView: View {
 
     @State private var textEditor = ""
     
+    @State private var presets: [PresetScene] = [
+        PresetScene(name: "Cold Bright", systemImage: "lightbulb.2", preset:
+                        Preset(bri: 229, on: true, transitiontime: 4, colormode: "ct", ct: 333)),
+        PresetScene(name: "Cold Medium", systemImage: "lightbulb.2", preset:
+                        Preset(bri: 140, on: true, transitiontime: 4, colormode: "ct", ct: 333)),
+        PresetScene(name: "Warm Bright", systemImage: "lightbulb.2", preset:
+                        Preset(bri: 229, on: true, transitiontime: 4, colormode: "ct", ct: 346)),
+        PresetScene(name: "Warm Medium", systemImage: "lightbulb.2", preset:
+                        Preset(bri: 140, on: true, transitiontime: 4, colormode: "ct", ct: 346)),
+        PresetScene(name: "Relax", systemImage: "lightbulb.2", preset:
+                        Preset(bri: 140, on: true, transitiontime: 4, colormode: "ct", ct: 447)),
+        PresetScene(name: "Nightlight", systemImage: "lightbulb.2", preset:
+                        Preset(bri: 1, on: true, transitiontime: 4, colormode: "xy", x: 0.5618, y: 0.3985)),
+        PresetScene(name: "Halloween Orange", systemImage: "lightbulb.2", preset:
+                        Preset(bri: 229, on: true, transitiontime: 4, colormode: "xy", x: 0.5921, y: 0.3830)),
+        PresetScene(name: "Halloween Purple", systemImage: "lightbulb.2", preset:
+                        Preset(bri: 229, on: true, transitiontime: 4, colormode: "xy", x: 0.2485, y: 0.0917)),
+        PresetScene(name: "Christmas Green", systemImage: "lightbulb.2", preset:
+                        Preset(bri: 229, on: true, transitiontime: 4, colormode: "xy", x: 0.3015, y: 0.5666)),
+        PresetScene(name: "Christmas Red", systemImage: "lightbulb.2", preset:
+                        Preset(bri: 229, on: true, transitiontime: 4, colormode: "xy", x: 0.6750, y: 0.3220))
+    ]
+    
     var body: some View {
         HStack {
             HStack(spacing: 16) {
@@ -60,10 +83,16 @@ struct DetailView: View {
             .padding(.vertical, 8)
             
             if (showInspector) {
-                Text("Inspector")
-                    .frame(minWidth: 200, maxWidth: 200, maxHeight: .infinity)
-                    .background(Color(NSColor.windowBackgroundColor))
-                    .transition(.move(edge: .trailing))
+                List {
+                    Section("Scene Presets") {
+                        ForEach($presets, id: \.self) { preset in
+                            PresetView(preset: preset)
+                        }
+                    }
+                }
+                .frame(minWidth: 200, maxWidth: 200, maxHeight: .infinity)
+                .background(Color(NSColor.windowBackgroundColor))
+                .transition(.move(edge: .trailing))
             }
         }
     }
