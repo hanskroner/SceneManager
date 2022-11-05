@@ -7,24 +7,12 @@
 
 import SwiftUI
 
-struct LightList: Identifiable, Hashable {
-    var id: String
-    var name: String
-}
-
 struct DetailView: View {
-    @Binding var item: SidebarItem?
+    @ObservedObject var deconzModel: deCONZClientModel
+    
     @Binding var showInspector: Bool
-    
+
     @State private var textEditor = ""
-    
-    @State private var selected: LightList?
-    
-    @State private var lights: [LightList] = [
-        LightList(id: "1", name: "Light 1"),
-        LightList(id: "2", name: "Light 2"),
-        LightList(id: "3", name: "Light 3")
-    ]
     
     var body: some View {
         HStack {
@@ -35,8 +23,11 @@ struct DetailView: View {
                         .padding(.horizontal)
                         .padding([.bottom], -4)
                     
-                    List(lights, id: \.self, selection: $selected) { item in
+                    List(deconzModel.sceneLights, id: \.self, selection: $deconzModel.selectedSceneLight) { item in
                         Text(item.name)
+                    }
+                    .onChange(of: deconzModel.selectedSceneLight) { newValue in
+                        textEditor = deconzModel.selectedSceneLight?.state ?? ""
                     }
                 }
                 .frame(minWidth: 250)
@@ -60,7 +51,7 @@ struct DetailView: View {
                         Button("Apply to Selected") {
                             Task { }
                         }
-                        .disabled(selected == nil)
+                        .disabled(deconzModel.selectedSceneLight == nil)
                         .fixedSize(horizontal: true, vertical: true)
                     }
                 }
@@ -79,8 +70,15 @@ struct DetailView: View {
     }
 }
 
-struct DetailView_Previews: PreviewProvider {
-    static var previews: some View {
-        DetailView(item: .constant(nil), showInspector: .constant(false))
-    }
+struct SceneLight: Identifiable, Hashable {
+    let id = UUID()
+    var lightID: Int
+    var name: String
+    var state: String
 }
+
+//struct DetailView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        DetailView(item: .constant(nil), deconzModel: nil, showInspector: .constant(false))
+//    }
+//}

@@ -152,7 +152,7 @@ actor deCONZClient: ObservableObject {
         try check(data: data, from: response)
     }
     
-    func getSceneAttributes(groupID: Int, sceneID: Int) async throws -> [deCONZLightState] {
+    func getSceneAttributes(groupID: Int, sceneID: Int) async throws -> [Int: deCONZLightState] {
         struct LightStateContainer: Decodable {
             var lights: [deCONZLightState]
         }
@@ -164,7 +164,16 @@ actor deCONZClient: ObservableObject {
         try check(data: data, from: response)
         
         let tempLightStates: LightStateContainer = try decoder.decode(LightStateContainer.self, from: data)
-        return tempLightStates.lights
+        
+        var lightStates = [Int: deCONZLightState]()
+        
+        for (light) in tempLightStates.lights {
+            if let stringLightID = light.id, let lightID = Int(stringLightID) {
+                lightStates[lightID] = light
+            }
+        }
+        
+        return lightStates
     }
     
     func modifyScene(groupID: Int, sceneID: Int, lightIDs: [Int], state: String) async throws {
