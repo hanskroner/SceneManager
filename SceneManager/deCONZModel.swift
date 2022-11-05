@@ -38,6 +38,18 @@ struct deCONZGroup: Codable {
     }
 }
 
+struct deCONZLightState: Codable {
+    var id: String?
+    var on: Bool?
+    var bri: Int?
+    var transitiontime: Int?
+    var colormode: String?
+    var ct: Int?
+    var x: Double?
+    var y: Double?
+    var xy: [Double]?
+}
+
 // MARK: - deCONZ REST API Error Handling
 
 enum deCONZError: Error {

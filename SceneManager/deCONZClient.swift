@@ -137,4 +137,76 @@ actor deCONZClient: ObservableObject {
         let (data, response) = try await URLSession.shared.data(for: request)
         try check(data: data, from: response)
     }
+    
+    // MARK: - deCONZ Scenes REST API Methods
+    
+    func createScene(groupID: Int, name: String) async throws {
+        let scene = deCONZScene(name: name)
+        
+        let path = "/api/\(self.keyAPI)/groups/\(groupID)/scenes"
+        var request = request(forPath: path, using: .post)
+        encoder.outputFormatting = []
+        request.httpBody = try encoder.encode(scene)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
+    }
+    
+    func getSceneAttributes(groupID: Int, sceneID: Int) async throws -> [deCONZLightState] {
+        struct LightStateContainer: Decodable {
+            var lights: [deCONZLightState]
+        }
+        
+        let path = "/api/\(self.keyAPI)/groups/\(groupID)/scenes/\(sceneID)/"
+        let request = request(forPath: path, using: .get)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
+        
+        let tempLightStates: LightStateContainer = try decoder.decode(LightStateContainer.self, from: data)
+        return tempLightStates.lights
+    }
+    
+    func modifyScene(groupID: Int, sceneID: Int, lightIDs: [Int], state: String) async throws {
+        // Build the request body by decoding and re-encoding 'state' to JSON (to 'validate' it).
+        // Since 'state' is the same for all passed-in lights, this only needs to be done once.
+        // Note that the deCONZ REST API is inconsistent in the way it handles xy Color Mode values.
+        // When modifying a Scene that uses xy Color Mode, the values must be passed in as an array under
+        // the "xy" JSON key. When getting the attributes of a Scene that uses xy Color Mode, the REST
+        // API returns the values in separate "x" and "y" JSON keys.
+        
+        var lightState: deCONZLightState = try decoder.decode(deCONZLightState.self, from: state.data(using: .utf8)!)
+        
+        if lightState.colormode == "xy" {
+            lightState.xy = [lightState.x!, lightState.y!]
+            lightState.x = nil
+            lightState.y = nil
+        }
+        
+        for (lightID) in lightIDs {
+            let path = "/api/\(self.keyAPI)/groups/\(groupID)/scenes/\(sceneID)/lights/\(lightID)/state/"
+            var request = request(forPath: path, using: .put)
+            encoder.outputFormatting = []
+            request.httpBody = try encoder.encode(lightState)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try check(data: data, from: response)
+            
+            // TODO: Pace consecutive requests
+            //       deCONZ won't be able to handle a string of requests one after the other. Even though
+            //       it will happily accept them, the Zigbee network takes some time to propagate all the
+            //       messages that result from each HTTP request. The messages pile up in the outgoing
+            //       Zigbee queue until the queue gets full and deCONZ starts to drop messages.
+            //
+            //       try await Task.sleep(nanoseconds: 300_000_000) ???
+        }
+    }
+    
+    func deleteScene(groupID: Int, sceneID: Int) async throws {
+        let path = "/api/\(self.keyAPI)/groups/\(groupID)/scenes/\(sceneID)/"
+        let request = request(forPath: path, using: .delete)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
+    }
 }
