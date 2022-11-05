@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3A58D4A42916F50B000FC97D /* SimpleJSONTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4A32916F50B000FC97D /* SimpleJSONTextView.swift */; };
 		3AF928552916A6D600CD2D33 /* SceneManagerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF928542916A6D600CD2D33 /* SceneManagerApp.swift */; };
 		3AF928572916A6D600CD2D33 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF928562916A6D600CD2D33 /* ContentView.swift */; };
 		3AF928592916A6D800CD2D33 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3AF928582916A6D800CD2D33 /* Assets.xcassets */; };
@@ -17,6 +18,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3A58D4A32916F50B000FC97D /* SimpleJSONTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleJSONTextView.swift; sourceTree = "<group>"; };
 		3AF928512916A6D600CD2D33 /* SceneManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SceneManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AF928542916A6D600CD2D33 /* SceneManagerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneManagerApp.swift; sourceTree = "<group>"; };
 		3AF928562916A6D600CD2D33 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -63,6 +65,7 @@
 				3AF928672916AE1100CD2D33 /* DetailView.swift */,
 				3AF928632916A88700CD2D33 /* deCONZClient.swift */,
 				3AF928652916A8C400CD2D33 /* deCONZModel.swift */,
+				3A58D4A32916F50B000FC97D /* SimpleJSONTextView.swift */,
 				3AF928582916A6D800CD2D33 /* Assets.xcassets */,
 				3AF9285D2916A6D800CD2D33 /* SceneManager.entitlements */,
 				3AF9285A2916A6D800CD2D33 /* Preview Content */,
@@ -149,6 +152,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3AF928662916A8C400CD2D33 /* deCONZModel.swift in Sources */,
+				3A58D4A42916F50B000FC97D /* SimpleJSONTextView.swift in Sources */,
 				3AF928572916A6D600CD2D33 /* ContentView.swift in Sources */,
 				3AF928552916A6D600CD2D33 /* SceneManagerApp.swift in Sources */,
 				3AF928682916AE1100CD2D33 /* DetailView.swift in Sources */,

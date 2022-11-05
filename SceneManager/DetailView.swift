@@ -38,8 +38,7 @@ struct DetailView: View {
                         .padding(.horizontal)
                         .padding([.bottom], -4)
                     
-                    TextEditor(text: $textEditor)
-                        .font(.system(size: 12, design: .monospaced))
+                    SimpleJSONTextView(text: $textEditor, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
                     
                     HStack {
                         Spacer()
