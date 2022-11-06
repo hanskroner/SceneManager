@@ -183,21 +183,22 @@ class deCONZClientModel: ObservableObject {
         }
         
         let newGroupName = proposedName + proposedNameSuffix
+        
         Task {
             guard let _ = try? await deconzClient.createGroup(name: newGroupName) else {
                 // FIXME: Handle errors
                 print("Error Creating Group \(newGroupName)")
                 return
             }
-            
+
             // To make absolutely sure that the model's knowledge of Groups matches deCONZ's, etch the
             // Group and Scene information from the REST API and update the model's cache. This will trigger
             // SwiftUI to redraw the UI, which will now include the newly-created group. To make the new
             // Group visible to the user, the model will mark it as selected, which will trigger SwiftUI
             // to selected it in the UI.
-            
+
             (self.cacheGroups, self.cacheScenes) = try await deconzClient.getAllGroups()
-            
+
             Task {
                 await refreshSidebarItems()
                 // FIXME: Not working
@@ -205,13 +206,35 @@ class deCONZClientModel: ObservableObject {
                 // a ScrollViewReader and then use an 'onChange' view modifier to call scrollTo() on the
                 // ScrollViewReader to the new item - except nothing happens. It seems having nested
                 // ForEachs or not having set Identifiability correctly is making things not work.
-                //                guard let newSidebarItem = sidebarItems.filter({ $0.id == "G\(newGroupID)" }).first else { return }
-                //
-                //                await MainActor.run {
-                //                    self.selectedSidebarItem = newSidebarItem
-                //                }
+//                let newSidebarItems = sidebarItems.map { item in
+//                    if (item.id == "G\(newGroupID)") {
+//                        var item = item
+//                        item.isRenaming = true
+//                        return item
+//                    }
+//
+//                    return item
+//                }
+//
+//                await MainActor.run {
+//                    self.sidebarItems = newSidebarItems
+//                }
             }
-            
+
+        }
+    }
+    
+    func renameGroup(groupID: Int, name: String) async {
+        do {
+            try await deconzClient.setGroupAttributes(groupID: groupID, name: name)
+            (self.cacheGroups, self.cacheScenes) = try await deconzClient.getAllGroups()
+        } catch {
+            // FIXME: Handle errors
+            print(error)
+        }
+        
+        Task {
+            await refreshSidebarItems()
         }
     }
     
