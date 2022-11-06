@@ -110,3 +110,21 @@ struct deCONZErrorContext: Decodable {
         description = try errorContainer.decode(String.self, forKey: .description)
     }
 }
+
+struct deCONZSuccessContext: Decodable {
+    let id: String
+    
+    enum CodingKeys: String, CodingKey {
+        case success
+    }
+    
+    enum SuccessKeys: String, CodingKey {
+        case id
+    }
+    
+    init(from decoder: Decoder) throws {
+        let rootContainer = try decoder.container(keyedBy: CodingKeys.self)
+        let successContainer = try rootContainer.nestedContainer(keyedBy: SuccessKeys.self, forKey: .success)
+        id = try successContainer.decode(String.self, forKey: .id)
+    }
+}
