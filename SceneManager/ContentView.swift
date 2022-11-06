@@ -8,67 +8,13 @@
 import SwiftUI
 
 struct ContentView: View {
-    @SceneStorage("inspector") private var showInspector = false
-    
     @EnvironmentObject private var deconzModel: deCONZClientModel
+    
+    @SceneStorage("inspector") private var showInspector = false
     
     var body: some View {
         NavigationSplitView {
-            VStack(spacing: 0) {
-                List(selection: $deconzModel.selectedSidebarItem) {
-                    Section("Groups") {
-                        ForEach(deconzModel.sidebarItems) { group in
-                            if let children = group.children {
-                                DisclosureGroup {
-                                    ForEach(children) { scene in
-                                        NavigationLink(scene.name, value: scene)
-                                            .contextMenu {
-                                                Button("Rename Scene") { }
-                                                Button("Delete Scene") { }
-                                            }
-                                    }
-                                } label: {
-                                    Text(group.name)
-                                        .contextMenu {
-                                            Button("Rename Group") { }
-                                            Button("Delete Group") {
-                                                deleteGroup(group: group)
-                                            }
-                                        }
-                                }
-                            } else {
-                                Text(group.name)
-                                    .contextMenu {
-                                        Button("Rename Group") { }
-                                        Button("Delete Group") {
-                                            deleteGroup(group: group)
-                                        }
-                                    }
-                            }
-                        }
-                    }
-                }
-                .frame(minWidth: 200)
-                .listStyle(.sidebar)
-                VStack {
-                    Divider()
-                    HStack {
-                        Button(action: {
-                            Task {
-                                await deconzModel.createNewGroup()
-                            }
-                        }) {
-                            Label("", systemImage: "plus")
-                        }
-                        .buttonStyle(.plain)
-                        .font(.system(size: 14))
-                        .help("New Group")
-                        
-                        Spacer()
-                    }
-                    .padding([.leading, .bottom], 8)
-                }
-            }
+            Sidebar()
         } detail: {
             DetailView(showInspector: $showInspector)
                 .navigationTitle(deconzModel.selectedSidebarItem?.parentName ?? "Scene Manager")
@@ -82,12 +28,11 @@ struct ContentView: View {
             }
         }
     }
-    
-    func deleteGroup(group: SidebarItem) {
-        Task {
-            guard let groupID = group.groupID else { return }
-            await deconzModel.deleteGroup(groupID: groupID)
-        }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
     }
 }
 
@@ -102,8 +47,92 @@ struct SidebarItem: Identifiable, Hashable {
     var sceneID: Int?
 }
 
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
+struct Sidebar: View {
+    @EnvironmentObject private var deconzModel: deCONZClientModel
+    
+    @State var isPresentingConfirmDeleteGroup: Bool = false
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            List(selection: $deconzModel.selectedSidebarItem) {
+                Section("Groups") {
+                    ForEach(deconzModel.sidebarItems, id: \.id) { group in
+                        if let children = group.children {
+                            DisclosureGroup {
+                                ForEach(children, id: \.id) { scene in
+                                    NavigationLink(scene.name, value: scene)
+                                        .contextMenu {
+                                            Button("Rename Scene") { }
+                                            Button("Delete Scene") { }
+                                        }
+                                }
+                            } label: {
+                                TextGroupWithContextMenu(item: group, isPresentingConfirmation: $isPresentingConfirmDeleteGroup)
+                            }
+                        } else {
+                            TextGroupWithContextMenu(item: group, isPresentingConfirmation: $isPresentingConfirmDeleteGroup)
+                                .confirmationDialog("Are you sure you want to delete the Group '\(group.name)'?", isPresented: $isPresentingConfirmDeleteGroup) {
+                                    Button("Delete Group", role: .destructive) {
+                                        deleteGroup(group: group)
+                                    }
+                                }
+                        }
+                    }
+                }
+            }
+            .frame(minWidth: 200)
+            .listStyle(.sidebar)
+            
+            SidebarBottomBar()
+        }
+    }
+    
+    func deleteGroup(group: SidebarItem) {
+        Task {
+            guard let groupID = group.groupID else { return }
+            await deconzModel.deleteGroup(groupID: groupID)
+        }
+    }
+}
+
+struct SidebarBottomBar: View {
+    @EnvironmentObject private var deconzModel: deCONZClientModel
+    
+    var body: some View {
+        VStack {
+            Divider()
+            HStack {
+                Button(action: {
+                    Task {
+                        await deconzModel.createNewGroup()
+                    }
+                }) {
+                    Label("", systemImage: "plus")
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 14))
+                .help("New Group")
+                
+                Spacer()
+            }
+            .padding([.leading, .bottom], 8)
+        }
+    }
+}
+
+struct TextGroupWithContextMenu: View {
+    var item: SidebarItem
+    
+    @Binding var isPresentingConfirmation: Bool
+    
+    var body: some View {
+        Text(item.name)
+            .contextMenu {
+                Button("Rename Group") { }
+                
+                Button("Delete Group") {
+                    isPresentingConfirmation = true
+                }
+            }
     }
 }
