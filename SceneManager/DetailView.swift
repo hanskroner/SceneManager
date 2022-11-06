@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct DetailView: View {
-    @StateObject var deconzModel: deCONZClientModel
+    @EnvironmentObject private var deconzModel: deCONZClientModel
     
     @Binding var showInspector: Bool
     

@@ -43,7 +43,7 @@ struct SettingsView: View {
 struct ContentView: View {
     @SceneStorage("inspector") private var showInspector = false
     
-    @StateObject var deconzModel = deCONZClientModel()
+    @EnvironmentObject private var deconzModel: deCONZClientModel
     
     var body: some View {
         NavigationSplitView {
@@ -114,7 +114,7 @@ struct ContentView: View {
                 }
             }
         } detail: {
-            DetailView(deconzModel: deconzModel, showInspector: $showInspector)
+            DetailView(showInspector: $showInspector)
                 .navigationTitle(deconzModel.selectedSidebarItem?.parentName ?? "Scene Manager")
                 .navigationSubtitle(deconzModel.selectedSidebarItem?.name ?? "No Scene Selected")
         }
