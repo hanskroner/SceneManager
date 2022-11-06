@@ -11,8 +11,6 @@ struct DetailView: View {
     @StateObject var deconzModel: deCONZClientModel
     
     @Binding var showInspector: Bool
-
-    @State private var textEditor = ""
     
     @State private var presets: [PresetScene] = [
         PresetScene(name: "Cold Bright", systemImage: "lightbulb.2", preset:
@@ -46,11 +44,11 @@ struct DetailView: View {
                         .padding(.horizontal)
                         .padding([.bottom], -4)
                     
-                    List(deconzModel.sceneLights, id: \.self, selection: $deconzModel.selectedSceneLight) { item in
+                    List(deconzModel.sceneLights, id: \.self, selection: $deconzModel.selectedSceneLights) { item in
                         Text(item.name)
                     }
-                    .onChange(of: deconzModel.selectedSceneLight) { newValue in
-                        textEditor = deconzModel.selectedSceneLight.first?.state ?? ""
+                    .onChange(of: deconzModel.selectedSceneLights) { newValue in
+                        deconzModel.jsonStateText = deconzModel.selectedSceneLights.first?.state ?? ""
                     }
                 }
                 .frame(minWidth: 250)
@@ -61,11 +59,11 @@ struct DetailView: View {
                         .padding(.horizontal)
                         .padding([.bottom], -4)
                     
-                    SimpleJSONTextView(text: $textEditor, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
+                    SimpleJSONTextView(text: $deconzModel.jsonStateText, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
                         .onDrop(of: [PresetScene.draggableType], isTargeted: nil) { providers in
                             PresetScene.fromItemProviders(providers) { presets in
                                 guard let first = presets.first else { return }
-                                textEditor = first.preset.prettyPrint
+                                deconzModel.jsonStateText = first.preset.prettyPrint
                             }
                             
                             return true
@@ -74,14 +72,21 @@ struct DetailView: View {
                     HStack {
                         Spacer()
                         Button("Apply to Group") {
-                            Task { }
+                            Task {
+                                await deconzModel.modifyScene(range: .allLightsInGroup)
+                            }
                         }
+                        .disabled(deconzModel.selectedSidebarItem == nil
+                                  || deconzModel.jsonStateText.isEmpty)
                         .fixedSize(horizontal: true, vertical: true)
                         
                         Button("Apply to Selected") {
-                            Task { }
+                            Task {
+                                await deconzModel.modifyScene(range: .selectedLightsOnly)
+                            }
                         }
-                        .disabled(deconzModel.selectedSceneLight.isEmpty)
+                        .disabled(deconzModel.selectedSceneLights.isEmpty
+                                  || deconzModel.jsonStateText.isEmpty)
                         .fixedSize(horizontal: true, vertical: true)
                     }
                 }
