@@ -129,7 +129,7 @@ struct ContentView: View {
 }
 
 struct SidebarItem: Identifiable, Hashable {
-    var id = UUID()
+    let id: String
     var name: String
     var parentName: String?
     
@@ -146,14 +146,12 @@ class deCONZClientModel: ObservableObject {
     
     @Published var selectedSidebarItem: SidebarItem? = nil {
         didSet {
-            self.selectedSceneLight = nil
+            if (oldValue != selectedSidebarItem) {
+                self.selectedSceneLight.removeAll()
+            }
             
             if (selectedSidebarItem == nil) {
-                Task {
-                    await MainActor.run {
-                        self.sceneLights = [SceneLight]()
-                    }
-                }
+                self.sceneLights = [SceneLight]()
             }
             
             if let groupID = selectedSidebarItem?.groupID, let sceneID = selectedSidebarItem?.sceneID {
@@ -164,7 +162,7 @@ class deCONZClientModel: ObservableObject {
         }
     }
     
-    @Published var selectedSceneLight: SceneLight? = nil
+    @Published var selectedSceneLight = Set<SceneLight>()
     
     @Published private(set) var sidebarItems = [SidebarItem]()
     @Published private(set) var sceneLights = [SceneLight]()
@@ -201,14 +199,14 @@ class deCONZClientModel: ObservableObject {
                   let scenes = group.scenes
             else { return }
             
-            var groupItem = SidebarItem(name: groupName, groupID: groupID)
+            var groupItem = SidebarItem(id: "G\(groupID)", name: groupName, groupID: groupID)
             
             for (sceneStringID) in scenes {
                 guard let sceneID = Int(sceneStringID),
                       let sceneName = cacheScenes[groupID]?[sceneID]?.name
                 else { return }
                 
-                let sceneItem = SidebarItem(name: sceneName, parentName: groupName, groupID: groupID, sceneID: sceneID)
+                let sceneItem = SidebarItem(id: "G\(groupID)S\(sceneID)", name: sceneName, parentName: groupName, groupID: groupID, sceneID: sceneID)
                 
                 if (groupItem.children == nil) {
                     groupItem.children = [SidebarItem]()
@@ -249,7 +247,7 @@ class deCONZClientModel: ObservableObject {
             else { return }
             
             let stateString = lightState.prettyPrint
-            updatedSceneLights.append(SceneLight(lightID: lightID, name: lightName, state: stateString))
+            updatedSceneLights.append(SceneLight(id: "G\(groupID)S\(sceneID)L\(lightID)", lightID: lightID, name: lightName, state: stateString))
         }
         
         // Sort Light names alphabetically

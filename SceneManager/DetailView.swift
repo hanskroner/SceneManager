@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct DetailView: View {
-    @ObservedObject var deconzModel: deCONZClientModel
+    @StateObject var deconzModel: deCONZClientModel
     
     @Binding var showInspector: Bool
 
@@ -50,7 +50,7 @@ struct DetailView: View {
                         Text(item.name)
                     }
                     .onChange(of: deconzModel.selectedSceneLight) { newValue in
-                        textEditor = deconzModel.selectedSceneLight?.state ?? ""
+                        textEditor = deconzModel.selectedSceneLight.first?.state ?? ""
                     }
                 }
                 .frame(minWidth: 250)
@@ -81,7 +81,7 @@ struct DetailView: View {
                         Button("Apply to Selected") {
                             Task { }
                         }
-                        .disabled(deconzModel.selectedSceneLight == nil)
+                        .disabled(deconzModel.selectedSceneLight.isEmpty)
                         .fixedSize(horizontal: true, vertical: true)
                     }
                 }
@@ -107,7 +107,7 @@ struct DetailView: View {
 }
 
 struct SceneLight: Identifiable, Hashable {
-    let id = UUID()
+    let id: String
     var lightID: Int
     var name: String
     var state: String
