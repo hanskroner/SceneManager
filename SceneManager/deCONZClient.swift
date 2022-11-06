@@ -61,7 +61,7 @@ actor deCONZClient: ObservableObject {
     
     // MARK: - deCONZ Groups REST API Methods
     
-    func createGroup(name: String) async throws {
+    func createGroup(name: String) async throws -> Int {
         let group = deCONZGroup(name: name)
         
         let path = "/api/\(self.keyAPI)/groups/"
@@ -71,6 +71,13 @@ actor deCONZClient: ObservableObject {
         
         let (data, response) = try await URLSession.shared.data(for: request)
         try check(data: data, from: response)
+        
+        let successResponse: [deCONZSuccessContext] = try decoder.decode([deCONZSuccessContext].self, from: data)
+        guard let successContext = successResponse.first,
+              let responseID = Int(successContext.id)
+        else { throw deCONZError.unknownResponse(data: data, response: response) }
+        
+        return responseID
     }
     
     func getAllGroups() async throws -> ([Int: deCONZGroup], [Int: [Int: deCONZScene]]) {
