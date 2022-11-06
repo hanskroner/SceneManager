@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct SceneManagerApp: App {
+    @StateObject private var deconzModel = deCONZClientModel()
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(deconzModel)
         }
         
 #if os(macOS)
