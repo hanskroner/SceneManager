@@ -10,6 +10,7 @@
 		3A58D4A42916F50B000FC97D /* SimpleJSONTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4A32916F50B000FC97D /* SimpleJSONTextView.swift */; };
 		3A58D4A62916F813000FC97D /* PresetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4A52916F813000FC97D /* PresetView.swift */; };
 		3A58D4A82916F8D2000FC97D /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4A72916F8D2000FC97D /* Colors.swift */; };
+		3A58D4AD2917A74C000FC97D /* SettingsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4AC2917A74C000FC97D /* SettingsViews.swift */; };
 		3AF928552916A6D600CD2D33 /* SceneManagerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF928542916A6D600CD2D33 /* SceneManagerApp.swift */; };
 		3AF928572916A6D600CD2D33 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF928562916A6D600CD2D33 /* ContentView.swift */; };
 		3AF928592916A6D800CD2D33 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3AF928582916A6D800CD2D33 /* Assets.xcassets */; };
@@ -24,6 +25,7 @@
 		3A58D4A52916F813000FC97D /* PresetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetView.swift; sourceTree = "<group>"; };
 		3A58D4A72916F8D2000FC97D /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		3A58D4AA2916FD70000FC97D /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		3A58D4AC2917A74C000FC97D /* SettingsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViews.swift; sourceTree = "<group>"; };
 		3AF928512916A6D600CD2D33 /* SceneManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SceneManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AF928542916A6D600CD2D33 /* SceneManagerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneManagerApp.swift; sourceTree = "<group>"; };
 		3AF928562916A6D600CD2D33 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -66,6 +68,7 @@
 			isa = PBXGroup;
 			children = (
 				3AF928542916A6D600CD2D33 /* SceneManagerApp.swift */,
+				3A58D4AC2917A74C000FC97D /* SettingsViews.swift */,
 				3AF928562916A6D600CD2D33 /* ContentView.swift */,
 				3AF928672916AE1100CD2D33 /* DetailView.swift */,
 				3A58D4A52916F813000FC97D /* PresetView.swift */,
@@ -165,6 +168,7 @@
 				3AF928572916A6D600CD2D33 /* ContentView.swift in Sources */,
 				3AF928552916A6D600CD2D33 /* SceneManagerApp.swift in Sources */,
 				3AF928682916AE1100CD2D33 /* DetailView.swift in Sources */,
+				3A58D4AD2917A74C000FC97D /* SettingsViews.swift in Sources */,
 				3AF928642916A88700CD2D33 /* deCONZClient.swift in Sources */,
 				3A58D4A62916F813000FC97D /* PresetView.swift in Sources */,
 			);
