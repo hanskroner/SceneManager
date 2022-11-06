@@ -139,6 +139,11 @@ struct SidebarItem: Identifiable, Hashable {
     var sceneID: Int?
 }
 
+enum ModifySceneRange {
+    case allLightsInGroup
+    case selectedLightsOnly
+}
+
 class deCONZClientModel: ObservableObject {
     private let deconzClient = deCONZClient()
     
@@ -147,7 +152,7 @@ class deCONZClientModel: ObservableObject {
     @Published var selectedSidebarItem: SidebarItem? = nil {
         didSet {
             if (oldValue != selectedSidebarItem) {
-                self.selectedSceneLight.removeAll()
+                self.selectedSceneLights.removeAll()
             }
             
             if (selectedSidebarItem == nil) {
@@ -162,7 +167,9 @@ class deCONZClientModel: ObservableObject {
         }
     }
     
-    @Published var selectedSceneLight = Set<SceneLight>()
+    @Published var selectedSceneLights = Set<SceneLight>()
+    
+    @Published var jsonStateText = ""
     
     @Published private(set) var sidebarItems = [SidebarItem]()
     @Published private(set) var sceneLights = [SceneLight]()
@@ -227,7 +234,7 @@ class deCONZClientModel: ObservableObject {
         }
     }
     
-    func updateSceneLights(forGroupID groupID: Int, sceneID: Int) async {
+    private func updateSceneLights(forGroupID groupID: Int, sceneID: Int) async {
         var updatedSceneLights = [SceneLight]()
         
         let sceneAttributes = try? await deconzClient.getSceneAttributes(groupID: groupID, sceneID: sceneID)
@@ -252,6 +259,38 @@ class deCONZClientModel: ObservableObject {
         
         // Sort Light names alphabetically
         let list = updatedSceneLights.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+        await MainActor.run {
+            self.sceneLights = list
+        }
+    }
+    
+    func modifyScene(range: ModifySceneRange) async {
+        guard let selectedSidebarItem = selectedSidebarItem,
+              let groupID = selectedSidebarItem.groupID,
+              let sceneID = selectedSidebarItem.sceneID
+        else { return }
+        
+        let lightIDs: [Int]
+        switch range {
+        case .allLightsInGroup:
+            lightIDs = self.sceneLights.map({ $0.lightID }).sorted()
+        case .selectedLightsOnly:
+            lightIDs = selectedSceneLights.map({ $0.lightID }).sorted()
+        }
+        
+        guard let _ = try? await deconzClient.modifyScene(groupID: groupID, sceneID: sceneID, lightIDs: lightIDs, state: jsonStateText) else {
+            // FIXME: Handle erros
+            print("Error Updating Group \(groupID), Scene \(sceneID), Lights \(lightIDs)")
+            return
+        }
+        
+        // If the request was successful, store the new JSON state in the modified lights
+        var sceneLightsCopy = self.sceneLights
+        for (lightID, _) in lightIDs.enumerated() {
+            sceneLightsCopy[lightID].state = jsonStateText
+        }
+
+        let list = sceneLightsCopy
         await MainActor.run {
             self.sceneLights = list
         }
