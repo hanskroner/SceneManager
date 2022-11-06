@@ -45,12 +45,12 @@ struct SidebarItem: Identifiable, Hashable {
     
     var groupID: Int?
     var sceneID: Int?
+    
+    var isRenaming: Bool = false
 }
 
 struct Sidebar: View {
     @EnvironmentObject private var deconzModel: deCONZClientModel
-    
-    @State var isPresentingConfirmDeleteGroup: Bool = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -60,22 +60,15 @@ struct Sidebar: View {
                         if let children = group.children {
                             DisclosureGroup {
                                 ForEach(children, id: \.id) { scene in
-                                    NavigationLink(scene.name, value: scene)
-                                        .contextMenu {
-                                            Button("Rename Scene") { }
-                                            Button("Delete Scene") { }
-                                        }
-                                }
-                            } label: {
-                                TextGroupWithContextMenu(item: group, isPresentingConfirmation: $isPresentingConfirmDeleteGroup)
-                            }
-                        } else {
-                            TextGroupWithContextMenu(item: group, isPresentingConfirmation: $isPresentingConfirmDeleteGroup)
-                                .confirmationDialog("Are you sure you want to delete the Group '\(group.name)'?", isPresented: $isPresentingConfirmDeleteGroup) {
-                                    Button("Delete Group", role: .destructive) {
-                                        deleteGroup(group: group)
+                                    NavigationLink(value: scene) {
+                                        SidebarItemView(item: scene)
                                     }
                                 }
+                            } label: {
+                                SidebarItemView(item: group)
+                            }
+                        } else {
+                            SidebarItemView(item: group)
                         }
                     }
                 }
@@ -84,13 +77,6 @@ struct Sidebar: View {
             .listStyle(.sidebar)
             
             SidebarBottomBar()
-        }
-    }
-    
-    func deleteGroup(group: SidebarItem) {
-        Task {
-            guard let groupID = group.groupID else { return }
-            await deconzModel.deleteGroup(groupID: groupID)
         }
     }
 }
@@ -120,19 +106,73 @@ struct SidebarBottomBar: View {
     }
 }
 
-struct TextGroupWithContextMenu: View {
-    var item: SidebarItem
+struct SidebarItemView: View {
+    @EnvironmentObject private var deconzModel: deCONZClientModel
     
-    @Binding var isPresentingConfirmation: Bool
+    @State var item: SidebarItem
+    
+    @FocusState private var isFocused: Bool
+    
+    @State var isPresentingConfirmation: Bool = false
     
     var body: some View {
-        Text(item.name)
-            .contextMenu {
-                Button("Rename Group") { }
-                
-                Button("Delete Group") {
-                    isPresentingConfirmation = true
-                }
+        if (item.isRenaming) {
+            HStack(spacing: 0) {
+                TextField("", text: $item.name)
+                    .focused($isFocused)
+                    .frame(maxWidth: .infinity)
+                    .onChange(of: isFocused) { newValue in
+                        if newValue == false {
+                            item.isRenaming = false
+                            Task {
+                                await deconzModel.renameGroup(groupID: item.groupID!, name: item.name)
+                            }
+                        }
+                    }
+                    .padding([.leading], -8)
             }
+        } else {
+            Text(item.name)
+                .contextMenu {
+                    Button(action: {
+                        item.isRenaming = true
+                        isFocused = true
+                    }, label: {
+                        if (item.sceneID == nil) {
+                            Text("Rename Group")
+                        } else {
+                            Text("Rename Scene")
+                        }
+                    })
+                    
+                    Button(action: {
+                        isPresentingConfirmation = true
+                    }, label: {
+                        if (item.sceneID == nil) {
+                            Text("Delete Group")
+                        } else {
+                            Text("Delete Scene")
+                        }
+                    })
+                }
+                .confirmationDialog("Are you sure you want to delete '\(item.name)'?", isPresented: $isPresentingConfirmation) {
+                    if (item.sceneID == nil) {
+                        Button("Delete Group", role: .destructive) {
+                            deleteGroup(group: item)
+                        }
+                    } else {
+                        Button("Delete Scene", role: .destructive) {
+//                            deleteScene(scene: item)
+                        }
+                    }
+                }
+        }
+    }
+    
+    func deleteGroup(group: SidebarItem) {
+        Task {
+            guard let groupID = group.groupID else { return }
+            await deconzModel.deleteGroup(groupID: groupID)
+        }
     }
 }
