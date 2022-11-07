@@ -39,13 +39,21 @@ class deCONZClientModel: ObservableObject {
     
     @Published var jsonStateText = ""
     
-    @Published private(set) var sidebarItems = [SidebarItem]()
-    @Published private(set) var sceneLights = [SceneLight]()
+    @Published var scrollToItem: String? {
+        didSet {
+            prepareListSnapshot()
+        }
+    }
     
+    @Published var sidebarItems = [SidebarItem]()
+    @Published var sceneLights = [SceneLight]()
+
     private var cacheLights: [Int: deCONZLight]?
     private var cacheGroups: [Int: deCONZGroup]?
     private var cacheScenes: [Int: [Int: deCONZScene]]?
-    
+
+    private var copyForSnapshot: [SidebarItem]?
+
     init() {
         Task {
             self.cacheLights = try await deconzClient.getAllLights()
@@ -56,6 +64,44 @@ class deCONZClientModel: ObservableObject {
             }
         }
     }
+    
+    // MARK: - SibedarItems Snapshot Methods
+
+    private func prepareListSnapshot() {
+        // Store a copy of the existing items
+        self.copyForSnapshot = self.sidebarItems
+        
+        // Get a list of only the 'parent' nodes. Nodes with children will have their 'children' nodes
+        // set to an empty array, while nodes with no children will have 'nil'
+        var sidebarItems = self.sidebarItems.map({ item in
+            var item = item
+            
+            if item.children != nil {
+                item.children = [SidebarItem]()
+            }
+            
+            return item
+        })
+        
+        // Attach children back to the parents that are expanded
+        for (index, item) in self.sidebarItems.enumerated() {
+            if !item.isExpanded { continue }
+            
+            sidebarItems[index].children = self.copyForSnapshot![index].children
+        }
+        
+        // Set the 'snapshot' list as the item list.
+        self.sidebarItems = sidebarItems
+    }
+    
+    func removeListSnapshot() {
+        guard let copyForSnapshot = self.copyForSnapshot else { return }
+        self.scrollToItem = nil
+        self.sidebarItems = copyForSnapshot
+        self.copyForSnapshot = nil
+    }
+    
+    // MARK: - Publisher-related Methods
     
     private func refreshSidebarItems() async {
         var updatedSidebarItems = [SidebarItem]()
@@ -74,6 +120,12 @@ class deCONZClientModel: ObservableObject {
                   let scenes = group.scenes
             else { return }
             
+            // FIXME: Will have to check 'isExpanded' against previously saved 'oldValue's when refreshing.
+            //        The Model stores the expanded states of the View's DisclosureGroups in the List Model's
+            //        'isExpanded' property. These will all be 'false' when creating the new SidebarItems.
+            //        If there are previous entries in the List Model, the values of 'isExpanded' should be
+            //        copied across to the new list. Otherwise the View will collapse all DisclosureGroups
+            //        after the redraw.
             var groupItem = SidebarItem(id: "G\(groupID)", name: groupName, groupID: groupID)
             
             for (sceneStringID) in scenes {
@@ -132,6 +184,8 @@ class deCONZClientModel: ObservableObject {
         }
     }
     
+    // MARK: - deCONZ CRUD Methods
+    
     func modifyScene(range: ModifySceneRange) async {
         guard let selectedSidebarItem = selectedSidebarItem,
               let groupID = selectedSidebarItem.groupID,
@@ -164,16 +218,17 @@ class deCONZClientModel: ObservableObject {
         }
     }
     
-    func createNewGroup() async {
-        guard let cacheGroups = self.cacheGroups else { return }
-        
+    func createNewSidebarItem() async {
         // In keeping with modern macOS design, a Group is created immediately using a proposed name
         // instead of presenting a Window to the user and asking them to name the Group. The code below
-        // goes through the existing Group names and tries to create a proposed name for the new Group that
-        // won't clash with existing names. If it failes to propose a reasonable name, the REST API will
-        // produce an error when attempting to create a new Group with an already-existing name.
+        // doesn't actually create a new Group via the REST API, instead it inserts a SidebarItem in the
+        // Model's List Model which is immediately ready to rename. Once the rename is performed, the View
+        // will call on the Model to create the Group via the REST API.
         
-        let groupNames = Array(cacheGroups.values).compactMap({ $0.name })
+        // First, go through the existing Group names and propose an un-used placeholder name for the new
+        // Group that. The REST API will produce an error when attempting to create a new Group with an
+        // already-existing name - this is just to make the creation process friendlier.
+        let groupNames = sidebarItems.compactMap({ $0.name })
         let proposedName = "New Group"
         var proposedNameSuffix = ""
         
@@ -184,43 +239,41 @@ class deCONZClientModel: ObservableObject {
         
         let newGroupName = proposedName + proposedNameSuffix
         
-        Task {
-            guard let _ = try? await deconzClient.createGroup(name: newGroupName) else {
-                // FIXME: Handle errors
-                print("Error Creating Group \(newGroupName)")
-                return
-            }
-
-            // To make absolutely sure that the model's knowledge of Groups matches deCONZ's, etch the
-            // Group and Scene information from the REST API and update the model's cache. This will trigger
-            // SwiftUI to redraw the UI, which will now include the newly-created group. To make the new
-            // Group visible to the user, the model will mark it as selected, which will trigger SwiftUI
-            // to selected it in the UI.
-
+        // The SidebarItem for the new group is created with '-999' as its GroupID. It is also flagged as
+        // 'renaming' and 'wantingFocus' to have the View draw it as a TextField with focus - allowing the
+        // user to immediately provide the actual name for the new group. The View identifies items with
+        // GroupID '-999' as "new" and routes the submission after renaming to "createGroup" instead of the
+        // usual "renameGroup". The flags are temporary, as this SidebarItem will be released when the Model's
+        // List Model is refreshed after performing the actual group creation via the REST API.
+        
+        let newGroupID = -999
+        let newGroupItem = SidebarItem(id: newGroupName, name: newGroupName, groupID: newGroupID, isRenaming: true, wantsFocus: true)
+        await MainActor.run {
+            // The SidebarItem representing the new group is added to the Model's List Model. The List Model
+            // is then sorted before being presented again to the user. Finally, the newly created SidebarItem
+            // is scrolled into view.
+            var mutableCopy = self.sidebarItems
+            mutableCopy.append(newGroupItem)
+            self.sidebarItems = mutableCopy.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+            self.scrollToItem = newGroupName
+        }
+    }
+    
+    func createGroup(name: String) async {
+        do {
+            let _ = try await deconzClient.createGroup(name: name)
+            
+            // Fetch the Group and Scene information from the REST API and update the model's cache. This
+            // will trigger SwiftUI to redraw the UI, which will now include the newly-created group and not
+            // the placeholder SidebarItem that wa used to name it.
             (self.cacheGroups, self.cacheScenes) = try await deconzClient.getAllGroups()
-
-            Task {
-                await refreshSidebarItems()
-                // FIXME: Not working
-                // I haven't been able to get this working. The approach seems to be to wrap the List in
-                // a ScrollViewReader and then use an 'onChange' view modifier to call scrollTo() on the
-                // ScrollViewReader to the new item - except nothing happens. It seems having nested
-                // ForEachs or not having set Identifiability correctly is making things not work.
-//                let newSidebarItems = sidebarItems.map { item in
-//                    if (item.id == "G\(newGroupID)") {
-//                        var item = item
-//                        item.isRenaming = true
-//                        return item
-//                    }
-//
-//                    return item
-//                }
-//
-//                await MainActor.run {
-//                    self.sidebarItems = newSidebarItems
-//                }
-            }
-
+        } catch {
+            // FIXME: Handle errors
+            print(error)
+        }
+        
+        Task {
+            await refreshSidebarItems()
         }
     }
     

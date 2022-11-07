@@ -47,6 +47,8 @@ struct SidebarItem: Identifiable, Hashable {
     var sceneID: Int?
     
     var isRenaming: Bool = false
+    var isExpanded: Bool = false
+    var wantsFocus: Bool = false
 }
 
 struct Sidebar: View {
@@ -54,27 +56,35 @@ struct Sidebar: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            List(selection: $deconzModel.selectedSidebarItem) {
-                Section("Groups") {
-                    ForEach(deconzModel.sidebarItems, id: \.id) { group in
-                        if let children = group.children {
-                            DisclosureGroup {
-                                ForEach(children, id: \.id) { scene in
-                                    NavigationLink(value: scene) {
-                                        SidebarItemView(item: scene)
+            ScrollViewReader { scrollReader in
+                List(selection: $deconzModel.selectedSidebarItem) {
+                    Section("Groups") {
+                        ForEach(Array(deconzModel.sidebarItems.enumerated()), id: \.1.id) { i, group in
+                            if let children = group.children {
+                                DisclosureGroup(isExpanded: $deconzModel.sidebarItems[i].isExpanded) {
+                                    ForEach(children) { scene in
+                                        NavigationLink(value: scene) {
+                                            SidebarItemView(item: scene)
+                                        }
                                     }
+                                } label: {
+                                    SidebarItemView(item: group)
                                 }
-                            } label: {
+                            } else {
                                 SidebarItemView(item: group)
                             }
-                        } else {
-                            SidebarItemView(item: group)
                         }
                     }
                 }
+                .frame(minWidth: 200)
+                .listStyle(.sidebar)
+                .onChange(of: deconzModel.scrollToItem) { item in
+                    if let item = item {
+                        scrollReader.scrollTo(item, anchor: .center)
+                        deconzModel.removeListSnapshot()
+                    }
+                }
             }
-            .frame(minWidth: 200)
-            .listStyle(.sidebar)
             
             SidebarBottomBar()
         }
@@ -90,7 +100,7 @@ struct SidebarBottomBar: View {
             HStack {
                 Button(action: {
                     Task {
-                        await deconzModel.createNewGroup()
+                        await deconzModel.createNewSidebarItem()
                     }
                 }) {
                     Label("", systemImage: "plus")
@@ -117,26 +127,32 @@ struct SidebarItemView: View {
     
     var body: some View {
         if (item.isRenaming) {
-            HStack(spacing: 0) {
-                TextField("", text: $item.name)
-                    .focused($isFocused)
-                    .frame(maxWidth: .infinity)
-                    .onChange(of: isFocused) { newValue in
-                        if newValue == false {
-                            item.isRenaming = false
-                            Task {
+            TextField("", text: $item.name)
+                .focused($isFocused)
+                .frame(maxWidth: .infinity)
+                .onChange(of: isFocused) { newValue in
+                    if newValue == false {
+                        item.isRenaming = false
+
+                        Task {
+                            if (item.groupID == -999) {
+                                await deconzModel.createGroup(name: item.name)
+                            } else {
                                 await deconzModel.renameGroup(groupID: item.groupID!, name: item.name)
                             }
                         }
                     }
-                    .padding([.leading], -8)
-            }
+                }
+                .onAppear {
+                    isFocused = item.wantsFocus
+                }
+                .padding([.leading], -8)
         } else {
             Text(item.name)
                 .contextMenu {
                     Button(action: {
                         item.isRenaming = true
-                        isFocused = true
+                        item.wantsFocus = true
                     }, label: {
                         if (item.sceneID == nil) {
                             Text("Rename Group")
