@@ -80,7 +80,9 @@ struct Sidebar: View {
                 .listStyle(.sidebar)
                 .onChange(of: deconzModel.scrollToItem) { item in
                     if let item = item {
-                        scrollReader.scrollTo(item, anchor: .center)
+                        withAnimation {
+                            scrollReader.scrollTo(item, anchor: .center)
+                        }
                         deconzModel.removeListSnapshot()
                     }
                 }
