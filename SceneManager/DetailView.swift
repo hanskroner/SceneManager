@@ -50,6 +50,41 @@ struct DetailView: View {
                     .onChange(of: deconzModel.selectedSceneLights) { newValue in
                         deconzModel.jsonStateText = deconzModel.selectedSceneLights.first?.state ?? ""
                     }
+                    .safeAreaInset(edge: .bottom, spacing: 0) {
+                        VStack {
+                            Divider()
+                            HStack(alignment: .firstTextBaseline) {
+                                Button(action: {
+                                    Task {
+                                        
+                                    }
+                                }) {
+                                    Label("", systemImage: "plus")
+                                }
+                                .buttonStyle(.plain)
+                                .font(.system(size: 14))
+                                .help("Add Lights")
+                                .disabled(deconzModel.selectedSidebarItem == nil)
+                                
+                                Button(action: {
+                                    Task {
+                                        
+                                    }
+                                }) {
+                                    Label("", systemImage: "minus")
+                                }
+                                .buttonStyle(.plain)
+                                .font(.system(size: 14))
+                                .help("Remove Lights")
+                                .disabled(deconzModel.selectedSidebarItem == nil ||
+                                          deconzModel.selectedSceneLights.isEmpty)
+                                
+                                Spacer()
+                            }
+                            .padding([.leading, .bottom], 8)
+                            .background(.ultraThinMaterial)
+                        }
+                    }
                 }
                 .frame(minWidth: 250)
                 
@@ -91,9 +126,10 @@ struct DetailView: View {
                     }
                 }
                 .frame(minWidth: 250)
+                .padding(.bottom, 8)
             }
             .padding(.horizontal)
-            .padding(.vertical, 8)
+            .padding(.top, 8)
             
             if (showInspector) {
                 List {

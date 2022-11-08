@@ -55,7 +55,6 @@ struct Sidebar: View {
     @EnvironmentObject private var deconzModel: deCONZClientModel
     
     var body: some View {
-        VStack(spacing: 0) {
             ScrollViewReader { scrollReader in
                 List(selection: $deconzModel.selectedSidebarItem) {
                     Section("Groups") {
@@ -76,6 +75,10 @@ struct Sidebar: View {
                         }
                     }
                 }
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    SidebarBottomBar()
+                        .background(.ultraThinMaterial)
+                }
                 .frame(minWidth: 200)
                 .listStyle(.sidebar)
                 .onChange(of: deconzModel.scrollToItem) { item in
@@ -87,9 +90,6 @@ struct Sidebar: View {
                     }
                 }
             }
-            
-            SidebarBottomBar()
-        }
     }
 }
 
