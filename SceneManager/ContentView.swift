@@ -102,7 +102,7 @@ struct SidebarBottomBar: View {
             HStack {
                 Button(action: {
                     Task {
-                        await deconzModel.createNewSidebarItem()
+                        await deconzModel.createNewSidebarItem(groupID: nil, sceneID: nil)
                     }
                 }) {
                     Label("", systemImage: "plus")
@@ -137,10 +137,14 @@ struct SidebarItemView: View {
                         item.isRenaming = false
 
                         Task {
-                            if (item.groupID == -999) {
+                            if ((item.groupID == -999) && (item.sceneID == -999)) {
                                 await deconzModel.createGroup(name: item.name)
-                            } else {
+                            } else if ((item.groupID != -999) && (item.sceneID == -999)) {
+                                await deconzModel.createScene(groupID: item.groupID!, name: item.name)
+                            } else if ((item.groupID != nil) && (item.sceneID == nil)) {
                                 await deconzModel.renameGroup(groupID: item.groupID!, name: item.name)
+                            } else {
+                                await deconzModel.renameScene(groupID: item.groupID!, sceneID: item.sceneID!, name: item.name)
                             }
                         }
                     }
@@ -152,6 +156,16 @@ struct SidebarItemView: View {
         } else {
             Text(item.name)
                 .contextMenu {
+                    if (item.sceneID == nil) {
+                        Button(action: {
+                            Task {
+                                await deconzModel.createNewSidebarItem(groupID: item.groupID, sceneID: nil)
+                            }
+                        }, label: {
+                            Text("New Scene")
+                        })
+                    }
+                    
                     Button(action: {
                         item.isRenaming = true
                         item.wantsFocus = true

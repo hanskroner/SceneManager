@@ -183,6 +183,18 @@ actor deCONZClient: ObservableObject {
         return lightStates
     }
     
+    func setSceneAttributes(groupID: Int, sceneID: Int, name: String) async throws {
+        let scene = deCONZScene(name: name)
+        
+        let path = "/api/\(self.keyAPI)/groups/\(groupID)/scenes/\(sceneID)/"
+        var request = request(forPath: path, using: .put)
+        encoder.outputFormatting = []
+        request.httpBody = try encoder.encode(scene)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
+    }
+    
     func modifyScene(groupID: Int, sceneID: Int, lightIDs: [Int], state: String) async throws {
         // Build the request body by decoding and re-encoding 'state' to JSON (to 'validate' it).
         // Since 'state' is the same for all passed-in lights, this only needs to be done once.

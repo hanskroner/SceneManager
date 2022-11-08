@@ -184,60 +184,35 @@ class deCONZClientModel: ObservableObject {
         }
     }
     
-    // MARK: - deCONZ CRUD Methods
-    
-    func modifyScene(range: ModifySceneRange) async {
-        guard let selectedSidebarItem = selectedSidebarItem,
-              let groupID = selectedSidebarItem.groupID,
-              let sceneID = selectedSidebarItem.sceneID
-        else { return }
+    func createNewSidebarItem(groupID: Int?, sceneID: Int?) async {
+        // In keeping with modern macOS design, SidebarItem are created immediately using a proposed name
+        // instead of presenting a Window to the user and asking for a name. The code below only injects an
+        // item into the Sidebar - no calls to the REST API are made. The injected SidebarItem is immediately
+        // made ready to rename. Once the rename is performed, the View will call on the Model to create
+        // either a Group or a Scene via the REST API.
         
-        let lightIDs: [Int]
-        switch range {
-        case .allLightsInGroup:
-            lightIDs = self.sceneLights.map({ $0.lightID }).sorted()
-        case .selectedLightsOnly:
-            lightIDs = selectedSceneLights.map({ $0.lightID }).sorted()
-        }
-        
-        guard let _ = try? await deconzClient.modifyScene(groupID: groupID, sceneID: sceneID, lightIDs: lightIDs, state: jsonStateText) else {
-            // FIXME: Handle errors
-            print("Error Updating Group \(groupID), Scene \(sceneID), Lights \(lightIDs)")
-            return
-        }
-        
-        // If the request was successful, store the new JSON state in the modified lights
-        var sceneLightsCopy = self.sceneLights
-        for (lightID, _) in lightIDs.enumerated() {
-            sceneLightsCopy[lightID].state = jsonStateText
-        }
-        
-        let list = sceneLightsCopy
-        await MainActor.run {
-            self.sceneLights = list
-        }
-    }
-    
-    func createNewSidebarItem() async {
-        // In keeping with modern macOS design, a Group is created immediately using a proposed name
-        // instead of presenting a Window to the user and asking them to name the Group. The code below
-        // doesn't actually create a new Group via the REST API, instead it inserts a SidebarItem in the
-        // Model's List Model which is immediately ready to rename. Once the rename is performed, the View
-        // will call on the Model to create the Group via the REST API.
-        
-        // First, go through the existing Group names and propose an un-used placeholder name for the new
-        // Group that. The REST API will produce an error when attempting to create a new Group with an
-        // already-existing name - this is just to make the creation process friendlier.
-        let groupNames = sidebarItems.compactMap({ $0.name })
-        let proposedName = "New Group"
+        // First, go through the existing names and propose an un-used placeholder name for the new
+        // Sidebar Item. The REST API will produce an error when attempting to create a new Group or Scene
+        // with an already-existing name - this is just to make the creation process friendlier.
+        let newName: String
+        let proposedName = "New \(groupID == nil ? "Group" : "Scene")"
+        let existingNames: [String]
         var proposedNameSuffix = ""
         
+        if ((groupID == nil) && (sceneID == nil)) {
+            // A new 'Group' Sidebar Item is being created
+            existingNames = sidebarItems.compactMap({ $0.name })
+        } else {
+            // A new 'Scene' Sidebar Item is being created
+            existingNames = sidebarItems.first(where: { $0.groupID == groupID })?.children?.compactMap({ $0.name }) ?? [String]()
+        }
+        
         for index in 1 ..< 100 {
-            if !groupNames.contains(proposedName + proposedNameSuffix) { break }
+            if !existingNames.contains(proposedName + proposedNameSuffix) { break }
             proposedNameSuffix = String(index)
         }
         
-        let newGroupName = proposedName + proposedNameSuffix
+        newName = proposedName + proposedNameSuffix
         
         // The SidebarItem for the new group is created with '-999' as its GroupID. It is also flagged as
         // 'renaming' and 'wantingFocus' to have the View draw it as a TextField with focus - allowing the
@@ -246,18 +221,37 @@ class deCONZClientModel: ObservableObject {
         // usual "renameGroup". The flags are temporary, as this SidebarItem will be released when the Model's
         // List Model is refreshed after performing the actual group creation via the REST API.
         
-        let newGroupID = -999
-        let newGroupItem = SidebarItem(id: newGroupName, name: newGroupName, groupID: newGroupID, isRenaming: true, wantsFocus: true)
+        let newGroupID = groupID ?? -999
+        let newSceneID = sceneID ?? -999
+        let newSidebarItem = SidebarItem(id: newName, name: newName, groupID: newGroupID, sceneID: newSceneID, isRenaming: true, wantsFocus: true)
         await MainActor.run {
-            // The SidebarItem representing the new group is added to the Model's List Model. The List Model
-            // is then sorted before being presented again to the user. Finally, the newly created SidebarItem
-            // is scrolled into view.
+            // The SidebarItem is added to the Model's List Model. The List Model is then sorted before being
+            // presented again to the user. Finally, the newly created SidebarItem is scrolled into view.
             var mutableCopy = self.sidebarItems
-            mutableCopy.append(newGroupItem)
-            self.sidebarItems = mutableCopy.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
-            self.scrollToItem = newGroupName
+            if ((groupID == nil) && (sceneID == nil)) {
+                // A new 'Group' Sidebar Item is being created
+                mutableCopy.append(newSidebarItem)
+                self.sidebarItems = mutableCopy.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+            } else {
+                // A new 'Scene' Sidebar Item is being created
+                guard let groupIndex = sidebarItems.firstIndex(where: { $0.groupID == groupID }) else { return }
+                
+                // If this is creating a new 'Scene' Sidebar Item, expand its parent 'Group' if it was collapsed
+                self.sidebarItems[groupIndex].isExpanded = true
+                
+                if (self.sidebarItems[groupIndex].children == nil) {
+                    self.sidebarItems[groupIndex].children = [SidebarItem]()
+                }
+                
+                self.sidebarItems[groupIndex].children?.append(newSidebarItem)
+            }
+            
+            // Scroll to the new Sidebar Item to make it visible for the user
+            self.scrollToItem = newName
         }
     }
+    
+    // MARK: - deCONZ Group CRUD Methods
     
     func createGroup(name: String) async {
         do {
@@ -294,6 +288,86 @@ class deCONZClientModel: ObservableObject {
     func deleteGroup(groupID: Int) async {
         do {
             try await deconzClient.deleteGroup(groupID: groupID)
+            (self.cacheGroups, self.cacheScenes) = try await deconzClient.getAllGroups()
+        } catch {
+            // FIXME: Handle errors
+            print(error)
+        }
+        
+        Task {
+            await refreshSidebarItems()
+        }
+    }
+    
+    // MARK: - deCONZ Scene CRUD Methods
+    
+    func createScene(groupID: Int, name: String) async {
+        do {
+            let _ = try await deconzClient.createScene(groupID: groupID, name: name)
+            
+            // Fetch the Group and Scene information from the REST API and update the model's cache. This
+            // will trigger SwiftUI to redraw the UI, which will now include the newly-created group and not
+            // the placeholder SidebarItem that wa used to name it.
+            (self.cacheGroups, self.cacheScenes) = try await deconzClient.getAllGroups()
+        } catch {
+            // FIXME: Handle errors
+            print(error)
+        }
+        
+        Task {
+            await refreshSidebarItems()
+        }
+    }
+    
+    func renameScene(groupID: Int, sceneID: Int, name: String) async {
+        do {
+            try await deconzClient.setSceneAttributes(groupID: groupID, sceneID: sceneID, name: name)
+            (self.cacheGroups, self.cacheScenes) = try await deconzClient.getAllGroups()
+        } catch {
+            // FIXME: Handle errors
+            print(error)
+        }
+        
+        Task {
+            await refreshSidebarItems()
+        }
+    }
+    
+    func modifyScene(range: ModifySceneRange) async {
+        guard let selectedSidebarItem = selectedSidebarItem,
+              let groupID = selectedSidebarItem.groupID,
+              let sceneID = selectedSidebarItem.sceneID
+        else { return }
+        
+        let lightIDs: [Int]
+        switch range {
+        case .allLightsInGroup:
+            lightIDs = self.sceneLights.map({ $0.lightID }).sorted()
+        case .selectedLightsOnly:
+            lightIDs = selectedSceneLights.map({ $0.lightID }).sorted()
+        }
+        
+        guard let _ = try? await deconzClient.modifyScene(groupID: groupID, sceneID: sceneID, lightIDs: lightIDs, state: jsonStateText) else {
+            // FIXME: Handle errors
+            print("Error Updating Group \(groupID), Scene \(sceneID), Lights \(lightIDs)")
+            return
+        }
+        
+        // If the request was successful, store the new JSON state in the modified lights
+        var sceneLightsCopy = self.sceneLights
+        for (lightID, _) in lightIDs.enumerated() {
+            sceneLightsCopy[lightID].state = jsonStateText
+        }
+        
+        let list = sceneLightsCopy
+        await MainActor.run {
+            self.sceneLights = list
+        }
+    }
+    
+    func deleteScene(groupID: Int, sceneID: Int) async {
+        do {
+            try await deconzClient.deleteScene(groupID: groupID, sceneID: sceneID)
             (self.cacheGroups, self.cacheScenes) = try await deconzClient.getAllGroups()
         } catch {
             // FIXME: Handle errors
