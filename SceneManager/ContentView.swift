@@ -106,6 +106,8 @@ struct SidebarBottomBar: View {
                     }
                 }) {
                     Label("", systemImage: "plus")
+                        .padding([.leading, .bottom], 8)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .font(.system(size: 14))
@@ -113,7 +115,6 @@ struct SidebarBottomBar: View {
                 
                 Spacer()
             }
-            .padding([.leading, .bottom], 8)
         }
     }
 }
@@ -194,7 +195,7 @@ struct SidebarItemView: View {
                         }
                     } else {
                         Button("Delete Scene", role: .destructive) {
-//                            deleteScene(scene: item)
+                            deleteScene(scene: item)
                         }
                     }
                 }
@@ -205,6 +206,16 @@ struct SidebarItemView: View {
         Task {
             guard let groupID = group.groupID else { return }
             await deconzModel.deleteGroup(groupID: groupID)
+        }
+    }
+    
+    func deleteScene(scene: SidebarItem) {
+        Task {
+            guard let groupID = scene.groupID,
+                  let sceneID = scene.sceneID
+            else { return }
+            
+            await deconzModel.deleteScene(groupID: groupID, sceneID: sceneID)
         }
     }
 }

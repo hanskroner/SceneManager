@@ -7,6 +7,60 @@
 
 import SwiftUI
 
+struct TestView: View {
+    let window: NSWindow
+    let deconzModel: deCONZClientModel
+    
+    @State var addLights = Set<SceneLight>()
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            HStack(alignment: .top) {
+                Image("Icon")
+                    .resizable()
+                    .frame(width: 72, height: 72)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Add Lights to '\(deconzModel.selectedSidebarItem!.parentName!)'")
+                        .font(.system(.headline))
+                    
+                    Text("Lights are added to Groups, not Scenes.")
+                        .font(.system(.callout))
+                }
+                .padding(.top, 6)
+            }
+            
+            List(deconzModel.lightsNotIn(groupID: deconzModel.selectedSidebarItem!.groupID!), id: \.self, selection: $addLights) { item in
+                Text(item.name)
+            }
+            
+            HStack {
+                Spacer()
+                
+                Button("Cancel") {
+                    window.close()
+                }
+                .fixedSize()
+                .keyboardShortcut(.cancelAction)
+                
+                Button("Add \(addLights.count == 1 ? "Light" : "Lights")") {
+                    var groupLights = deconzModel.sceneLights
+                    groupLights.append(contentsOf: addLights)
+                    
+                    Task {
+                        await deconzModel.modifyGroupLights(groupID: deconzModel.selectedSidebarItem!.groupID!, groupLights: groupLights)
+                        window.close()
+                    }
+                }
+                    .fixedSize()
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(addLights.isEmpty)
+            }
+            .padding(.top, 8)
+        }
+    }
+}
+
 struct DetailView: View {
     @EnvironmentObject private var deconzModel: deCONZClientModel
     
@@ -51,39 +105,7 @@ struct DetailView: View {
                         deconzModel.jsonStateText = deconzModel.selectedSceneLights.first?.state ?? ""
                     }
                     .safeAreaInset(edge: .bottom, spacing: 0) {
-                        VStack {
-                            Divider()
-                            HStack(alignment: .firstTextBaseline) {
-                                Button(action: {
-                                    Task {
-                                        
-                                    }
-                                }) {
-                                    Label("", systemImage: "plus")
-                                }
-                                .buttonStyle(.plain)
-                                .font(.system(size: 14))
-                                .help("Add Lights")
-                                .disabled(deconzModel.selectedSidebarItem == nil)
-                                
-                                Button(action: {
-                                    Task {
-                                        
-                                    }
-                                }) {
-                                    Label("", systemImage: "minus")
-                                }
-                                .buttonStyle(.plain)
-                                .font(.system(size: 14))
-                                .help("Remove Lights")
-                                .disabled(deconzModel.selectedSidebarItem == nil ||
-                                          deconzModel.selectedSceneLights.isEmpty)
-                                
-                                Spacer()
-                            }
-                            .padding([.leading, .bottom], 8)
-                            .background(.ultraThinMaterial)
-                        }
+                        LightsListBottomBar()
                     }
                 }
                 .frame(minWidth: 250)
@@ -143,6 +165,69 @@ struct DetailView: View {
                 .background(Color(NSColor.windowBackgroundColor))
                 .transition(.move(edge: .trailing))
             }
+        }
+    }
+}
+
+struct LightsListBottomBar: View {
+    @EnvironmentObject private var deconzModel: deCONZClientModel
+    
+    var body: some View {
+        VStack {
+            Divider()
+            HStack(alignment: .firstTextBaseline, spacing: 0) {
+                Button(action: {
+                    let window = NSWindow(
+                        contentRect: .zero,
+                        styleMask: [.titled, .closable],
+                        backing: .buffered,
+                        defer: false
+                    )
+                    
+                    window.titlebarAppearsTransparent = true
+                    
+                    window.center()
+                    window.isReleasedWhenClosed = false
+                    
+                    let view = TestView(window: window, deconzModel: deconzModel)
+                        .padding()
+                        .frame( width: 340, height: 400)
+                    
+                    let hosting = NSHostingView(rootView: view)
+                    window.contentView = hosting
+                    hosting.autoresizingMask = [.width, .height]
+                    
+                    NSApp.keyWindow?.beginSheet(window)
+                }) {
+                    Label("", systemImage: "plus")
+                        .padding([.leading, .bottom], 8)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 14))
+                .help("Add Lights")
+                .disabled(deconzModel.selectedSidebarItem == nil)
+                
+                Button(action: {
+                    Task {
+                        let groupLights = deconzModel.sceneLights.filter({ !deconzModel.selectedSceneLights.contains($0) })
+                        await deconzModel.modifyGroupLights(groupID: deconzModel.selectedSidebarItem!.groupID!, groupLights: groupLights)
+                    }
+                }) {
+                    Label("", systemImage: "minus")
+                        .padding(.bottom, 4)
+                        .padding([.leading, .bottom], 8)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 14))
+                .help("Remove Lights")
+                .disabled(deconzModel.selectedSidebarItem == nil ||
+                          deconzModel.selectedSceneLights.isEmpty)
+                
+                Spacer()
+            }
+            .background(.ultraThinMaterial)
         }
     }
 }

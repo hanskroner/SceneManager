@@ -56,7 +56,9 @@ actor deCONZClient: ObservableObject {
         try check(data: data, from: response)
         
         let lightsResponse: [Int: deCONZLight] = try decoder.decode([Int : deCONZLight].self, from: data)
-        return lightsResponse
+        
+        // Exclude the deCONZ Zigbee interface from the list
+        return lightsResponse.filter({ $0.1.type != "Configuration tool" })
     }
     
     // MARK: - deCONZ Groups REST API Methods
@@ -195,7 +197,7 @@ actor deCONZClient: ObservableObject {
         try check(data: data, from: response)
     }
     
-    func modifyScene(groupID: Int, sceneID: Int, lightIDs: [Int], state: String) async throws {
+    func modifyScene(groupID: Int, sceneID: Int, lightIDs: [Int], state: deCONZLightState) async throws {
         // Build the request body by decoding and re-encoding 'state' to JSON (to 'validate' it).
         // Since 'state' is the same for all passed-in lights, this only needs to be done once.
         // Note that the deCONZ REST API is inconsistent in the way it handles xy Color Mode values.
@@ -203,8 +205,7 @@ actor deCONZClient: ObservableObject {
         // the "xy" JSON key. When getting the attributes of a Scene that uses xy Color Mode, the REST
         // API returns the values in separate "x" and "y" JSON keys.
         
-        var lightState: deCONZLightState = try decoder.decode(deCONZLightState.self, from: state.data(using: .utf8)!)
-        
+        var lightState = state
         if lightState.colormode == "xy" {
             lightState.xy = [lightState.x!, lightState.y!]
             lightState.x = nil
@@ -228,6 +229,14 @@ actor deCONZClient: ObservableObject {
             //
             //       try await Task.sleep(nanoseconds: 300_000_000) ???
         }
+    }
+    
+    func storeScene(groupID: Int, sceneID: Int) async throws {
+        let path = "/api/\(self.keyAPI)/groups/\(groupID)/scenes/\(sceneID)/store"
+        let request = request(forPath: path, using: .put)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
     }
     
     func deleteScene(groupID: Int, sceneID: Int) async throws {
