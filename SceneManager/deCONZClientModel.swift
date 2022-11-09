@@ -15,6 +15,7 @@ enum ModifySceneRange {
 class deCONZClientModel: ObservableObject {
     private let deconzClient = deCONZClient()
     
+    private let decoder = JSONDecoder()
     private let encoder = JSONEncoder()
     
     @Published var selectedSidebarItem: SidebarItem? = nil {
@@ -109,6 +110,9 @@ class deCONZClientModel: ObservableObject {
         guard let cacheGroups = self.cacheGroups,
               let cacheScenes = self.cacheScenes else { return }
         
+        // Prepare a Dictionary that holds the current expansion state of Groups
+        let storedExpansions = self.sidebarItems.reduce(into: [Int: Bool]()) { $0[$1.groupID] = $1.isExpanded }
+        
         // Ignore Groups where 'devicemembership' is not empty
         // These groups are created by switches or sensors and are not the kind we're looking for.
         let filteredGroups = cacheGroups.filter({ $0.value.devicemembership?.isEmpty ?? true })
@@ -120,13 +124,7 @@ class deCONZClientModel: ObservableObject {
                   let scenes = group.scenes
             else { return }
             
-            // FIXME: Will have to check 'isExpanded' against previously saved 'oldValue's when refreshing.
-            //        The Model stores the expanded states of the View's DisclosureGroups in the List Model's
-            //        'isExpanded' property. These will all be 'false' when creating the new SidebarItems.
-            //        If there are previous entries in the List Model, the values of 'isExpanded' should be
-            //        copied across to the new list. Otherwise the View will collapse all DisclosureGroups
-            //        after the redraw.
-            var groupItem = SidebarItem(id: "G\(groupID)", name: groupName, groupID: groupID)
+            var groupItem = SidebarItem(id: "G\(groupID)", name: groupName, groupID: groupID, isExpanded: storedExpansions[groupID] ?? false)
             
             for (sceneStringID) in scenes {
                 guard let sceneID = Int(sceneStringID),
@@ -169,9 +167,17 @@ class deCONZClientModel: ObservableObject {
         for (stringLightID) in cacheGroups[groupID]?.lights ?? [] {
             guard let lightID = Int(stringLightID),
                   let light = cacheLights[lightID],
-                  let lightName = light.name,
-                  let lightState = sceneAttributes[lightID]
+                  let lightName = light.name
             else { return }
+            
+            guard let lightState = sceneAttributes[lightID] else {
+                // The light is in the group, but not in the scene. This is one of the two possible outcomes
+                // after modifying the light members of a group. In order to add the light to the scene, a
+                // call to 'storeScene' is needed. This will overwrite the saved states of all the other
+                // lights in the scene, so they'll need to be restored.
+                print("[Group ID \(groupID), Scene ID \(sceneID)] - No Attributes for Light ID \(lightID)")
+                fatalError("WIP")
+            }
             
             let stateString = lightState.prettyPrint
             updatedSceneLights.append(SceneLight(id: "G\(groupID)S\(sceneID)L\(lightID)", lightID: lightID, name: lightName, state: stateString))
@@ -182,6 +188,23 @@ class deCONZClientModel: ObservableObject {
         await MainActor.run {
             self.sceneLights = list
         }
+    }
+    
+    func lightsNotIn(groupID: Int) -> [SceneLight] {
+        var missingSceneLights = [SceneLight]()
+        
+        guard let cacheLights = self.cacheLights,
+              let cacheGroups = self.cacheGroups,
+              let groupLights = cacheGroups[groupID]?.lights
+        else { return [SceneLight]() }
+        
+        let groupLightsIDs = groupLights.compactMap({ Int($0) })
+        let lighstNotInGroup = cacheLights.filter({ !groupLightsIDs.contains($0.0) })
+        for (lightID, lightNotInGroup) in lighstNotInGroup {
+            missingSceneLights.append(SceneLight(id: "ADD\(groupID)L\(lightID)", lightID: lightID, name: lightNotInGroup.name!, state: ""))
+        }
+        
+        return missingSceneLights.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
     }
     
     func createNewSidebarItem(groupID: Int?, sceneID: Int?) async {
@@ -285,6 +308,70 @@ class deCONZClientModel: ObservableObject {
         }
     }
     
+    func modifyGroupLights(groupID: Int, groupLights: [SceneLight]) async {
+        let groupLightsIDs = groupLights.map({ $0.lightID }).sorted()
+        
+        // Modifying the Lights in a Group is a more expensive operation that one wouuld think at first
+        // glace. Naively calling only 'setGroupAttributes' with the new Lights the group should have leaves
+        // the Scenes in an inconsistent state - a deCONZ Groups has a list of the Lights in it, but Scenes
+        // of a Group are just a list of Lights with specific State Attributes. Modifying the list of Lights
+        // in a Group needs to also modify all of its Scenes so that the list of Lights across all of them
+        // is the same.
+        // There is no 'setSceneAttributes' in deCONZ that allows for modifying the Lights memebers of a
+        // Scene. Instead, 'storeScene' needs to be called - which will instruct the Lights to store their
+        // current State Attributes as the Scene for a given identifier. This works fine for the interactive
+        // way the deCONZ UI, Phoscon, builds Scenes but not for us - our goal is to be able to create and
+        // update Scenes without affecting the current State Attributes of Lights.
+        // In order to keep the list of Lights across a Group and its Scenes in sync, all Scenes in a Group
+        // will have to be rebuilt when the list of Lights in a Group changes. First, the Group's Lights are
+        // updated by calling 'setGroupAttributes', a copy of the current Scenes cache is made and the
+        // cache of Groups and Scenes is refreshed. Next, for each of a Group's Scenes, 'storeScene' is
+        // called - syncing the list of Lights in the Group with that Scene, but also over-writting the
+        // State Attibutes of all the Lights with their current state. The previous State Attributes for each
+        // Light in the Scene can be looked up in the copy that was made of the Scenes cache, and then
+        // applied to each Light by calling 'modifyScene' on each one.
+        // Depending on the number of Lights and Scenes in a Group, this operation can take a while. To make
+        // matters worse, the deCONZ REST API doesn't have a throttling mechanism for requests - sending
+        // requests "too fast" will lead to error and lost packets, so a 500ms delay between requests is
+        // inserted. This means that an operation on a Group with 10 Lights and 5 Scenes will take roughly
+        // 25 seconds to complete.
+        // TODO: Consider the possibility of queueing the above commands
+        //       The idea would be to send commands as fast as posible until an error is returned. That would
+        //       introduce a wait, after which the queued commands would again be sent as fast as possible
+        //       until another error is returned.
+        
+        do {
+            let cacheScenesCopy = self.cacheScenes
+            var sceneAttributesCopy = [Int: [Int: deCONZLightState]]()
+            for (sceneID, _) in cacheScenesCopy?[groupID] ?? [:] {
+                sceneAttributesCopy[sceneID] = try await deconzClient.getSceneAttributes(groupID: groupID, sceneID: sceneID)
+            }
+            
+            try await deconzClient.setGroupAttributes(groupID: groupID, lights: groupLightsIDs)
+            
+            (self.cacheGroups, self.cacheScenes) = try await deconzClient.getAllGroups()
+            
+            // Sync the Lights in each Scene to the new Lights in the Group by calling 'storeScene'
+            for (sceneID, scene) in self.cacheScenes?[groupID] ?? [:] {
+                try await deconzClient.storeScene(groupID: groupID, sceneID: sceneID)
+                
+                // Restore the State Attributes each Light in each Scene had before being overwritten by
+                // the previous call to 'storeScene'
+                for lightID in scene.lights?.compactMap({ Int($0) }) ?? [] {
+                    let storedState = sceneAttributesCopy[sceneID]?[lightID] ?? deCONZLightState()
+                    try await deconzClient.modifyScene(groupID: groupID, sceneID: sceneID, lightIDs: [lightID], state: storedState)
+                }
+            }
+        } catch {
+            // FIXME: Handle errors
+            print(error)
+        }
+        
+        Task {
+            await updateSceneLights(forGroupID: groupID, sceneID: self.selectedSidebarItem!.sceneID!)
+        }
+    }
+    
     func deleteGroup(groupID: Int) async {
         do {
             try await deconzClient.deleteGroup(groupID: groupID)
@@ -347,7 +434,9 @@ class deCONZClientModel: ObservableObject {
             lightIDs = selectedSceneLights.map({ $0.lightID }).sorted()
         }
         
-        guard let _ = try? await deconzClient.modifyScene(groupID: groupID, sceneID: sceneID, lightIDs: lightIDs, state: jsonStateText) else {
+        guard let lightState: deCONZLightState = try? decoder.decode(deCONZLightState.self, from: jsonStateText.data(using: .utf8)!),
+              let _ = try? await deconzClient.modifyScene(groupID: groupID, sceneID: sceneID, lightIDs: lightIDs, state: lightState)
+        else {
             // FIXME: Handle errors
             print("Error Updating Group \(groupID), Scene \(sceneID), Lights \(lightIDs)")
             return
