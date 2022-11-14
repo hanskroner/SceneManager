@@ -149,7 +149,7 @@ actor deCONZClient: ObservableObject {
     
     // MARK: - deCONZ Scenes REST API Methods
     
-    func createScene(groupID: Int, name: String) async throws {
+    func createScene(groupID: Int, name: String) async throws -> Int {
         let scene = deCONZScene(name: name)
         
         let path = "/api/\(self.keyAPI)/groups/\(groupID)/scenes"
@@ -159,6 +159,13 @@ actor deCONZClient: ObservableObject {
         
         let (data, response) = try await URLSession.shared.data(for: request)
         try check(data: data, from: response)
+        
+        let successResponse: [deCONZSuccessContext] = try decoder.decode([deCONZSuccessContext].self, from: data)
+        guard let successContext = successResponse.first,
+              let responseID = Int(successContext.id)
+        else { throw deCONZError.unknownResponse(data: data, response: response) }
+        
+        return responseID
     }
     
     func getSceneAttributes(groupID: Int, sceneID: Int) async throws -> [Int: deCONZLightState] {
