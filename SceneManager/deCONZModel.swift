@@ -15,6 +15,7 @@ struct deCONZLight: Codable, Hashable {
     var manufacturer: String?
     var modelid: String?
     var type: String?
+    var state: deCONZLightState?
 }
 
 struct deCONZScene: Codable {
