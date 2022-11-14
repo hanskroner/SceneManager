@@ -8,7 +8,7 @@
 import SwiftUI
 
 enum ModifySceneRange {
-    case allLightsInGroup
+    case allLightsInScene
     case selectedLightsOnly
 }
 
@@ -16,27 +16,29 @@ class deCONZClientModel: ObservableObject {
     private let deconzClient = deCONZClient()
     
     private let decoder = JSONDecoder()
-    private let encoder = JSONEncoder()
     
-    @Published var selectedSidebarItem: SidebarItem? = nil {
+    var selectedSidebarItem: SidebarItem? {
+        return sidebarItemFor(id: selectedSidebarItemID)
+    }
+    
+    @Published var selectedSidebarItemID: String? = nil {
         didSet {
-            if (oldValue != selectedSidebarItem) {
-                self.selectedSceneLights.removeAll()
+            if (oldValue != selectedSidebarItemID) {
+                self.selectedLightItems.removeAll()
             }
             
-            if (selectedSidebarItem == nil) {
-                self.sceneLights = [SceneLight]()
+            if (selectedSidebarItemID == nil) {
+                self.lightsList = [LightItem]()
             }
             
-            if let groupID = selectedSidebarItem?.groupID, let sceneID = selectedSidebarItem?.sceneID {
-                Task {
-                    await self.updateSceneLights(forGroupID: groupID, sceneID: sceneID)
-                }
+            Task {
+                
+                await self.refreshLightsList(forGroupID: selectedSidebarItem?.groupID, sceneID: selectedSidebarItem?.sceneID)
             }
         }
     }
     
-    @Published var selectedSceneLights = Set<SceneLight>()
+    @Published var selectedLightItems = Set<LightItem>()
     
     @Published var jsonStateText = ""
     
@@ -47,7 +49,7 @@ class deCONZClientModel: ObservableObject {
     }
     
     @Published var sidebarItems = [SidebarItem]()
-    @Published var sceneLights = [SceneLight]()
+    @Published var lightsList = [LightItem]()
 
     private var cacheLights: [Int: deCONZLight]?
     private var cacheGroups: [Int: deCONZGroup]?
@@ -64,6 +66,27 @@ class deCONZClientModel: ObservableObject {
                 await refreshSidebarItems()
             }
         }
+    }
+    
+    private func sidebarItemFor(id: String?) -> SidebarItem? {
+        // Find the selected SidebarItem by the provided ID
+        var sidebarItem: SidebarItem?
+        groupLoop: for (group) in self.sidebarItems {
+            if (group.id == id) {
+                sidebarItem = group
+                break groupLoop
+            }
+        
+            sceneLoop: for (scene) in group.children ?? [] {
+                if (scene.id == id) {
+                    sidebarItem = scene
+                    break groupLoop
+                }
+            }
+        }
+        
+        let returnValue = sidebarItem
+        return returnValue
     }
     
     // MARK: - SibedarItems Snapshot Methods
@@ -152,56 +175,68 @@ class deCONZClientModel: ObservableObject {
         }
     }
     
-    private func updateSceneLights(forGroupID groupID: Int, sceneID: Int) async {
-        var updatedSceneLights = [SceneLight]()
-        
-        let sceneAttributes = try? await deconzClient.getSceneAttributes(groupID: groupID, sceneID: sceneID)
-        
+    private func refreshLightsList(forGroupID groupID: Int?, sceneID: Int?) async {
         guard let cacheLights = self.cacheLights,
               let cacheGroups = self.cacheGroups,
-              let sceneAttributes = sceneAttributes
+              let groupID = groupID
         else { return }
         
-        encoder.outputFormatting = [.sortedKeys, .prettyPrinted]
+        var updatedSceneLights = [LightItem]()
         
-        for (stringLightID) in cacheGroups[groupID]?.lights ?? [] {
-            guard let lightID = Int(stringLightID),
-                  let light = cacheLights[lightID],
-                  let lightName = light.name
-            else { return }
+        if let sceneID = sceneID {
+            // If a Scene ID is provided, build a list of Lights belonging to that Group's Scene
             
-            guard let lightState = sceneAttributes[lightID] else {
-                // The light is in the group, but not in the scene. This is one of the two possible outcomes
-                // after modifying the light members of a group. In order to add the light to the scene, a
-                // call to 'storeScene' is needed. This will overwrite the saved states of all the other
-                // lights in the scene, so they'll need to be restored.
-                print("[Group ID \(groupID), Scene ID \(sceneID)] - No Attributes for Light ID \(lightID)")
-                fatalError("WIP")
+            guard let sceneAttributes = try? await deconzClient.getSceneAttributes(groupID: groupID, sceneID: sceneID) else {
+                // FIXME: Update 'self.sceneLights'
+                return
             }
             
-            let stateString = lightState.prettyPrint
-            updatedSceneLights.append(SceneLight(id: "G\(groupID)S\(sceneID)L\(lightID)", lightID: lightID, name: lightName, state: stateString))
+            for (lightID, lightState) in sceneAttributes {
+                guard let light = cacheLights[lightID],
+                      let lightName = light.name
+                else {
+                    // FIXME: Update 'self.sceneLights'
+                    return
+                }
+                
+                let stateString = lightState.prettyPrint
+                updatedSceneLights.append(LightItem(id: "G\(groupID)S\(sceneID)L\(lightID)", lightID: lightID, name: lightName, state: stateString))
+            }
+        } else {
+            // If no Scene ID is provided, build a list of Lights belonging to that Group ID
+            
+            for (stringLightID) in cacheGroups[groupID]?.lights ?? [] {
+                guard let lightID = Int(stringLightID),
+                      let light = cacheLights[lightID],
+                      let lightName = light.name
+                else {
+                    // FIXME: Update 'self.sceneLights'
+                    return
+                }
+                
+                updatedSceneLights.append(LightItem(id: "G\(groupID)L\(lightID)", lightID: lightID, name: lightName, state: ""))
+            }
         }
         
         // Sort Light names alphabetically
         let list = updatedSceneLights.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
         await MainActor.run {
-            self.sceneLights = list
+            self.lightsList = list
         }
     }
     
-    func lightsNotIn(groupID: Int) -> [SceneLight] {
-        var missingSceneLights = [SceneLight]()
+    func lightsNotIn(groupID: Int) -> [LightItem] {
+        var missingSceneLights = [LightItem]()
         
         guard let cacheLights = self.cacheLights,
               let cacheGroups = self.cacheGroups,
               let groupLights = cacheGroups[groupID]?.lights
-        else { return [SceneLight]() }
+        else { return [LightItem]() }
         
         let groupLightsIDs = groupLights.compactMap({ Int($0) })
         let lighstNotInGroup = cacheLights.filter({ !groupLightsIDs.contains($0.0) })
         for (lightID, lightNotInGroup) in lighstNotInGroup {
-            missingSceneLights.append(SceneLight(id: "ADD\(groupID)L\(lightID)", lightID: lightID, name: lightNotInGroup.name!, state: ""))
+            missingSceneLights.append(LightItem(id: "ADD\(groupID)L\(lightID)", lightID: lightID, name: lightNotInGroup.name!, state: ""))
         }
         
         return missingSceneLights.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
@@ -308,67 +343,20 @@ class deCONZClientModel: ObservableObject {
         }
     }
     
-    func modifyGroupLights(groupID: Int, groupLights: [SceneLight]) async {
+    func modifyGroupLights(groupID: Int, groupLights: [LightItem]) async {
         let groupLightsIDs = groupLights.map({ $0.lightID }).sorted()
         
-        // Modifying the Lights in a Group is a more expensive operation that one wouuld think at first
-        // glace. Naively calling only 'setGroupAttributes' with the new Lights the group should have leaves
-        // the Scenes in an inconsistent state - a deCONZ Groups has a list of the Lights in it, but Scenes
-        // of a Group are just a list of Lights with specific State Attributes. Modifying the list of Lights
-        // in a Group needs to also modify all of its Scenes so that the list of Lights across all of them
-        // is the same.
-        // There is no 'setSceneAttributes' in deCONZ that allows for modifying the Lights memebers of a
-        // Scene. Instead, 'storeScene' needs to be called - which will instruct the Lights to store their
-        // current State Attributes as the Scene for a given identifier. This works fine for the interactive
-        // way the deCONZ UI, Phoscon, builds Scenes but not for us - our goal is to be able to create and
-        // update Scenes without affecting the current State Attributes of Lights.
-        // In order to keep the list of Lights across a Group and its Scenes in sync, all Scenes in a Group
-        // will have to be rebuilt when the list of Lights in a Group changes. First, the Group's Lights are
-        // updated by calling 'setGroupAttributes', a copy of the current Scenes cache is made and the
-        // cache of Groups and Scenes is refreshed. Next, for each of a Group's Scenes, 'storeScene' is
-        // called - syncing the list of Lights in the Group with that Scene, but also over-writting the
-        // State Attibutes of all the Lights with their current state. The previous State Attributes for each
-        // Light in the Scene can be looked up in the copy that was made of the Scenes cache, and then
-        // applied to each Light by calling 'modifyScene' on each one.
-        // Depending on the number of Lights and Scenes in a Group, this operation can take a while. To make
-        // matters worse, the deCONZ REST API doesn't have a throttling mechanism for requests - sending
-        // requests "too fast" will lead to error and lost packets, so a 500ms delay between requests is
-        // inserted. This means that an operation on a Group with 10 Lights and 5 Scenes will take roughly
-        // 25 seconds to complete.
-        // TODO: Consider the possibility of queueing the above commands
-        //       The idea would be to send commands as fast as posible until an error is returned. That would
-        //       introduce a wait, after which the queued commands would again be sent as fast as possible
-        //       until another error is returned.
-        
         do {
-            let cacheScenesCopy = self.cacheScenes
-            var sceneAttributesCopy = [Int: [Int: deCONZLightState]]()
-            for (sceneID, _) in cacheScenesCopy?[groupID] ?? [:] {
-                sceneAttributesCopy[sceneID] = try await deconzClient.getSceneAttributes(groupID: groupID, sceneID: sceneID)
-            }
-            
             try await deconzClient.setGroupAttributes(groupID: groupID, lights: groupLightsIDs)
             
             (self.cacheGroups, self.cacheScenes) = try await deconzClient.getAllGroups()
-            
-            // Sync the Lights in each Scene to the new Lights in the Group by calling 'storeScene'
-            for (sceneID, scene) in self.cacheScenes?[groupID] ?? [:] {
-                try await deconzClient.storeScene(groupID: groupID, sceneID: sceneID)
-                
-                // Restore the State Attributes each Light in each Scene had before being overwritten by
-                // the previous call to 'storeScene'
-                for lightID in scene.lights?.compactMap({ Int($0) }) ?? [] {
-                    let storedState = sceneAttributesCopy[sceneID]?[lightID] ?? deCONZLightState()
-                    try await deconzClient.modifyScene(groupID: groupID, sceneID: sceneID, lightIDs: [lightID], state: storedState)
-                }
-            }
         } catch {
             // FIXME: Handle errors
             print(error)
         }
         
         Task {
-            await updateSceneLights(forGroupID: groupID, sceneID: self.selectedSidebarItem!.sceneID!)
+            await refreshLightsList(forGroupID: groupID, sceneID: nil)
         }
     }
     
@@ -428,10 +416,10 @@ class deCONZClientModel: ObservableObject {
         
         let lightIDs: [Int]
         switch range {
-        case .allLightsInGroup:
-            lightIDs = self.sceneLights.map({ $0.lightID }).sorted()
+        case .allLightsInScene:
+            lightIDs = self.lightsList.map({ $0.lightID }).sorted()
         case .selectedLightsOnly:
-            lightIDs = selectedSceneLights.map({ $0.lightID }).sorted()
+            lightIDs = selectedLightItems.map({ $0.lightID }).sorted()
         }
         
         guard let lightState: deCONZLightState = try? decoder.decode(deCONZLightState.self, from: jsonStateText.data(using: .utf8)!),
@@ -443,14 +431,14 @@ class deCONZClientModel: ObservableObject {
         }
         
         // If the request was successful, store the new JSON state in the modified lights
-        var sceneLightsCopy = self.sceneLights
+        var sceneLightsCopy = self.lightsList
         for (lightID, _) in lightIDs.enumerated() {
             sceneLightsCopy[lightID].state = jsonStateText
         }
         
         let list = sceneLightsCopy
         await MainActor.run {
-            self.sceneLights = list
+            self.lightsList = list
         }
     }
     

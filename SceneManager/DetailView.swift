@@ -7,11 +7,11 @@
 
 import SwiftUI
 
-struct TestView: View {
+struct AddLightsView: View {
     let window: NSWindow
     let deconzModel: deCONZClientModel
     
-    @State var addLights = Set<SceneLight>()
+    @State var addLights = Set<LightItem>()
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -21,15 +21,13 @@ struct TestView: View {
                     .frame(width: 72, height: 72)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Add Lights to '\(deconzModel.selectedSidebarItem!.parentName!)'")
+                    Text("Add Lights to '\(deconzModel.selectedSidebarItem!.name)'")
                         .font(.system(.headline))
-                    
-                    Text("Lights are added to Groups, not Scenes.")
-                        .font(.system(.callout))
                 }
                 .padding(.top, 6)
             }
             
+            // TODO: Only Groups for now
             List(deconzModel.lightsNotIn(groupID: deconzModel.selectedSidebarItem!.groupID!), id: \.self, selection: $addLights) { item in
                 Text(item.name)
             }
@@ -44,7 +42,8 @@ struct TestView: View {
                 .keyboardShortcut(.cancelAction)
                 
                 Button("Add \(addLights.count == 1 ? "Light" : "Lights")") {
-                    var groupLights = deconzModel.sceneLights
+                    // TODO: Only Groups for now
+                    var groupLights = deconzModel.lightsList
                     groupLights.append(contentsOf: addLights)
                     
                     Task {
@@ -98,14 +97,17 @@ struct DetailView: View {
                         .padding(.horizontal)
                         .padding([.bottom], -4)
                     
-                    List(deconzModel.sceneLights, id: \.self, selection: $deconzModel.selectedSceneLights) { item in
+                    List(deconzModel.lightsList, id: \.self, selection: $deconzModel.selectedLightItems) { item in
                         Text(item.name)
                     }
-                    .onChange(of: deconzModel.selectedSceneLights) { newValue in
-                        deconzModel.jsonStateText = deconzModel.selectedSceneLights.first?.state ?? ""
+                    .onChange(of: deconzModel.selectedLightItems) { newValue in
+                        deconzModel.jsonStateText = deconzModel.selectedLightItems.first?.state ?? ""
                     }
                     .safeAreaInset(edge: .bottom, spacing: 0) {
-                        LightsListBottomBar()
+                        // TODO: Only Groups for now
+                        if (deconzModel.selectedSidebarItem?.type == .group) {
+                            LightsListBottomBar()
+                        }
                     }
                 }
                 .frame(minWidth: 250)
@@ -118,6 +120,7 @@ struct DetailView: View {
                     
                     SimpleJSONTextView(text: $deconzModel.jsonStateText, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
                         .onDrop(of: [PresetScene.draggableType], isTargeted: nil) { providers in
+                            // FIXME: Disallow drop when disabled
                             PresetScene.fromItemProviders(providers) { presets in
                                 guard let first = presets.first else { return }
                                 deconzModel.jsonStateText = first.preset.prettyPrint
@@ -128,9 +131,9 @@ struct DetailView: View {
                     
                     HStack {
                         Spacer()
-                        Button("Apply to Group") {
+                        Button("Apply to Scene") {
                             Task {
-                                await deconzModel.modifyScene(range: .allLightsInGroup)
+                                await deconzModel.modifyScene(range: .allLightsInScene)
                             }
                         }
                         .disabled(deconzModel.selectedSidebarItem == nil
@@ -142,13 +145,14 @@ struct DetailView: View {
                                 await deconzModel.modifyScene(range: .selectedLightsOnly)
                             }
                         }
-                        .disabled(deconzModel.selectedSceneLights.isEmpty
+                        .disabled(deconzModel.selectedLightItems.isEmpty
                                   || deconzModel.jsonStateText.isEmpty)
                         .fixedSize(horizontal: true, vertical: true)
                     }
                 }
                 .frame(minWidth: 250)
                 .padding(.bottom, 8)
+                .disabled(deconzModel.selectedSidebarItem?.type == .group)
             }
             .padding(.horizontal)
             .padding(.top, 8)
@@ -189,7 +193,7 @@ struct LightsListBottomBar: View {
                     window.center()
                     window.isReleasedWhenClosed = false
                     
-                    let view = TestView(window: window, deconzModel: deconzModel)
+                    let view = AddLightsView(window: window, deconzModel: deconzModel)
                         .padding()
                         .frame( width: 340, height: 400)
                     
@@ -210,7 +214,7 @@ struct LightsListBottomBar: View {
                 
                 Button(action: {
                     Task {
-                        let groupLights = deconzModel.sceneLights.filter({ !deconzModel.selectedSceneLights.contains($0) })
+                        let groupLights = deconzModel.lightsList.filter({ !deconzModel.selectedLightItems.contains($0) })
                         await deconzModel.modifyGroupLights(groupID: deconzModel.selectedSidebarItem!.groupID!, groupLights: groupLights)
                     }
                 }) {
@@ -223,7 +227,7 @@ struct LightsListBottomBar: View {
                 .font(.system(size: 14))
                 .help("Remove Lights")
                 .disabled(deconzModel.selectedSidebarItem == nil ||
-                          deconzModel.selectedSceneLights.isEmpty)
+                          deconzModel.selectedLightItems.isEmpty)
                 
                 Spacer()
             }
@@ -232,15 +236,18 @@ struct LightsListBottomBar: View {
     }
 }
 
-struct SceneLight: Identifiable, Hashable {
+struct LightItem: Identifiable, Hashable {
     let id: String
     var lightID: Int
     var name: String
     var state: String
 }
 
-//struct DetailView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        DetailView(item: .constant(nil), deconzModel: nil, showInspector: .constant(false))
-//    }
-//}
+struct DetailView_Previews: PreviewProvider {
+    static let deconzModel = deCONZClientModel()
+    
+    static var previews: some View {
+        DetailView(showInspector: .constant(false))
+            .environmentObject(deconzModel)
+    }
+}

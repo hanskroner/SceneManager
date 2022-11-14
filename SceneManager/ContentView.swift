@@ -17,8 +17,8 @@ struct ContentView: View {
             Sidebar()
         } detail: {
             DetailView(showInspector: $showInspector)
-                .navigationTitle(deconzModel.selectedSidebarItem?.parentName ?? "Scene Manager")
-                .navigationSubtitle(deconzModel.selectedSidebarItem?.name ?? "No Scene Selected")
+                .navigationTitle(deconzModel.selectedSidebarItem?.groupName ?? "Scene Manager")
+                .navigationSubtitle(deconzModel.selectedSidebarItem?.sceneName ?? "No Scene Selected")
         }
         .frame(minWidth: 960, minHeight: 300)
         .background(Color(NSColor.gridColor))
@@ -37,6 +37,12 @@ struct ContentView_Previews: PreviewProvider {
 }
 
 struct SidebarItem: Identifiable, Hashable {
+    enum SidebarItemType {
+        case blank
+        case group
+        case scene
+    }
+    
     let id: String
     var name: String
     var parentName: String?
@@ -49,6 +55,28 @@ struct SidebarItem: Identifiable, Hashable {
     var isRenaming: Bool = false
     var isExpanded: Bool = false
     var wantsFocus: Bool = false
+    
+    var type: SidebarItemType {
+        if ((groupID != nil) && (sceneID == nil)) { return .group }
+        if ((groupID != nil) && (sceneID != nil)) { return .scene }
+        
+        return .blank
+    }
+    
+    var groupName: String? {
+        switch self.type {
+        case .blank: return nil
+        case .group: return self.name
+        case .scene: return self.parentName
+        }
+    }
+    
+    var sceneName: String? {
+        switch self.type {
+        case .scene: return self.name
+        default: return nil
+        }
+    }
 }
 
 struct Sidebar: View {
@@ -56,12 +84,12 @@ struct Sidebar: View {
     
     var body: some View {
             ScrollViewReader { scrollReader in
-                List(selection: $deconzModel.selectedSidebarItem) {
+                List(selection: $deconzModel.selectedSidebarItemID) {
                     Section("Groups") {
                         ForEach(Array(deconzModel.sidebarItems.enumerated()), id: \.1.id) { i, group in
                             if let children = group.children {
                                 DisclosureGroup(isExpanded: $deconzModel.sidebarItems[i].isExpanded) {
-                                    ForEach(children) { scene in
+                                    ForEach(children, id: \.id) { scene in
                                         NavigationLink(value: scene) {
                                             SidebarItemView(item: scene)
                                         }
