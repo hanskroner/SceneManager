@@ -11,7 +11,22 @@ struct AddLightsView: View {
     let window: NSWindow
     let deconzModel: deCONZClientModel
     
-    @State var addLights = Set<LightItem>()
+    @State var lightItems = [LightItem]()
+    @State var addLightItems = Set<LightItem>()
+    
+    func loadLightItems() async {
+        var lightItems: [LightItem]
+        switch deconzModel.selectedSidebarItem?.type {
+        case .group:
+            lightItems = deconzModel.lightsNotIn(groupID: deconzModel.selectedSidebarItem!.groupID!)
+        case .scene:
+            lightItems = await deconzModel.lightsIn(groupID: deconzModel.selectedSidebarItem!.groupID!, butNotIn: deconzModel.selectedSidebarItem!.sceneID!)
+        default:
+            lightItems = []
+        }
+        
+        self.lightItems = lightItems
+    }
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -27,9 +42,11 @@ struct AddLightsView: View {
                 .padding(.top, 6)
             }
             
-            // TODO: Only Groups for now
-            List(deconzModel.lightsNotIn(groupID: deconzModel.selectedSidebarItem!.groupID!), id: \.self, selection: $addLights) { item in
+            List(lightItems, id: \.self, selection: $addLightItems) { item in
                 Text(item.name)
+            }
+            .task {
+                await loadLightItems()
             }
             
             HStack {
@@ -41,19 +58,32 @@ struct AddLightsView: View {
                 .fixedSize()
                 .keyboardShortcut(.cancelAction)
                 
-                Button("Add \(addLights.count == 1 ? "Light" : "Lights")") {
-                    // TODO: Only Groups for now
-                    var groupLights = deconzModel.lightsList
-                    groupLights.append(contentsOf: addLights)
+                Button("Add \(addLightItems.count == 1 ? "Light" : "Lights")") {
+                    var lightItems = deconzModel.lightsList
                     
                     Task {
-                        await deconzModel.modifyGroupLights(groupID: deconzModel.selectedSidebarItem!.groupID!, groupLights: groupLights)
+                        if (deconzModel.selectedSidebarItem!.type == .group) {
+                            lightItems.append(contentsOf: addLightItems)
+                            await deconzModel.modifyGroupLights(groupID: deconzModel.selectedSidebarItem!.groupID!, groupLights: lightItems)
+                        } else if (deconzModel.selectedSidebarItem!.type == .scene) {
+                            // TODO: Find a nicer way to do this
+                            // Set the Light's 'state' to 'ADD' to let 'modifySceneLights' this is an addition
+                            let modifiedLightItems = addLightItems.map {
+                                var lightItem = $0
+                                lightItem.state = "ADD"
+                                return lightItem
+                            }
+
+                            lightItems.append(contentsOf: modifiedLightItems)
+                            await deconzModel.modifySceneLights(groupID: deconzModel.selectedSidebarItem!.groupID!, sceneID: deconzModel.selectedSidebarItem!.sceneID!, sceneLights: lightItems)
+                        }
+                        
                         window.close()
                     }
                 }
                     .fixedSize()
                     .keyboardShortcut(.defaultAction)
-                    .disabled(addLights.isEmpty)
+                    .disabled(addLightItems.isEmpty)
             }
             .padding(.top, 8)
         }
@@ -104,10 +134,7 @@ struct DetailView: View {
                         deconzModel.jsonStateText = deconzModel.selectedLightItems.first?.state ?? ""
                     }
                     .safeAreaInset(edge: .bottom, spacing: 0) {
-                        // TODO: Only Groups for now
-                        if (deconzModel.selectedSidebarItem?.type == .group) {
-                            LightsListBottomBar()
-                        }
+                        LightsListBottomBar()
                     }
                 }
                 .frame(minWidth: 250)
@@ -213,9 +240,30 @@ struct LightsListBottomBar: View {
                 .disabled(deconzModel.selectedSidebarItem == nil)
                 
                 Button(action: {
-                    Task {
-                        let groupLights = deconzModel.lightsList.filter({ !deconzModel.selectedLightItems.contains($0) })
-                        await deconzModel.modifyGroupLights(groupID: deconzModel.selectedSidebarItem!.groupID!, groupLights: groupLights)
+                    switch (deconzModel.selectedSidebarItem?.type) {
+                    case .group:
+                        Task {
+                            let groupLightItems = deconzModel.lightsList.filter({ !deconzModel.selectedLightItems.contains($0) })
+                            await deconzModel.modifyGroupLights(groupID: deconzModel.selectedSidebarItem!.groupID!, groupLights: groupLightItems)
+                        }
+                    case .scene:
+                        Task {
+                            // TODO: Find a nicer way to do this
+                            // Set the Light's 'state' to 'REMOVE' to let 'modifySceneLights' this is a removal
+                            let sceneLightItems = deconzModel.lightsList.map {
+                                if (deconzModel.selectedLightItems.contains($0)) {
+                                    var lightItem = $0
+                                    lightItem.state = "REMOVE"
+                                    return lightItem
+                                } else {
+                                    return $0
+                                }
+                            }
+                            
+                            await deconzModel.modifySceneLights(groupID: deconzModel.selectedSidebarItem!.groupID!, sceneID: deconzModel.selectedSidebarItem!.sceneID!, sceneLights: sceneLightItems)
+                        }
+                    default:
+                        break
                     }
                 }) {
                     Label("", systemImage: "minus")

@@ -234,14 +234,6 @@ actor deCONZClient: ObservableObject {
             
             let (data, response) = try await URLSession.shared.data(for: request)
             try check(data: data, from: response)
-            
-            // TODO: Pace consecutive requests
-            //       deCONZ won't be able to handle a string of requests one after the other. Even though
-            //       it will happily accept them, the Zigbee network takes some time to propagate all the
-            //       messages that result from each HTTP request. The messages pile up in the outgoing
-            //       Zigbee queue until the queue gets full and deCONZ starts to drop messages.
-            //
-            //       try await Task.sleep(nanoseconds: 300_000_000) ???
         }
     }
     
