@@ -225,8 +225,30 @@ class deCONZClientModel: ObservableObject {
         }
     }
     
+    func lightsIn(groupID: Int, butNotIn sceneID: Int) async -> [LightItem] {
+        var missingLightItems = [LightItem]()
+        
+        guard let cacheLights = self.cacheLights,
+              let cacheGroups = self.cacheGroups,
+              let groupLights = cacheGroups[groupID]?.lights,
+              let sceneAttributes = try? await deconzClient.getSceneAttributes(groupID: groupID, sceneID: sceneID)
+        else { return [LightItem]() }
+        
+        let groupLightsIDs = groupLights.compactMap({ Int($0) })
+        let sceneLightsIDs = sceneAttributes.compactMap({ Int($0.key) })
+        
+        let lightsInGroup = cacheLights.filter({ groupLightsIDs.contains($0.0) })
+        let lightsInGroupButNotInScene = lightsInGroup.filter({ !sceneLightsIDs.contains($0.0) })
+        
+        for (lightID, lightInGroupButNotInScene) in lightsInGroupButNotInScene {
+            missingLightItems.append(LightItem(id: "ADD\(groupID)L\(lightID)", lightID: lightID, name: lightInGroupButNotInScene.name!, state: ""))
+        }
+        
+        return missingLightItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+    }
+    
     func lightsNotIn(groupID: Int) -> [LightItem] {
-        var missingSceneLights = [LightItem]()
+        var missingLightItems = [LightItem]()
         
         guard let cacheLights = self.cacheLights,
               let cacheGroups = self.cacheGroups,
@@ -234,12 +256,14 @@ class deCONZClientModel: ObservableObject {
         else { return [LightItem]() }
         
         let groupLightsIDs = groupLights.compactMap({ Int($0) })
-        let lighstNotInGroup = cacheLights.filter({ !groupLightsIDs.contains($0.0) })
-        for (lightID, lightNotInGroup) in lighstNotInGroup {
-            missingSceneLights.append(LightItem(id: "ADD\(groupID)L\(lightID)", lightID: lightID, name: lightNotInGroup.name!, state: ""))
+        
+        let lightsNotInGroup = cacheLights.filter({ !groupLightsIDs.contains($0.0) })
+        
+        for (lightID, lightNotInGroup) in lightsNotInGroup {
+            missingLightItems.append(LightItem(id: "ADD\(groupID)L\(lightID)", lightID: lightID, name: lightNotInGroup.name!, state: ""))
         }
         
-        return missingSceneLights.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+        return missingLightItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
     }
     
     func createNewSidebarItem(groupID: Int?, sceneID: Int?) async {
@@ -405,6 +429,42 @@ class deCONZClientModel: ObservableObject {
         
         Task {
             await refreshSidebarItems()
+        }
+    }
+    
+    func modifySceneLights(groupID: Int, sceneID: Int, sceneLights: [LightItem]) async {
+        guard let cacheLights = self.cacheLights else { return }
+        let lightsNotInGroup = lightsNotIn(groupID: groupID)
+        let lightsNotInScene = await lightsIn(groupID: groupID, butNotIn: sceneID)
+        
+        // Use the 'lightID' of the Lights for comparing. The objects will likely have different 'state' or
+        // 'id' values and cannot be relied upon for direct comparisson.
+        let lightsNotInGroupIDs = lightsNotInGroup.map({ $0.lightID }).sorted()
+        let lightsNotInSceneIDs = lightsNotInScene.map({ $0.lightID }).sorted()
+        
+        do {
+            for (lightItem) in sceneLights {
+                // Ignore lights that don't belong to the Scene's Group
+                if (lightsNotInGroupIDs.contains(lightItem.lightID)) { continue }
+                
+                // Add the Light to the Scene if it doesn't already belong to it and has a state
+                if (lightsNotInSceneIDs.contains(lightItem.lightID) && lightItem.state == "ADD") {
+                    guard let lightState = cacheLights[lightItem.lightID]?.state else { continue }
+                    let _ = try await deconzClient.modifyScene(groupID: groupID, sceneID: sceneID, lightIDs: [lightItem.lightID], state: lightState)
+                }
+                
+                // Remove the Light from the Scene if it already belongs to it and doesn't have a state
+                if (!lightsNotInSceneIDs.contains(lightItem.lightID) && lightItem.state == "REMOVE") {
+                    let _ = try await deconzClient.modifyScene(groupID: groupID, sceneID: sceneID, lightIDs: [lightItem.lightID], state: deCONZLightState())
+                }
+            }
+        } catch {
+            // FIXME: Handle errors
+            print(error)
+        }
+        
+        Task {
+            await refreshLightsList(forGroupID: groupID, sceneID: nil)
         }
     }
     
