@@ -55,7 +55,14 @@ actor deCONZClient: ObservableObject {
         let (data, response) = try await URLSession.shared.data(for: request)
         try check(data: data, from: response)
         
-        let lightsResponse: [Int: deCONZLight] = try decoder.decode([Int : deCONZLight].self, from: data)
+        var lightsResponse: [Int: deCONZLight] = try decoder.decode([Int : deCONZLight].self, from: data)
+        for (lightID, light) in lightsResponse {
+            if let xy = light.state?.xy {
+                lightsResponse[lightID]?.state?.x = xy[0]
+                lightsResponse[lightID]?.state?.y = xy[1]
+                lightsResponse[lightID]?.state?.xy = nil
+            }
+        }
         
         // Exclude the deCONZ Zigbee interface from the list
         return lightsResponse.filter({ $0.1.type != "Configuration tool" })
