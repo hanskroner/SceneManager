@@ -8,33 +8,15 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-struct PresetScene: Hashable, Codable {
+// MARK: - Models
+
+struct PresetItem: Hashable, Codable {
     var name: String
     var systemImage: String
     var preset: deCONZLightState
-}
-
-struct PresetView: View {
-    @Binding var preset: PresetScene
     
-    var body: some View {
-        VStack {
-            Label("", systemImage: preset.systemImage)
-                .foregroundColor(.primary)
-                .font(.system(size: 24))
-            Text(preset.name)
-                .font(.headline)
-                .padding(.top, 4)
-        }
-        .padding(.vertical)
-        .frame(maxWidth: .infinity)
-        .background(colorForPreset(preset: preset.preset))
-        .cornerRadius(8)
-        .itemProvider { preset.itemProvider }
-    }
-    
-    func colorForPreset(preset: deCONZLightState) -> Color {
-        switch preset.colormode {
+    var color: Color {
+        switch self.preset.colormode {
         case "ct":
             return Color(colorFromMired(mired: preset.ct!)!)
         case "xy":
@@ -45,17 +27,17 @@ struct PresetView: View {
     }
 }
 
-extension PresetScene {
-    static var draggableType = UTType(exportedAs: "com.hanskroner.SceneManager.presetScene")
+extension PresetItem {
+    static var draggableType = UTType(exportedAs: "com.hanskroner.scene-manager.preset-item")
     
-    static func fromItemProviders(_ itemProviders: [NSItemProvider], completion: @escaping ([PresetScene]) -> Void) {
+    static func fromItemProviders(_ itemProviders: [NSItemProvider], completion: @escaping ([PresetItem]) -> Void) {
         let typeIdentifier = Self.draggableType.identifier
         let filteredProviders = itemProviders.filter {
             $0.hasItemConformingToTypeIdentifier(typeIdentifier)
         }
         
         let group = DispatchGroup()
-        var result = [Int: PresetScene]()
+        var result = [Int: PresetItem]()
         
         for (index, provider) in filteredProviders.enumerated() {
             group.enter()
@@ -63,7 +45,7 @@ extension PresetScene {
                 defer { group.leave() }
                 guard let data = data else { return }
                 let decoder = JSONDecoder()
-                guard let preset = try? decoder.decode(PresetScene.self, from: data)
+                guard let preset = try? decoder.decode(PresetItem.self, from: data)
                 else { return }
                 result[index] = preset
             }
@@ -90,5 +72,37 @@ extension PresetScene {
             return nil
         }
         return provider
+    }
+}
+
+
+// MARK: - Views
+
+struct PresetView: View {
+    @Binding var presetItem: PresetItem
+    
+    var body: some View {
+        VStack {
+            Label("", systemImage: presetItem.systemImage)
+                .foregroundColor(.primary)
+                .font(.system(size: 24))
+            Text(presetItem.name)
+                .font(.headline)
+                .padding(.top, 4)
+        }
+        .padding(.vertical)
+        .frame(maxWidth: .infinity)
+        .background(presetItem.color)
+        .cornerRadius(8)
+        .itemProvider { presetItem.itemProvider }
+    }
+}
+
+// MARK: - Previews
+
+struct PresetView_Previews: PreviewProvider {
+    static var previews: some View {
+        PresetView(presetItem: .constant(PresetItem(name: "Preset Item", systemImage: "lightbulb.2", preset:
+                                            deCONZLightState(on: true, bri: 229, transitiontime: 4, colormode: "xy", x: 0.2485, y: 0.0917))))
     }
 }

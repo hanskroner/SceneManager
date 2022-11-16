@@ -15,7 +15,7 @@
 			<key>UTTypeIcons</key>
 			<dict/>
 			<key>UTTypeIdentifier</key>
-			<string>com.hanskroner.SceneManager.presetScene</string>
+			<string>com.hanskroner.scene-manager.preset-item</string>
 			<key>UTTypeTagSpecification</key>
 			<dict/>
 		</dict>

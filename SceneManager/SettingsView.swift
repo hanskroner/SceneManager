@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+// MARK: - Views
+
 struct SettingsView: View {
     @AppStorage("deconz_url") private var url = ""
     @AppStorage("deconz_key") private var key = ""
@@ -37,5 +39,13 @@ struct SettingsView: View {
         }
         .padding()
         .frame(width: 375, height: 100)
+    }
+}
+
+// MARK: - Previews
+
+struct SettingsView_Previews: PreviewProvider {
+    static var previews: some View {
+        SettingsView()
     }
 }
