@@ -17,27 +17,41 @@ class SceneManagerModel: ObservableObject {
     
     private let decoder = JSONDecoder()
     
-    var selectedSidebarItem: SidebarItem?
-    
-    @Published var selectedSidebarItemID: String? = nil {
+    var selectedSidebarItem: SidebarItem? {
         didSet {
-            if (oldValue != selectedSidebarItemID) {
-                self.selectedLightItems.removeAll()
+            if (oldValue?.groupID != selectedSidebarItem?.groupID) {
+                self.selectedLightItemIDs.removeAll()
             }
             
             if (selectedSidebarItemID == nil) {
                 self.lightsList = [LightItem]()
             }
             
-            self.selectedSidebarItem = sidebarItemFor(id: selectedSidebarItemID)
-            
             Task {
                 await self.refreshLightsList(forGroupID: selectedSidebarItem?.groupID, sceneID: selectedSidebarItem?.sceneID)
+                
+                // Refresh the Light List selecction and potentially the Light State of the selected Light
+                self.selectedLightItems = lightItemsFor(ids: selectedLightItemIDs)
+                await MainActor.run {
+                    self.jsonStateText = self.selectedLightItems.first?.state ?? ""
+                }
             }
         }
     }
     
-    @Published var selectedLightItems = Set<LightItem>()
+    @Published var selectedSidebarItemID: String? = nil {
+        didSet {
+            self.selectedSidebarItem = sidebarItemFor(id: selectedSidebarItemID)
+        }
+    }
+    
+    var selectedLightItems = Set<LightItem>()
+    
+    @Published var selectedLightItemIDs = Set<Int>() {
+        didSet {
+            self.selectedLightItems = lightItemsFor(ids: selectedLightItemIDs)
+        }
+    }
     
     @Published var jsonStateText = ""
     
@@ -84,6 +98,28 @@ class SceneManagerModel: ObservableObject {
         
         let returnValue = sidebarItem
         return returnValue
+    }
+    
+    private func lightItemsFor(ids: Set<Int>) -> Set<LightItem> {
+        // Find the selected LighItems by the provided IDs
+        // The lists are traversed in this particular way to preseve the selection ordering.
+        var lightItems = Set<LightItem>()
+        selectedLoop: for (selectedLightItemID) in ids {
+            existingLoop: for (lightItem) in self.lightsList {
+                if (lightItem.lightID == selectedLightItemID) {
+                    lightItems.insert(lightItem)
+                    break selectedLoop
+                }
+            }
+        }
+                
+//        for (lightItem) in self.lightsList {
+//            if ids.contains(lightItem.lightID) {
+//                lightItems.insert(lightItem)
+//            }
+//        }
+        
+        return lightItems
     }
     
     // MARK: - SibedarItems Snapshot Methods

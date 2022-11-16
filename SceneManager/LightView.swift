@@ -28,10 +28,10 @@ struct LightView: View {
                 .padding(.horizontal)
                 .padding([.bottom], -4)
             
-            List(deconzModel.lightsList, id: \.self, selection: $deconzModel.selectedLightItems) { item in
+            List(deconzModel.lightsList, id: \.lightID, selection: $deconzModel.selectedLightItemIDs) { item in
                 Text(item.name)
             }
-            .onChange(of: deconzModel.selectedLightItems) { newValue in
+            .onChange(of: deconzModel.selectedLightItemIDs) { newValue in
                 deconzModel.jsonStateText = deconzModel.selectedLightItems.first?.state ?? ""
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
