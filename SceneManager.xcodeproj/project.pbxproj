@@ -7,10 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3A37157529241D6E00390154 /* deCONZWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A37157429241D6E00390154 /* deCONZWebSocketClient.swift */; };
+		3A37157A2924CA2400390154 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3715792924CA2400390154 /* SidebarView.swift */; };
+		3A37157C2924CAAB00390154 /* AddLightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A37157B2924CAAB00390154 /* AddLightView.swift */; };
+		3A3715802924CB3500390154 /* LightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A37157F2924CB3500390154 /* LightView.swift */; };
+		3A3715822924CC0E00390154 /* LightStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3715812924CC0E00390154 /* LightStateView.swift */; };
 		3A58D4A42916F50B000FC97D /* SimpleJSONTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4A32916F50B000FC97D /* SimpleJSONTextView.swift */; };
 		3A58D4A62916F813000FC97D /* PresetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4A52916F813000FC97D /* PresetView.swift */; };
 		3A58D4A82916F8D2000FC97D /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4A72916F8D2000FC97D /* Colors.swift */; };
-		3A58D4AD2917A74C000FC97D /* SettingsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4AC2917A74C000FC97D /* SettingsViews.swift */; };
+		3A58D4AD2917A74C000FC97D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4AC2917A74C000FC97D /* SettingsView.swift */; };
 		3A58D4B42917F326000FC97D /* deCONZClientModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4B32917F326000FC97D /* deCONZClientModel.swift */; };
 		3AF928552916A6D600CD2D33 /* SceneManagerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF928542916A6D600CD2D33 /* SceneManagerApp.swift */; };
 		3AF928572916A6D600CD2D33 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF928562916A6D600CD2D33 /* ContentView.swift */; };
@@ -22,11 +27,16 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3A37157429241D6E00390154 /* deCONZWebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = deCONZWebSocketClient.swift; sourceTree = "<group>"; };
+		3A3715792924CA2400390154 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		3A37157B2924CAAB00390154 /* AddLightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddLightView.swift; sourceTree = "<group>"; };
+		3A37157F2924CB3500390154 /* LightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightView.swift; sourceTree = "<group>"; };
+		3A3715812924CC0E00390154 /* LightStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightStateView.swift; sourceTree = "<group>"; };
 		3A58D4A32916F50B000FC97D /* SimpleJSONTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleJSONTextView.swift; sourceTree = "<group>"; };
 		3A58D4A52916F813000FC97D /* PresetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetView.swift; sourceTree = "<group>"; };
 		3A58D4A72916F8D2000FC97D /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		3A58D4AA2916FD70000FC97D /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		3A58D4AC2917A74C000FC97D /* SettingsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViews.swift; sourceTree = "<group>"; };
+		3A58D4AC2917A74C000FC97D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3A58D4B32917F326000FC97D /* deCONZClientModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = deCONZClientModel.swift; sourceTree = "<group>"; };
 		3AF928512916A6D600CD2D33 /* SceneManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SceneManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AF928542916A6D600CD2D33 /* SceneManagerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneManagerApp.swift; sourceTree = "<group>"; };
@@ -50,6 +60,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3A3715762924C77900390154 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				3AF928562916A6D600CD2D33 /* ContentView.swift */,
+				3AF928672916AE1100CD2D33 /* DetailView.swift */,
+				3A3715792924CA2400390154 /* SidebarView.swift */,
+				3A37157F2924CB3500390154 /* LightView.swift */,
+				3A3715812924CC0E00390154 /* LightStateView.swift */,
+				3A58D4A52916F813000FC97D /* PresetView.swift */,
+				3A58D4AC2917A74C000FC97D /* SettingsView.swift */,
+				3A37157B2924CAAB00390154 /* AddLightView.swift */,
+			);
+			name = Views;
+			sourceTree = "<group>";
+		};
 		3AF928482916A6D600CD2D33 = {
 			isa = PBXGroup;
 			children = (
@@ -70,10 +95,7 @@
 			isa = PBXGroup;
 			children = (
 				3AF928542916A6D600CD2D33 /* SceneManagerApp.swift */,
-				3A58D4AC2917A74C000FC97D /* SettingsViews.swift */,
-				3AF928562916A6D600CD2D33 /* ContentView.swift */,
-				3AF928672916AE1100CD2D33 /* DetailView.swift */,
-				3A58D4A52916F813000FC97D /* PresetView.swift */,
+				3A3715762924C77900390154 /* Views */,
 				3A58D4A72916F8D2000FC97D /* Colors.swift */,
 				3AF928632916A88700CD2D33 /* deCONZClient.swift */,
 				3A58D4B32917F326000FC97D /* deCONZClientModel.swift */,
@@ -83,6 +105,7 @@
 				3AF928582916A6D800CD2D33 /* Assets.xcassets */,
 				3AF9285D2916A6D800CD2D33 /* SceneManager.entitlements */,
 				3AF9285A2916A6D800CD2D33 /* Preview Content */,
+				3A37157429241D6E00390154 /* deCONZWebSocketClient.swift */,
 			);
 			path = SceneManager;
 			sourceTree = "<group>";
@@ -166,13 +189,18 @@
 			buildActionMask = 2147483647;
 			files = (
 				3AF928662916A8C400CD2D33 /* deCONZModel.swift in Sources */,
+				3A37157C2924CAAB00390154 /* AddLightView.swift in Sources */,
 				3A58D4A82916F8D2000FC97D /* Colors.swift in Sources */,
 				3A58D4A42916F50B000FC97D /* SimpleJSONTextView.swift in Sources */,
 				3AF928572916A6D600CD2D33 /* ContentView.swift in Sources */,
+				3A3715822924CC0E00390154 /* LightStateView.swift in Sources */,
+				3A3715802924CB3500390154 /* LightView.swift in Sources */,
 				3AF928552916A6D600CD2D33 /* SceneManagerApp.swift in Sources */,
+				3A37157A2924CA2400390154 /* SidebarView.swift in Sources */,
 				3A58D4B42917F326000FC97D /* deCONZClientModel.swift in Sources */,
 				3AF928682916AE1100CD2D33 /* DetailView.swift in Sources */,
-				3A58D4AD2917A74C000FC97D /* SettingsViews.swift in Sources */,
+				3A58D4AD2917A74C000FC97D /* SettingsView.swift in Sources */,
+				3A37157529241D6E00390154 /* deCONZWebSocketClient.swift in Sources */,
 				3AF928642916A88700CD2D33 /* deCONZClient.swift in Sources */,
 				3A58D4A62916F813000FC97D /* PresetView.swift in Sources */,
 			);
@@ -316,7 +344,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hanskroner.SceneManager;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hanskroner.scene-manager";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -345,7 +373,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hanskroner.SceneManager;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hanskroner.scene-manager";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
