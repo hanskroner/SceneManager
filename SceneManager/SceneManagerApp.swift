@@ -9,7 +9,7 @@ import SwiftUI
 
 @main
 struct SceneManagerApp: App {
-    @StateObject private var deconzModel = deCONZClientModel()
+    @StateObject private var deconzModel = SceneManagerModel()
     
     var body: some Scene {
         WindowGroup {

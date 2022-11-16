@@ -11,7 +11,7 @@ import SwiftUI
 
 struct AddLightView: View {
     let window: NSWindow
-    let deconzModel: deCONZClientModel
+    let deconzModel: SceneManagerModel
     
     @State var lightItems = [LightItem]()
     @State var addLightItems = Set<LightItem>()
@@ -95,7 +95,7 @@ struct AddLightView: View {
 // MARK: - Previews
 
 struct AddLightView_Previews: PreviewProvider {
-    static let deconzModel = deCONZClientModel()
+    static let deconzModel = SceneManagerModel()
     
     static var previews: some View {
         // FIXME: Contains implicitly unwrapped Optionals that will be 'nil' in the Preview

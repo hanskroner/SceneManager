@@ -55,7 +55,7 @@ struct SidebarItem: Identifiable, Hashable {
 // MARK: - Views
 
 struct SidebarView: View {
-    @EnvironmentObject private var deconzModel: deCONZClientModel
+    @EnvironmentObject private var deconzModel: SceneManagerModel
     
     var body: some View {
         ScrollViewReader { scrollReader in
@@ -97,7 +97,7 @@ struct SidebarView: View {
 }
 
 struct SidebarBottomBarView: View {
-    @EnvironmentObject private var deconzModel: deCONZClientModel
+    @EnvironmentObject private var deconzModel: SceneManagerModel
     
     var body: some View {
         VStack {
@@ -123,7 +123,7 @@ struct SidebarBottomBarView: View {
 }
 
 struct SidebarItemView: View {
-    @EnvironmentObject private var deconzModel: deCONZClientModel
+    @EnvironmentObject private var deconzModel: SceneManagerModel
     
     @State var item: SidebarItem
     
@@ -226,7 +226,7 @@ struct SidebarItemView: View {
 // MARK: - Previews
 
 struct SidebarView_Previews: PreviewProvider {
-    static let deconzModel = deCONZClientModel()
+    static let deconzModel = SceneManagerModel()
     
     static var previews: some View {
         SidebarView()

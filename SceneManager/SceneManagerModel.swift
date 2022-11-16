@@ -1,5 +1,5 @@
 //
-//  deCONZClientModel.swift
+//  SceneManagerModel.swift
 //  SceneManager
 //
 //  Created by Hans Kröner on 06/11/2022.
@@ -12,14 +12,12 @@ enum ModifySceneRange {
     case selectedLightsOnly
 }
 
-class deCONZClientModel: ObservableObject {
-    private let deconzClient = deCONZClient()
+class SceneManagerModel: ObservableObject {
+    private let deconzClient = deCONZRESTClient()
     
     private let decoder = JSONDecoder()
     
-    var selectedSidebarItem: SidebarItem? {
-        return sidebarItemFor(id: selectedSidebarItemID)
-    }
+    var selectedSidebarItem: SidebarItem?
     
     @Published var selectedSidebarItemID: String? = nil {
         didSet {
@@ -31,8 +29,9 @@ class deCONZClientModel: ObservableObject {
                 self.lightsList = [LightItem]()
             }
             
+            self.selectedSidebarItem = sidebarItemFor(id: selectedSidebarItemID)
+            
             Task {
-                
                 await self.refreshLightsList(forGroupID: selectedSidebarItem?.groupID, sceneID: selectedSidebarItem?.sceneID)
             }
         }
@@ -62,9 +61,7 @@ class deCONZClientModel: ObservableObject {
             self.cacheLights = try await deconzClient.getAllLights()
             (self.cacheGroups, self.cacheScenes) = try await deconzClient.getAllGroups()
             
-            Task {
-                await refreshSidebarItems()
-            }
+            await refreshSidebarItems()
         }
     }
     
@@ -136,25 +133,11 @@ class deCONZClientModel: ObservableObject {
         // Prepare a Dictionary that holds the current expansion state of Groups
         let storedExpansions = self.sidebarItems.reduce(into: [Int: Bool]()) { $0[$1.groupID] = $1.isExpanded }
         
-        // Ignore Groups where 'devicemembership' is not empty
-        // These groups are created by switches or sensors and are not the kind we're looking for.
-        let filteredGroups = cacheGroups.filter({ $0.value.devicemembership?.isEmpty ?? true })
-        
-        for (_, group) in filteredGroups {
-            guard let groupName = group.name,
-                  let groupStringID = group.id,
-                  let groupID = Int(groupStringID),
-                  let scenes = group.scenes
-            else { return }
+        for (_, group) in cacheGroups {
+            var groupItem = SidebarItem(id: "G\(group.id)", name: group.name, groupID: group.id, isExpanded: storedExpansions[group.id] ?? false)
             
-            var groupItem = SidebarItem(id: "G\(groupID)", name: groupName, groupID: groupID, isExpanded: storedExpansions[groupID] ?? false)
-            
-            for (sceneStringID) in scenes {
-                guard let sceneID = Int(sceneStringID),
-                      let sceneName = cacheScenes[groupID]?[sceneID]?.name
-                else { return }
-                
-                let sceneItem = SidebarItem(id: "G\(groupID)S\(sceneID)", name: sceneName, parentName: groupName, groupID: groupID, sceneID: sceneID)
+            for (_, scene) in cacheScenes[group.id] ?? [:] {
+                let sceneItem = SidebarItem(id: "G\(group.id)S\(scene.id)", name: scene.name, parentName: group.name, groupID: group.id, sceneID: scene.id)
                 
                 if (groupItem.children == nil) {
                     groupItem.children = [SidebarItem]()
@@ -192,29 +175,26 @@ class deCONZClientModel: ObservableObject {
             }
             
             for (lightID, lightState) in sceneAttributes {
-                guard let light = cacheLights[lightID],
-                      let lightName = light.name
+                guard let light = cacheLights[lightID]
                 else {
                     // FIXME: Update 'self.sceneLights'
                     return
                 }
                 
                 let stateString = lightState.prettyPrint
-                updatedSceneLights.append(LightItem(id: "G\(groupID)S\(sceneID)L\(lightID)", lightID: lightID, name: lightName, state: stateString))
+                updatedSceneLights.append(LightItem(id: "G\(groupID)S\(sceneID)L\(lightID)", lightID: lightID, name: light.name, state: stateString))
             }
         } else {
             // If no Scene ID is provided, build a list of Lights belonging to that Group ID
             
-            for (stringLightID) in cacheGroups[groupID]?.lights ?? [] {
-                guard let lightID = Int(stringLightID),
-                      let light = cacheLights[lightID],
-                      let lightName = light.name
+            for (lightID) in cacheGroups[groupID]?.lights ?? [] {
+                guard let light = cacheLights[lightID]
                 else {
                     // FIXME: Update 'self.sceneLights'
                     return
                 }
                 
-                updatedSceneLights.append(LightItem(id: "G\(groupID)L\(lightID)", lightID: lightID, name: lightName, state: ""))
+                updatedSceneLights.append(LightItem(id: "G\(groupID)L\(lightID)", lightID: lightID, name: light.name, state: ""))
             }
         }
         
@@ -241,7 +221,7 @@ class deCONZClientModel: ObservableObject {
         let lightsInGroupButNotInScene = lightsInGroup.filter({ !sceneLightsIDs.contains($0.0) })
         
         for (lightID, lightInGroupButNotInScene) in lightsInGroupButNotInScene {
-            missingLightItems.append(LightItem(id: "ADD\(groupID)L\(lightID)", lightID: lightID, name: lightInGroupButNotInScene.name!, state: ""))
+            missingLightItems.append(LightItem(id: "ADD\(groupID)L\(lightID)", lightID: lightID, name: lightInGroupButNotInScene.name, state: ""))
         }
         
         return missingLightItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
@@ -260,7 +240,7 @@ class deCONZClientModel: ObservableObject {
         let lightsNotInGroup = cacheLights.filter({ !groupLightsIDs.contains($0.0) })
         
         for (lightID, lightNotInGroup) in lightsNotInGroup {
-            missingLightItems.append(LightItem(id: "ADD\(groupID)L\(lightID)", lightID: lightID, name: lightNotInGroup.name!, state: ""))
+            missingLightItems.append(LightItem(id: "ADD\(groupID)L\(lightID)", lightID: lightID, name: lightNotInGroup.name, state: ""))
         }
         
         return missingLightItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
@@ -433,7 +413,6 @@ class deCONZClientModel: ObservableObject {
     }
     
     func modifySceneLights(groupID: Int, sceneID: Int, sceneLights: [LightItem]) async {
-        guard let cacheLights = self.cacheLights else { return }
         let lightsNotInGroup = lightsNotIn(groupID: groupID)
         let lightsNotInScene = await lightsIn(groupID: groupID, butNotIn: sceneID)
         
@@ -449,13 +428,13 @@ class deCONZClientModel: ObservableObject {
                 
                 // Add the Light to the Scene if it doesn't already belong to it and has a state
                 if (lightsNotInSceneIDs.contains(lightItem.lightID) && lightItem.state == "ADD") {
-                    guard let lightState = cacheLights[lightItem.lightID]?.state else { continue }
+                    let lightState = try await deconzClient.getLightState(lightID: lightItem.lightID)
                     let _ = try await deconzClient.modifyScene(groupID: groupID, sceneID: sceneID, lightIDs: [lightItem.lightID], state: lightState)
                 }
                 
                 // Remove the Light from the Scene if it already belongs to it and doesn't have a state
                 if (!lightsNotInSceneIDs.contains(lightItem.lightID) && lightItem.state == "REMOVE") {
-                    let _ = try await deconzClient.modifyScene(groupID: groupID, sceneID: sceneID, lightIDs: [lightItem.lightID], state: deCONZLightState())
+                    let _ = try await deconzClient.modifyScene(groupID: groupID, sceneID: sceneID, lightIDs: [lightItem.lightID], state: nil)
                 }
             }
         } catch {

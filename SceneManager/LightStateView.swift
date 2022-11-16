@@ -10,7 +10,7 @@ import SwiftUI
 // MARK: - Views
 
 struct LightStateView: View {
-    @EnvironmentObject private var deconzModel: deCONZClientModel
+    @EnvironmentObject private var deconzModel: SceneManagerModel
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -60,7 +60,7 @@ struct LightStateView: View {
 // MARK: - Previews
 
 struct LightStateView_Previews: PreviewProvider {
-    static let deconzModel = deCONZClientModel()
+    static let deconzModel = SceneManagerModel()
     
     static var previews: some View {
         LightStateView()

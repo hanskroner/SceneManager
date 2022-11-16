@@ -7,70 +7,126 @@
 
 import Foundation
 
-// MARK: - deCONZ REST API Containers
+// MARK: - Models
 
-struct deCONZLight: Codable, Hashable {
-    var id: String?
-    var name: String?
-    var manufacturer: String?
-    var modelid: String?
-    var type: String?
-    var state: deCONZLightState?
+enum deCONZLightColorMode: Hashable {
+    case ct(Int)
+    case xy(Double, Double)
 }
 
-struct deCONZScene: Codable {
-    var id: String?
-    var name: String?
-    var lights: [String]?
-}
-
-struct deCONZGroup: Codable {
-    var id: String?
-    var name: String?
-    var lights: [String]?
-    var scenes: [String]?
-    var devicemembership: [String]?
-    
-    enum CodingKeys: String, CodingKey {
-        case id
-        case name
-        case lights
-        case devicemembership
-    }
-}
-
-struct deCONZLightState: Hashable, Codable {
-    var id: String?
-    var on: Bool?
-    var bri: Int?
+struct deCONZLightState: Hashable {
+    var on: Bool
+    var bri: Int
     var transitiontime: Int?
-    var colormode: String?
-    var ct: Int?
-    var x: Double?
-    var y: Double?
-    var xy: [Double]?
+    var colormode: deCONZLightColorMode
     
     var prettyPrint: String {
         var buffer = "{\n"
-        buffer += "  \"bri\" : \(bri ?? 0),\n"
-        buffer += "  \"colormode\" : \"\(colormode ?? "")\",\n"
-        if let ct = ct {
-            buffer += "  \"ct\" : \(ct),\n"
-        }
-        buffer += "  \"on\" : \(on ?? false),\n"
-        buffer += "  \"transitiontime\" : \(transitiontime ?? 0)"
-        if let x = x, let y = y {
-            buffer += ",\n"
-            buffer += String(format: "  \"x\" : %06.4f,\n", x)
-            buffer += String(format: "  \"y\" : %06.4f", y)
-        }
-        buffer += "\n}"
+        buffer += "  \"bri\" : \(bri),\n"
         
+        // !!!: 'hs' mode (Hue/Saturation) is not supported
+        switch self.colormode {
+        case .ct(let ct):
+            buffer += "  \"colormode\" : \"ct\",\n"
+            buffer += "  \"ct\" : \(ct),\n"
+        
+        default:
+            buffer += "  \"colormode\" : \"xy\",\n"
+        }
+        
+        buffer += "  \"on\" : \(on),\n"
+        buffer += "  \"transitiontime\" : \(transitiontime ?? 0)"
+        
+        switch self.colormode {
+        case .xy(let x, let y):
+            buffer += ",\n"
+            buffer += String(format: "  \"xy\" : [%06.4f, %06.4f]", x, y)
+        
+        default: break
+        }
+        
+        buffer += "\n}"
+
         return buffer
     }
 }
 
-// MARK: - deCONZ REST API Error Handling
+extension deCONZLightState: Codable {
+    enum CodingKeys: CodingKey {
+        case on, bri, transitiontime, colormode, ct, xy, x, y
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        on = try container.decode(Bool.self, forKey: .on)
+        bri = try container.decode(Int.self, forKey: .bri)
+        transitiontime = try? container.decode(Int?.self, forKey: .transitiontime)
+        
+        let _colormode = try container.decode(String?.self, forKey: .colormode)
+        let ct = try? container.decode(Int?.self, forKey: .ct)
+        let xy = try? container.decode([Double]?.self, forKey: .xy)
+        let x = try? container.decode(Double?.self, forKey: .x)
+        let y = try? container.decode(Double?.self, forKey: .y)
+        
+        if (_colormode == "ct") && ct != nil {
+            colormode = deCONZLightColorMode.ct(ct!)
+        } else if (_colormode == "xy") && xy != nil {
+            colormode = deCONZLightColorMode.xy(xy![0], xy![1])
+        } else if (_colormode == "xy") && x != nil && y != nil {
+            colormode = deCONZLightColorMode.xy(x!, y!)
+        } else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: container.codingPath,
+                    debugDescription: "Unable to decode light state"
+                )
+            )
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(on, forKey: .on)
+        try container.encode(bri, forKey: .bri)
+        if let transitiontime = self.transitiontime {
+            try container.encode(transitiontime, forKey: .transitiontime)
+        }
+        
+        switch self.colormode {
+        case .ct(let ct):
+            try container.encode("ct", forKey: .colormode)
+            try container.encode(ct, forKey: .ct)
+        case .xy(let x, let y):
+            try container.encode("xy", forKey: .colormode)
+            try container.encode([x, y], forKey: .xy)
+        }
+    }
+}
+
+struct deCONZLight: Codable, Hashable {
+    var id: Int
+    var name: String
+    var manufacturer: String
+    var modelid: String
+    var type: String
+}
+
+struct deCONZScene: Codable, Hashable {
+    var id: Int
+    var gid: Int
+    var name: String
+}
+
+struct deCONZGroup: Codable, Hashable {
+    var id: Int
+    var name: String
+    var lights: [Int]
+    var scenes: [Int]
+}
+
+// MARK: - REST API Returns
 
 enum deCONZError: Error {
     case apiError(context: deCONZErrorContext)

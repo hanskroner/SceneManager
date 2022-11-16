@@ -16,12 +16,12 @@
 		3A58D4A62916F813000FC97D /* PresetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4A52916F813000FC97D /* PresetView.swift */; };
 		3A58D4A82916F8D2000FC97D /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4A72916F8D2000FC97D /* Colors.swift */; };
 		3A58D4AD2917A74C000FC97D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4AC2917A74C000FC97D /* SettingsView.swift */; };
-		3A58D4B42917F326000FC97D /* deCONZClientModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4B32917F326000FC97D /* deCONZClientModel.swift */; };
+		3A58D4B42917F326000FC97D /* SceneManagerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4B32917F326000FC97D /* SceneManagerModel.swift */; };
 		3AF928552916A6D600CD2D33 /* SceneManagerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF928542916A6D600CD2D33 /* SceneManagerApp.swift */; };
 		3AF928572916A6D600CD2D33 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF928562916A6D600CD2D33 /* ContentView.swift */; };
 		3AF928592916A6D800CD2D33 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3AF928582916A6D800CD2D33 /* Assets.xcassets */; };
 		3AF9285C2916A6D800CD2D33 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3AF9285B2916A6D800CD2D33 /* Preview Assets.xcassets */; };
-		3AF928642916A88700CD2D33 /* deCONZClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF928632916A88700CD2D33 /* deCONZClient.swift */; };
+		3AF928642916A88700CD2D33 /* deCONZRESTClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF928632916A88700CD2D33 /* deCONZRESTClient.swift */; };
 		3AF928662916A8C400CD2D33 /* deCONZModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF928652916A8C400CD2D33 /* deCONZModel.swift */; };
 		3AF928682916AE1100CD2D33 /* DetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF928672916AE1100CD2D33 /* DetailView.swift */; };
 /* End PBXBuildFile section */
@@ -37,14 +37,14 @@
 		3A58D4A72916F8D2000FC97D /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		3A58D4AA2916FD70000FC97D /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3A58D4AC2917A74C000FC97D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		3A58D4B32917F326000FC97D /* deCONZClientModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = deCONZClientModel.swift; sourceTree = "<group>"; };
+		3A58D4B32917F326000FC97D /* SceneManagerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneManagerModel.swift; sourceTree = "<group>"; };
 		3AF928512916A6D600CD2D33 /* SceneManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SceneManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AF928542916A6D600CD2D33 /* SceneManagerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneManagerApp.swift; sourceTree = "<group>"; };
 		3AF928562916A6D600CD2D33 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		3AF928582916A6D800CD2D33 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3AF9285B2916A6D800CD2D33 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		3AF9285D2916A6D800CD2D33 /* SceneManager.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SceneManager.entitlements; sourceTree = "<group>"; };
-		3AF928632916A88700CD2D33 /* deCONZClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = deCONZClient.swift; sourceTree = "<group>"; };
+		3AF928632916A88700CD2D33 /* deCONZRESTClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = deCONZRESTClient.swift; sourceTree = "<group>"; };
 		3AF928652916A8C400CD2D33 /* deCONZModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = deCONZModel.swift; sourceTree = "<group>"; };
 		3AF928672916AE1100CD2D33 /* DetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -75,6 +75,25 @@
 			name = Views;
 			sourceTree = "<group>";
 		};
+		3A3715832924D41800390154 /* deCONZ */ = {
+			isa = PBXGroup;
+			children = (
+				3AF928652916A8C400CD2D33 /* deCONZModel.swift */,
+				3AF928632916A88700CD2D33 /* deCONZRESTClient.swift */,
+			);
+			name = deCONZ;
+			sourceTree = "<group>";
+		};
+		3A3715842924D45100390154 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				3A58D4AA2916FD70000FC97D /* Info.plist */,
+				3AF928582916A6D800CD2D33 /* Assets.xcassets */,
+				3AF9285D2916A6D800CD2D33 /* SceneManager.entitlements */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
 		3AF928482916A6D600CD2D33 = {
 			isa = PBXGroup;
 			children = (
@@ -95,15 +114,12 @@
 			isa = PBXGroup;
 			children = (
 				3AF928542916A6D600CD2D33 /* SceneManagerApp.swift */,
+				3A58D4B32917F326000FC97D /* SceneManagerModel.swift */,
 				3A3715762924C77900390154 /* Views */,
+				3A3715832924D41800390154 /* deCONZ */,
 				3A58D4A72916F8D2000FC97D /* Colors.swift */,
-				3AF928632916A88700CD2D33 /* deCONZClient.swift */,
-				3A58D4B32917F326000FC97D /* deCONZClientModel.swift */,
-				3AF928652916A8C400CD2D33 /* deCONZModel.swift */,
 				3A58D4A32916F50B000FC97D /* SimpleJSONTextView.swift */,
-				3A58D4AA2916FD70000FC97D /* Info.plist */,
-				3AF928582916A6D800CD2D33 /* Assets.xcassets */,
-				3AF9285D2916A6D800CD2D33 /* SceneManager.entitlements */,
+				3A3715842924D45100390154 /* Resources */,
 				3AF9285A2916A6D800CD2D33 /* Preview Content */,
 				3A37157429241D6E00390154 /* deCONZWebSocketClient.swift */,
 			);
@@ -197,11 +213,11 @@
 				3A3715802924CB3500390154 /* LightView.swift in Sources */,
 				3AF928552916A6D600CD2D33 /* SceneManagerApp.swift in Sources */,
 				3A37157A2924CA2400390154 /* SidebarView.swift in Sources */,
-				3A58D4B42917F326000FC97D /* deCONZClientModel.swift in Sources */,
+				3A58D4B42917F326000FC97D /* SceneManagerModel.swift in Sources */,
 				3AF928682916AE1100CD2D33 /* DetailView.swift in Sources */,
 				3A58D4AD2917A74C000FC97D /* SettingsView.swift in Sources */,
 				3A37157529241D6E00390154 /* deCONZWebSocketClient.swift in Sources */,
-				3AF928642916A88700CD2D33 /* deCONZClient.swift in Sources */,
+				3AF928642916A88700CD2D33 /* deCONZRESTClient.swift in Sources */,
 				3A58D4A62916F813000FC97D /* PresetView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -10,19 +10,17 @@ import UniformTypeIdentifiers
 
 // MARK: - Models
 
-struct PresetItem: Hashable, Codable {
+struct PresetItem: Codable, Hashable {
     var name: String
     var systemImage: String
     var preset: deCONZLightState
     
     var color: Color {
         switch self.preset.colormode {
-        case "ct":
-            return Color(colorFromMired(mired: preset.ct!)!)
-        case "xy":
-            return Color(colorFromXY(point: CGPoint(x: preset.x!, y: preset.y!), brightness: 1.0))
-        default:
-            return Color(.black)
+        case .ct(let ct):
+            return Color(colorFromMired(mired: ct)!)
+        case .xy(let x, let y):
+            return Color(colorFromXY(point: CGPoint(x: x, y: y), brightness: 1.0))
         }
     }
 }
@@ -103,6 +101,6 @@ struct PresetView: View {
 struct PresetView_Previews: PreviewProvider {
     static var previews: some View {
         PresetView(presetItem: .constant(PresetItem(name: "Preset Item", systemImage: "lightbulb.2", preset:
-                                            deCONZLightState(on: true, bri: 229, transitiontime: 4, colormode: "xy", x: 0.2485, y: 0.0917))))
+                                                        deCONZLightState(on: true, bri: 229, transitiontime: 4, colormode: .xy(0.2485, 0.0917)))))
     }
 }
