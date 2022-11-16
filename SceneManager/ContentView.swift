@@ -10,7 +10,7 @@ import SwiftUI
 // MARK: - Views
 
 struct ContentView: View {
-    @EnvironmentObject private var deconzModel: deCONZClientModel
+    @EnvironmentObject private var deconzModel: SceneManagerModel
     
     @SceneStorage("inspector") private var showInspector = false
     

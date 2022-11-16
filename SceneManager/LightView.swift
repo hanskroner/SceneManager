@@ -19,7 +19,7 @@ struct LightItem: Identifiable, Hashable {
 // MARK: - Views
 
 struct LightView: View {
-    @EnvironmentObject private var deconzModel: deCONZClientModel
+    @EnvironmentObject private var deconzModel: SceneManagerModel
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -43,7 +43,7 @@ struct LightView: View {
 }
 
 struct LightBottomBarView: View {
-    @EnvironmentObject private var deconzModel: deCONZClientModel
+    @EnvironmentObject private var deconzModel: SceneManagerModel
     
     var body: some View {
         VStack {
@@ -129,7 +129,7 @@ struct LightBottomBarView: View {
 // MARK: - Previews
 
 struct LightView_Previews: PreviewProvider {
-    static let deconzModel = deCONZClientModel()
+    static let deconzModel = SceneManagerModel()
     
     static var previews: some View {
         LightView()
