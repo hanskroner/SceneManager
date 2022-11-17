@@ -77,11 +77,16 @@ struct SidebarView: View {
                         }
                     }
                 }
+                
+                // 'safeAreaInsets' doesn't seem to allow bottom bar's ultra-thin material to do anything.
+                // Instead, this spacer acts as the inset and the bottom bar is drawn in an overlay.
+                Spacer()
+                    .frame(height: 1)
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
+            .overlay(alignment: .bottom) {
                 SidebarBottomBarView()
-                    .background(.ultraThinMaterial)
             }
+            
             .frame(minWidth: 200)
             .listStyle(.sidebar)
             .onChange(of: deconzModel.scrollToItem) { item in
@@ -118,6 +123,7 @@ struct SidebarBottomBarView: View {
                 
                 Spacer()
             }
+            .background(.ultraThinMaterial)
         }
     }
 }
