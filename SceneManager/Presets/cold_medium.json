@@ -1,0 +1,11 @@
+{
+    "name" : "Cold Medium",
+    "image" : "lightbulb.2",
+    "state" : {
+        "bri" : 140,
+        "colormode" : "ct",
+        "ct" : 333,
+        "on" : true,
+        "transitiontime" : 4
+    }
+}
