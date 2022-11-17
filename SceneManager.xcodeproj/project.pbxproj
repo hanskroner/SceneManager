@@ -17,6 +17,16 @@
 		3A58D4A82916F8D2000FC97D /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4A72916F8D2000FC97D /* Colors.swift */; };
 		3A58D4AD2917A74C000FC97D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4AC2917A74C000FC97D /* SettingsView.swift */; };
 		3A58D4B42917F326000FC97D /* SceneManagerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A58D4B32917F326000FC97D /* SceneManagerModel.swift */; };
+		3A88304F29262CA200D7203B /* warm_medium.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3A88304C29261DF300D7203B /* warm_medium.json */; };
+		3A8830592926332F00D7203B /* halloween_orange.json in Resources */ = {isa = PBXBuildFile; fileRef = 3A8830502926332E00D7203B /* halloween_orange.json */; };
+		3A88305A2926332F00D7203B /* warm_bright.json in Resources */ = {isa = PBXBuildFile; fileRef = 3A8830512926332E00D7203B /* warm_bright.json */; };
+		3A88305B2926332F00D7203B /* cold_medium.json in Resources */ = {isa = PBXBuildFile; fileRef = 3A8830522926332E00D7203B /* cold_medium.json */; };
+		3A88305C2926332F00D7203B /* cold_bright.json in Resources */ = {isa = PBXBuildFile; fileRef = 3A8830532926332E00D7203B /* cold_bright.json */; };
+		3A88305D2926332F00D7203B /* christmas_red.json in Resources */ = {isa = PBXBuildFile; fileRef = 3A8830542926332E00D7203B /* christmas_red.json */; };
+		3A88305E2926332F00D7203B /* nightlight.json in Resources */ = {isa = PBXBuildFile; fileRef = 3A8830552926332E00D7203B /* nightlight.json */; };
+		3A88305F2926332F00D7203B /* relax.json in Resources */ = {isa = PBXBuildFile; fileRef = 3A8830562926332F00D7203B /* relax.json */; };
+		3A8830602926332F00D7203B /* halloween_purple.json in Resources */ = {isa = PBXBuildFile; fileRef = 3A8830572926332F00D7203B /* halloween_purple.json */; };
+		3A8830612926332F00D7203B /* christmas_green.json in Resources */ = {isa = PBXBuildFile; fileRef = 3A8830582926332F00D7203B /* christmas_green.json */; };
 		3AF928552916A6D600CD2D33 /* SceneManagerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF928542916A6D600CD2D33 /* SceneManagerApp.swift */; };
 		3AF928572916A6D600CD2D33 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF928562916A6D600CD2D33 /* ContentView.swift */; };
 		3AF928592916A6D800CD2D33 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3AF928582916A6D800CD2D33 /* Assets.xcassets */; };
@@ -25,6 +35,19 @@
 		3AF928662916A8C400CD2D33 /* deCONZModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF928652916A8C400CD2D33 /* deCONZModel.swift */; };
 		3AF928682916AE1100CD2D33 /* DetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF928672916AE1100CD2D33 /* DetailView.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3A88304E29262C9200D7203B /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+				3A88304F29262CA200D7203B /* warm_medium.json in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		3A37157429241D6E00390154 /* deCONZWebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = deCONZWebSocketClient.swift; sourceTree = "<group>"; };
@@ -38,6 +61,16 @@
 		3A58D4AA2916FD70000FC97D /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3A58D4AC2917A74C000FC97D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3A58D4B32917F326000FC97D /* SceneManagerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneManagerModel.swift; sourceTree = "<group>"; };
+		3A88304C29261DF300D7203B /* warm_medium.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = warm_medium.json; sourceTree = "<group>"; };
+		3A8830502926332E00D7203B /* halloween_orange.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = halloween_orange.json; sourceTree = "<group>"; };
+		3A8830512926332E00D7203B /* warm_bright.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = warm_bright.json; sourceTree = "<group>"; };
+		3A8830522926332E00D7203B /* cold_medium.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = cold_medium.json; sourceTree = "<group>"; };
+		3A8830532926332E00D7203B /* cold_bright.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = cold_bright.json; sourceTree = "<group>"; };
+		3A8830542926332E00D7203B /* christmas_red.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = christmas_red.json; sourceTree = "<group>"; };
+		3A8830552926332E00D7203B /* nightlight.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = nightlight.json; sourceTree = "<group>"; };
+		3A8830562926332F00D7203B /* relax.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = relax.json; sourceTree = "<group>"; };
+		3A8830572926332F00D7203B /* halloween_purple.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = halloween_purple.json; sourceTree = "<group>"; };
+		3A8830582926332F00D7203B /* christmas_green.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = christmas_green.json; sourceTree = "<group>"; };
 		3AF928512916A6D600CD2D33 /* SceneManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SceneManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AF928542916A6D600CD2D33 /* SceneManagerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneManagerApp.swift; sourceTree = "<group>"; };
 		3AF928562916A6D600CD2D33 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -87,11 +120,29 @@
 		3A3715842924D45100390154 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				3A88304B29261D8900D7203B /* Presets */,
 				3A58D4AA2916FD70000FC97D /* Info.plist */,
 				3AF928582916A6D800CD2D33 /* Assets.xcassets */,
 				3AF9285D2916A6D800CD2D33 /* SceneManager.entitlements */,
 			);
 			name = Resources;
+			sourceTree = "<group>";
+		};
+		3A88304B29261D8900D7203B /* Presets */ = {
+			isa = PBXGroup;
+			children = (
+				3A8830532926332E00D7203B /* cold_bright.json */,
+				3A8830522926332E00D7203B /* cold_medium.json */,
+				3A8830512926332E00D7203B /* warm_bright.json */,
+				3A88304C29261DF300D7203B /* warm_medium.json */,
+				3A8830562926332F00D7203B /* relax.json */,
+				3A8830552926332E00D7203B /* nightlight.json */,
+				3A8830502926332E00D7203B /* halloween_orange.json */,
+				3A8830572926332F00D7203B /* halloween_purple.json */,
+				3A8830582926332F00D7203B /* christmas_green.json */,
+				3A8830542926332E00D7203B /* christmas_red.json */,
+			);
+			path = Presets;
 			sourceTree = "<group>";
 		};
 		3AF928482916A6D600CD2D33 = {
@@ -144,6 +195,7 @@
 				3AF9284D2916A6D600CD2D33 /* Sources */,
 				3AF9284E2916A6D600CD2D33 /* Frameworks */,
 				3AF9284F2916A6D600CD2D33 /* Resources */,
+				3A88304E29262C9200D7203B /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -192,8 +244,17 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3A88305F2926332F00D7203B /* relax.json in Resources */,
 				3AF9285C2916A6D800CD2D33 /* Preview Assets.xcassets in Resources */,
+				3A88305E2926332F00D7203B /* nightlight.json in Resources */,
+				3A88305B2926332F00D7203B /* cold_medium.json in Resources */,
+				3A8830592926332F00D7203B /* halloween_orange.json in Resources */,
+				3A88305A2926332F00D7203B /* warm_bright.json in Resources */,
+				3A8830612926332F00D7203B /* christmas_green.json in Resources */,
 				3AF928592916A6D800CD2D33 /* Assets.xcassets in Resources */,
+				3A88305C2926332F00D7203B /* cold_bright.json in Resources */,
+				3A88305D2926332F00D7203B /* christmas_red.json in Resources */,
+				3A8830602926332F00D7203B /* halloween_purple.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 enum ModifySceneRange {
     case allLightsInScene
@@ -529,5 +530,52 @@ class SceneManagerModel: ObservableObject {
         Task {
             await refreshSidebarItems()
         }
+    }
+    
+    // MARK: - Preset Scene Methods
+    
+    func copyFilesFromBundleToDocumentsDirectoryConformingTo(_ fileType: UTType) throws {
+        if let resPath = Bundle.main.resourcePath {
+            let dirContents = try FileManager.default.contentsOfDirectory(atPath: resPath)
+            let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+            
+            var filteredFiles = [String]()
+            for (fileExtension) in fileType.tags[.filenameExtension] ?? [] {
+                filteredFiles.append(contentsOf: dirContents.filter { $0.contains(fileExtension) })
+            }
+            
+            for (fileName) in filteredFiles {
+                if let documentsURL = documentsURL {
+                    let sourceURL = URL(fileURLWithPath: Bundle.main.resourcePath!).appendingPathComponent(fileName, conformingTo: fileType)
+                    let destURL = documentsURL.appendingPathComponent(fileName)
+                    try FileManager.default.copyItem(at: sourceURL, to: destURL)
+                }
+            }
+        }
+    }
+    
+    func filesInDocumentsDirectoryConformingTo(_ fileType: UTType) throws -> [URL] {
+        var fileURLs = [URL]()
+        guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return fileURLs }
+        let dirContents = try FileManager.default.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
+        
+        for (fileExtension) in fileType.tags[.filenameExtension] ?? [] {
+            fileURLs.append(contentsOf: dirContents.filter{ $0.absoluteString.contains(fileExtension) })
+        }
+        
+        return fileURLs
+    }
+    
+    func loadPresetItemsFromDocumentsDirectory() throws -> [PresetItem] {
+        var presets = [PresetItem]()
+        
+        let presetFiles = try filesInDocumentsDirectoryConformingTo(.json)
+        for (presetFile) in presetFiles {
+            let json = try String(contentsOf: presetFile)
+            let presetItem = try decoder.decode(PresetItem.self, from: json.data(using: .utf8)!)
+            presets.append(presetItem)
+        }
+
+        return presets.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
     }
 }

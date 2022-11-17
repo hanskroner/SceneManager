@@ -1,0 +1,11 @@
+{
+    "name" : "Halloween Purple",
+    "image" : "lightbulb.2",
+    "state" : {
+        "bri" : 229,
+        "colormode" : "xy",
+        "on" : true,
+        "transitiontime" : 4,
+        "xy" : [0.2485, 0.0917]
+    }
+}

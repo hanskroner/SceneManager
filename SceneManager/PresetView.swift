@@ -10,7 +10,7 @@ import UniformTypeIdentifiers
 
 // MARK: - Models
 
-struct PresetItem: Codable, Hashable {
+struct PresetItem: Hashable {
     var name: String
     var systemImage: String
     var preset: deCONZLightState
@@ -22,6 +22,28 @@ struct PresetItem: Codable, Hashable {
         case .xy(let x, let y):
             return Color(colorFromXY(point: CGPoint(x: x, y: y), brightness: 1.0))
         }
+    }
+}
+
+extension PresetItem: Codable {
+    enum CodingKeys: CodingKey {
+        case name, image, state
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        name = try container.decode(String.self, forKey: .name)
+        systemImage = try container.decode(String.self, forKey: .image)
+        preset = try container.decode(deCONZLightState.self, forKey: .state)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        try container.encode(name, forKey: .name)
+        try container.encode(systemImage, forKey: .image)
+        try container.encode(preset, forKey: .state)
     }
 }
 
@@ -73,10 +95,38 @@ extension PresetItem {
     }
 }
 
-
 // MARK: - Views
 
 struct PresetView: View {
+    @EnvironmentObject private var deconzModel: SceneManagerModel
+    
+    @State private var presets = [PresetItem]()
+    
+    var body: some View {
+        List {
+            Section("Scene Presets") {
+                ForEach($presets, id: \.self) { preset in
+                    PresetItemView(presetItem: preset)
+                }
+            }
+        }
+        .task {
+            Task {
+                if let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+                    let documentsContents = try FileManager.default.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
+                    
+                    if documentsContents.isEmpty {
+                        try deconzModel.copyFilesFromBundleToDocumentsDirectoryConformingTo(.json)
+                    }
+                    
+                    presets = try deconzModel.loadPresetItemsFromDocumentsDirectory()
+                }
+            }
+        }
+    }
+}
+
+struct PresetItemView: View {
     @Binding var presetItem: PresetItem
     
     var body: some View {
@@ -100,7 +150,6 @@ struct PresetView: View {
 
 struct PresetView_Previews: PreviewProvider {
     static var previews: some View {
-        PresetView(presetItem: .constant(PresetItem(name: "Preset Item", systemImage: "lightbulb.2", preset:
-                                                        deCONZLightState(on: true, bri: 229, transitiontime: 4, colormode: .xy(0.2485, 0.0917)))))
+        PresetView()
     }
 }

@@ -1,0 +1,11 @@
+{
+    "name" : "Christmas Green",
+    "image" : "lightbulb.2",
+    "state" : {
+        "bri" : 229,
+        "colormode" : "xy",
+        "on" : true,
+        "transitiontime" : 4,
+        "xy" : [0.3015, 0.5666]
+    }
+}
