@@ -18,9 +18,9 @@ struct PresetItem: Hashable {
     var color: Color {
         switch self.preset.colormode {
         case .ct(let ct):
-            return Color(colorFromMired(mired: ct)!)
+            return Color(SceneManager.color(fromMired: ct)!)
         case .xy(let x, let y):
-            return Color(colorFromXY(point: CGPoint(x: x, y: y), brightness: 1.0))
+            return Color(SceneManager.color(fromXY: CGPoint(x: x, y: y)))
         }
     }
 }

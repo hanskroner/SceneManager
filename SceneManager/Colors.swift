@@ -12,16 +12,18 @@ enum Gamut {
     case gamutB
     case gamutC
     
-    func getTriangle() -> [CGPoint] {
+    var triangle: [CGPoint] {
         switch self {
-        case .gamutA: return [CGPoint(x: 0.704, y: 0.296), CGPoint(x: 0.2151,y: 0.7106), CGPoint(x: 0.138, y: 0.08)]
-        case .gamutB: return [CGPoint(x: 0.675, y: 0.322), CGPoint(x: 0.4091, y: 0.518), CGPoint(x: 0.167, y: 0.04)]
-        case .gamutC: return [CGPoint(x: 0.692, y:  0.308), CGPoint(x: 0.17, y: 0.7), CGPoint(x: 0.153, y:  0.048)]
+        case .gamutA: return [CGPoint(x: 0.704, y: 0.296), CGPoint(x: 0.2151,y: 0.7106), CGPoint(x: 0.138, y: 0.080)]
+        case .gamutB: return [CGPoint(x: 0.675, y: 0.322), CGPoint(x: 0.4091, y: 0.518), CGPoint(x: 0.167, y: 0.040)]
+        case .gamutC: return [CGPoint(x: 0.692, y: 0.308), CGPoint(x: 0.1700, y: 0.700), CGPoint(x: 0.153, y: 0.048)]
         }
     }
 }
 
 // MARK: - Private Methods
+
+private typealias Line = (start: CGPoint, end: CGPoint)
 
 private func crossProduct(_ point1: CGPoint, _ point2: CGPoint) -> CGFloat {
     return point1.x * point2.y - point2.x * point1.y
@@ -31,14 +33,14 @@ private func dotProduct(_ point1: CGPoint, _ point2: CGPoint) -> CGFloat {
     return point1.x * point2.x + point1.y * point2.y
 }
 
-private func distanceBetweenPoint(_ point1: CGPoint, _ point2: CGPoint) -> CGFloat {
+private func distanceBetweenPoints(_ point1: CGPoint, _ point2: CGPoint) -> CGFloat {
     let dx = point1.x - point2.x
     let dy = point1.y - point2.y
     return sqrt(pow(dx, 2) + pow(dy, 2))
 }
 
-private func isPointInGamut(point: CGPoint, gamut: Gamut) -> Bool {
-    let gamutTriangle = gamut.getTriangle()
+private func isPoint(_ point: CGPoint, inGamut gamut: Gamut) -> Bool {
+    let gamutTriangle = gamut.triangle
     let v1 = CGPoint(x: gamutTriangle[1].x - gamutTriangle[0].x, y: gamutTriangle[1].y - gamutTriangle[0].y)
     let v2 = CGPoint(x: gamutTriangle[2].x - gamutTriangle[0].x, y: gamutTriangle[2].y - gamutTriangle[0].y)
     
@@ -49,9 +51,9 @@ private func isPointInGamut(point: CGPoint, gamut: Gamut) -> Bool {
     return (s >= 0.0) && (t >= 0.0) && (s + t <= 1.0)
 }
 
-private func closestPointToLine(lineStart: CGPoint, lineEnd: CGPoint, point: CGPoint) -> CGPoint {
-    let ap = CGPoint(x: point.x - lineStart.x, y: point.y - lineStart.y)
-    let ab = CGPoint(x: lineEnd.x - lineStart.x, y: lineEnd.y - lineStart.y)
+private func closestPoint(toLine line: Line, forPoint point: CGPoint) -> CGPoint {
+    let ap = CGPoint(x: point.x - line.start.x, y: point.y - line.start.y)
+    let ab = CGPoint(x: line.end.x - line.start.x, y: line.end.y - line.start.y)
     let ab2 = pow(ab.x, 2) + pow(ab.y, 2)
     let ap_ab = (ap.x * ab.x) + (ap.y * ab.y)
     var t = ap_ab / ab2
@@ -62,18 +64,18 @@ private func closestPointToLine(lineStart: CGPoint, lineEnd: CGPoint, point: CGP
         t = 1.0
     }
     
-    return CGPoint(x: lineStart.x + ab.x * t, y: lineStart.y + ab.y * t)
+    return CGPoint(x: line.start.x + ab.x * t, y: line.start.y + ab.y * t)
 }
 
-private func closestPointToPoint(point: CGPoint, gamut: Gamut) -> CGPoint {
-    let gamutTriangle = gamut.getTriangle()
-    let p_ab = closestPointToLine(lineStart: gamutTriangle[0], lineEnd: gamutTriangle[1], point: point)
-    let p_ac = closestPointToLine(lineStart: gamutTriangle[2], lineEnd: gamutTriangle[0], point: point)
-    let p_bc = closestPointToLine(lineStart: gamutTriangle[1], lineEnd: gamutTriangle[2], point: point)
+private func closestPoint(toPoint point: CGPoint, inGamut gamut: Gamut) -> CGPoint {
+    let gamutTriangle = gamut.triangle
+    let p_ab = closestPoint(toLine: Line(start: gamutTriangle[0], end: gamutTriangle[1]), forPoint: point)
+    let p_ac = closestPoint(toLine: Line(start: gamutTriangle[2], end: gamutTriangle[0]), forPoint: point)
+    let p_bc = closestPoint(toLine: Line(start: gamutTriangle[1], end: gamutTriangle[2]), forPoint: point)
     
-    let d_ab = distanceBetweenPoint(point, p_ab)
-    let d_ac = distanceBetweenPoint(point, p_ac)
-    let d_bc = distanceBetweenPoint(point, p_bc)
+    let d_ab = distanceBetweenPoints(point, p_ab)
+    let d_ac = distanceBetweenPoints(point, p_ac)
+    let d_bc = distanceBetweenPoints(point, p_bc)
     
     var lowest = d_ab
     var closestPoint = p_ab
@@ -91,11 +93,11 @@ private func closestPointToPoint(point: CGPoint, gamut: Gamut) -> CGPoint {
     return CGPoint(x: closestPoint.x, y: closestPoint.y)
 }
 
-private func cctFromMired(mired: Int) -> CGFloat {
+private func cct(fromMired mired: Int) -> CGFloat {
     return pow(10, 6) / CGFloat(mired)
 }
 
-private func xyFromCCT(cct: CGFloat) -> CGPoint? {
+private func xy(fromCCT cct: CGFloat) -> CGPoint? {
     var x: CGFloat = 0.0
     var y: CGFloat = 0.0
     
@@ -133,9 +135,7 @@ private func xyFromCCT(cct: CGFloat) -> CGPoint? {
     return CGPoint(x: x, y: y)
 }
 
-// MARK: - Public Methods
-
-func xyFromColor(color: NSColor, gamut: Gamut = .gamutC) -> CGPoint {
+private func xy(fromColor color: NSColor, inGamut gamut: Gamut = .gamutC) -> CGPoint {
     var r = CGFloat()
     var g = CGFloat()
     var b = CGFloat()
@@ -156,17 +156,19 @@ func xyFromColor(color: NSColor, gamut: Gamut = .gamutC) -> CGPoint {
     let cy = Y / (X + Y + Z)
     
     var xy = CGPoint(x: cx, y: cy)
-    if !isPointInGamut(point: xy, gamut: gamut) {
-        xy = closestPointToPoint(point: xy, gamut: gamut)
+    if !isPoint(xy, inGamut: gamut) {
+        xy = closestPoint(toPoint: xy, inGamut: gamut)
     }
     
     return xy
 }
 
-func colorFromXY(point: CGPoint, brightness: CGFloat, gamut: Gamut = .gamutC) -> NSColor {
+// MARK: - Public Methods
+
+func color(fromXY point: CGPoint, brightness: CGFloat = 1.0, inGamut gamut: Gamut = .gamutC) -> NSColor {
     var xy = point
-    if !isPointInGamut(point: xy, gamut: gamut) {
-        xy = closestPointToPoint(point: point, gamut: gamut)
+    if !isPoint(xy, inGamut: gamut) {
+        xy = closestPoint(toPoint: point, inGamut: gamut)
     }
     
     let X = (brightness / xy.y) * xy.x
@@ -199,7 +201,7 @@ func colorFromXY(point: CGPoint, brightness: CGFloat, gamut: Gamut = .gamutC) ->
     return NSColor(red: r, green: g, blue: b, alpha: 1.0)
 }
 
-func colorFromMired(mired: Int) -> NSColor? {
-    guard let xy = xyFromCCT(cct: cctFromMired(mired: mired)) else { return nil }
-    return colorFromXY(point: xy, brightness: 1.0, gamut: .gamutC)
+func color(fromMired mired: Int) -> NSColor? {
+    guard let xy = xy(fromCCT: cct(fromMired: mired)) else { return nil }
+    return color(fromXY: xy)
 }
