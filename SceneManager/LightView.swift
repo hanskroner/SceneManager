@@ -16,6 +16,11 @@ struct LightItem: Identifiable, Hashable {
     var state: String
 }
 
+enum LightItemAction {
+    case addToScene(lightItems: [LightItem])
+    case removeFromScene(lightItems: [LightItem])
+}
+
 // MARK: - Views
 
 struct LightView: View {
@@ -85,24 +90,17 @@ struct LightBottomBarView: View {
                     switch (deconzModel.selectedSidebarItem?.type) {
                     case .group:
                         Task {
-                            let groupLightItems = deconzModel.lightsList.filter({ !deconzModel.selectedLightItems.contains($0) })
+                            let groupLightItems = deconzModel.lightsList.filter({ !deconzModel.selectedLightItemIDs.contains($0.lightID) })
                             await deconzModel.modifyGroupLights(groupID: deconzModel.selectedSidebarItem!.groupID!, groupLights: groupLightItems)
                         }
                     case .scene:
                         Task {
-                            // TODO: Find a nicer way to do this
-                            // Set the Light's 'state' to 'REMOVE' to let 'modifySceneLights' this is a removal
-                            let sceneLightItems = deconzModel.lightsList.map {
-                                if (deconzModel.selectedLightItems.contains($0)) {
-                                    var lightItem = $0
-                                    lightItem.state = "REMOVE"
-                                    return lightItem
-                                } else {
-                                    return $0
-                                }
-                            }
-                            
-                            await deconzModel.modifySceneLights(groupID: deconzModel.selectedSidebarItem!.groupID!, sceneID: deconzModel.selectedSidebarItem!.sceneID!, sceneLights: sceneLightItems)
+                            let removingLightItems = LightItemAction.removeFromScene(lightItems: Array(deconzModel.selectedLightItems))
+                            await deconzModel.modifySceneLights(groupID: deconzModel.selectedSidebarItem!.groupID!,
+                                                                sceneID: deconzModel.selectedSidebarItem!.sceneID!,
+                                                                sceneLightAction: removingLightItems)
+
+                            deconzModel.selectedLightItemIDs.removeAll()
                         }
                     default:
                         break
@@ -117,7 +115,7 @@ struct LightBottomBarView: View {
                 .font(.system(size: 14))
                 .help("Remove Lights")
                 .disabled(deconzModel.selectedSidebarItem == nil ||
-                          deconzModel.selectedLightItems.isEmpty)
+                          deconzModel.selectedLightItemIDs.isEmpty)
                 
                 Spacer()
             }

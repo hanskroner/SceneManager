@@ -60,7 +60,7 @@ struct LightStateView: View {
         }
         .frame(minWidth: 250)
         .padding(.bottom, 8)
-        .disabled(deconzModel.selectedSidebarItem?.type == .group)
+        .disabled(deconzModel.selectedSidebarItem ==  nil || deconzModel.selectedSidebarItem?.type == .group)
     }
 }
 
