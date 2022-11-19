@@ -132,9 +132,10 @@ struct PresetItemView: View {
     var body: some View {
         VStack {
             Label("", systemImage: presetItem.systemImage)
-                .foregroundColor(.primary)
+                .foregroundColor(isDark(presetItem.color) ? .white : Color(NSColor.darkGray))
                 .font(.system(size: 24))
             Text(presetItem.name)
+                .foregroundColor(isDark(presetItem.color) ? .white : Color(NSColor.darkGray))
                 .font(.headline)
                 .padding(.top, 4)
         }
@@ -143,6 +144,14 @@ struct PresetItemView: View {
         .background(presetItem.color)
         .cornerRadius(8)
         .itemProvider { presetItem.itemProvider }
+    }
+    
+    func isDark(_ color: Color) -> Bool {
+        var r, g, b, a: CGFloat
+        (r, g, b, a) = (0, 0, 0, 0)
+        NSColor(color).getRed(&r, green: &g, blue: &b, alpha: &a)
+        let lum = 0.2126 * r + 0.7152 * g + 0.0722 * b
+        return  lum < 0.77
     }
 }
 
