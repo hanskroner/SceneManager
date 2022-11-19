@@ -109,16 +109,10 @@ class SceneManagerModel: ObservableObject {
             existingLoop: for (lightItem) in self.lightsList {
                 if (lightItem.lightID == selectedLightItemID) {
                     lightItems.insert(lightItem)
-                    break selectedLoop
+                    continue selectedLoop
                 }
             }
         }
-                
-//        for (lightItem) in self.lightsList {
-//            if ids.contains(lightItem.lightID) {
-//                lightItems.insert(lightItem)
-//            }
-//        }
         
         return lightItems
     }
@@ -449,7 +443,7 @@ class SceneManagerModel: ObservableObject {
         }
     }
     
-    func modifySceneLights(groupID: Int, sceneID: Int, sceneLights: [LightItem]) async {
+    func modifySceneLights(groupID: Int, sceneID: Int, sceneLightAction: LightItemAction) async {
         let lightsNotInGroup = lightsNotIn(groupID: groupID)
         let lightsNotInScene = await lightsIn(groupID: groupID, butNotIn: sceneID)
         
@@ -459,18 +453,22 @@ class SceneManagerModel: ObservableObject {
         let lightsNotInSceneIDs = lightsNotInScene.map({ $0.lightID }).sorted()
         
         do {
-            for (lightItem) in sceneLights {
-                // Ignore lights that don't belong to the Scene's Group
-                if (lightsNotInGroupIDs.contains(lightItem.lightID)) { continue }
-                
-                // Add the Light to the Scene if it doesn't already belong to it and has a state
-                if (lightsNotInSceneIDs.contains(lightItem.lightID) && lightItem.state == "ADD") {
+            switch sceneLightAction {
+            case .addToScene(let lightItems):
+                for lightItem in lightItems {
+                    // Check that the light is in the Group but not in the Scene
+                    guard !lightsNotInGroupIDs.contains(lightItem.lightID) &&
+                           lightsNotInSceneIDs.contains(lightItem.lightID) else { continue }
+                    
                     let lightState = try await deconzClient.getLightState(lightID: lightItem.lightID)
                     let _ = try await deconzClient.modifyScene(groupID: groupID, sceneID: sceneID, lightIDs: [lightItem.lightID], state: lightState)
                 }
-                
-                // Remove the Light from the Scene if it already belongs to it and doesn't have a state
-                if (!lightsNotInSceneIDs.contains(lightItem.lightID) && lightItem.state == "REMOVE") {
+            case .removeFromScene(let lightItems):
+                for lightItem in lightItems {
+                    // Check that the light is both in the Group and in the Scene
+                    guard !lightsNotInGroupIDs.contains(lightItem.lightID) &&
+                          !lightsNotInSceneIDs.contains(lightItem.lightID) else { continue }
+                    
                     let _ = try await deconzClient.modifyScene(groupID: groupID, sceneID: sceneID, lightIDs: [lightItem.lightID], state: nil)
                 }
             }
@@ -480,7 +478,7 @@ class SceneManagerModel: ObservableObject {
         }
         
         Task {
-            await refreshLightsList(forGroupID: groupID, sceneID: nil)
+            await refreshLightsList(forGroupID: groupID, sceneID: sceneID)
         }
     }
     

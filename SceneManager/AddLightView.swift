@@ -68,16 +68,10 @@ struct AddLightView: View {
                             lightItems.append(contentsOf: addLightItems)
                             await deconzModel.modifyGroupLights(groupID: deconzModel.selectedSidebarItem!.groupID!, groupLights: lightItems)
                         } else if (deconzModel.selectedSidebarItem!.type == .scene) {
-                            // TODO: Find a nicer way to do this
-                            // Set the Light's 'state' to 'ADD' to let 'modifySceneLights' this is an addition
-                            let modifiedLightItems = addLightItems.map {
-                                var lightItem = $0
-                                lightItem.state = "ADD"
-                                return lightItem
-                            }
-                            
-                            lightItems.append(contentsOf: modifiedLightItems)
-                            await deconzModel.modifySceneLights(groupID: deconzModel.selectedSidebarItem!.groupID!, sceneID: deconzModel.selectedSidebarItem!.sceneID!, sceneLights: lightItems)
+                            let addingLightItems = LightItemAction.addToScene(lightItems: Array(addLightItems))
+                            await deconzModel.modifySceneLights(groupID: deconzModel.selectedSidebarItem!.groupID!,
+                                                                sceneID: deconzModel.selectedSidebarItem!.sceneID!,
+                                                                sceneLightAction: addingLightItems)
                         }
                         
                         window.close()
