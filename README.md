@@ -41,7 +41,7 @@ Scene to be a subset of the Lights in its Group.
 - Changing the current state of a Group is not possible through the application
 - Recalling Scenes is not possible through the application
 - There is no indication of when an operation has succesfully completed. This is a pretty big deal, but
-ccurrently the deCONZ REST API does not provide a success or failure indication for Zigbee commands. It only
+currently the deCONZ REST API does not provide a success or failure indication for Zigbee commands. It only
 does so for the REST commands.
 
 ## Setup
