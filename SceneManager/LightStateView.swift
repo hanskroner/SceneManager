@@ -13,8 +13,6 @@ import UniformTypeIdentifiers
 struct LightStateView: View {
     @EnvironmentObject private var deconzModel: SceneManagerModel
     
-    @State private var lightStateText = ""
-    
     var body: some View {
         VStack(alignment: .leading) {
             Text("State")
@@ -22,24 +20,24 @@ struct LightStateView: View {
                 .padding(.horizontal)
                 .padding([.bottom], -4)
             
-            SimpleJSONTextView(text: $lightStateText, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
+            SimpleJSONTextView(text: $deconzModel.lightStateText, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
                 .drop(if: (deconzModel.selectedSidebarItem?.type != .group) && (!deconzModel.selectedLightItems.isEmpty), types: [PresetItem.draggableType]) { providers in
                     PresetItem.fromItemProviders(providers) { presets in
                         guard let first = presets.first else { return }
-                        deconzModel.jsonStateText = first.preset.prettyPrint
+                        deconzModel.jsonStateText = first.state.prettyPrint
                     }
                     
                     return true
                 }
                 .onChange(of: deconzModel.jsonStateText) { modelLightStateText in
-                    lightStateText = modelLightStateText
+                    deconzModel.lightStateText = modelLightStateText
                 }
             
             HStack {
                 Spacer()
                 Button("Apply to Scene") {
                     Task {
-                        deconzModel.jsonStateText = lightStateText
+                        deconzModel.jsonStateText = deconzModel.lightStateText
                         await deconzModel.modifyScene(range: .allLightsInScene)
                     }
                 }
@@ -49,7 +47,7 @@ struct LightStateView: View {
                 
                 Button("Apply to Selected") {
                     Task {
-                        deconzModel.jsonStateText = lightStateText
+                        deconzModel.jsonStateText = deconzModel.lightStateText
                         await deconzModel.modifyScene(range: .selectedLightsOnly)
                     }
                 }

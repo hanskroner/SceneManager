@@ -40,6 +40,9 @@ Scene to be a subset of the Lights in its Group.
 
 - Changing the current state of a Group is not possible through the application
 - Recalling Scenes is not possible through the application
+- There is no indication of when an operation has succesfully completed. This is a pretty big deal, but
+ccurrently the deCONZ REST API does not provide a success or failure indication for Zigbee commands. It only
+does so for the REST commands.
 
 ## Setup
 
@@ -64,7 +67,7 @@ REST API automatically.
 When a Group is selected, Lights can be added to it or removed from it by using the "+" and "-" buttons
 in the Lights list respectively. Only Lights that are not currently part of the Group will be displayed as
 available for adding. Adding Lights to a Group does not affect any of its Scenes, but removing a Light from a
-Group also removes it from any of the Group's 'Scenes where it was a member - this is handled by the deCONZ
+Group also removes it from any of the Group's Scenes where it was a member - this is handled by the deCONZ
 REST API automatically.
 
 ## Scenes
