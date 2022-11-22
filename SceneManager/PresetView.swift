@@ -13,10 +13,13 @@ import UniformTypeIdentifiers
 struct PresetItem: Hashable {
     var name: String
     var systemImage: String
-    var preset: deCONZLightState
+    var state: deCONZLightState
+    
+    var isRenaming: Bool = false
+    var wantsFocus: Bool = false
     
     var color: Color {
-        switch self.preset.colormode {
+        switch self.state.colormode {
         case .ct(let ct):
             return Color(SceneManager.color(fromMired: ct)!)
         case .xy(let x, let y):
@@ -35,7 +38,7 @@ extension PresetItem: Codable {
         
         name = try container.decode(String.self, forKey: .name)
         systemImage = try container.decode(String.self, forKey: .image)
-        preset = try container.decode(deCONZLightState.self, forKey: .state)
+        state = try container.decode(deCONZLightState.self, forKey: .state)
     }
     
     func encode(to encoder: Encoder) throws {
@@ -43,7 +46,7 @@ extension PresetItem: Codable {
 
         try container.encode(name, forKey: .name)
         try container.encode(systemImage, forKey: .image)
-        try container.encode(preset, forKey: .state)
+        try container.encode(state, forKey: .state)
     }
 }
 
@@ -100,26 +103,20 @@ extension PresetItem {
 struct PresetView: View {
     @EnvironmentObject private var deconzModel: SceneManagerModel
     
-    @State private var presets = [PresetItem]()
-    
     var body: some View {
-        List {
-            Section("Scene Presets") {
-                ForEach($presets, id: \.self) { preset in
-                    PresetItemView(presetItem: preset)
+        ScrollViewReader { scrollReader in
+            List {
+                Section("Scene Presets") {
+                    ForEach($deconzModel.presets, id: \.name) { preset in
+                        PresetItemView(presetItem: preset)
+                    }
                 }
             }
-        }
-        .task {
-            Task {
-                if let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
-                    let documentsContents = try FileManager.default.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
-                    
-                    if documentsContents.isEmpty {
-                        try deconzModel.copyFilesFromBundleToDocumentsDirectoryConformingTo(.json)
+            .onChange(of: deconzModel.scrollToPresetItemID) { item in
+                if let item = item {
+                    withAnimation {
+                        scrollReader.scrollTo(item, anchor: .center)
                     }
-                    
-                    presets = try deconzModel.loadPresetItemsFromDocumentsDirectory()
                 }
             }
         }
@@ -127,23 +124,86 @@ struct PresetView: View {
 }
 
 struct PresetItemView: View {
+    @EnvironmentObject private var deconzModel: SceneManagerModel
+    
     @Binding var presetItem: PresetItem
+    
+    @State var newName = ""
+    @State var isPresentingConfirmation: Bool = false
+    
+    @FocusState private var isFocused: Bool
     
     var body: some View {
         VStack {
             Label("", systemImage: presetItem.systemImage)
                 .foregroundColor(isDark(presetItem.color) ? .white : Color(NSColor.darkGray))
                 .font(.system(size: 24))
-            Text(presetItem.name)
-                .foregroundColor(isDark(presetItem.color) ? .white : Color(NSColor.darkGray))
-                .font(.headline)
-                .padding(.top, 4)
+            if (presetItem.isRenaming) {
+                TextField("", text: $newName)
+                    .multilineTextAlignment(.center)
+                    .font(.headline)
+                    .padding(.leading, 4)
+                    .padding(.trailing, 12)
+                    .padding(.top, 4)
+                    .focused($isFocused)
+                    .onChange(of: isFocused) { newValue in
+                        if newValue == false {
+                            do {
+                                try deconzModel.renamePresetItemInDocumentsDirectory(presetItem, newName: newName)
+                                presetItem.name = newName
+                                presetItem.isRenaming = false
+                            } catch {
+                                print(error)
+                            }
+                        }
+                    }
+                    .onAppear {
+                        newName = presetItem.name
+                        isFocused = presetItem.wantsFocus
+                    }
+            } else {
+                Text(presetItem.name)
+                    .foregroundColor(isDark(presetItem.color) ? .white : Color(NSColor.darkGray))
+                    .font(.headline)
+                    .padding(.top, 4)
+            }
         }
         .padding(.vertical)
         .frame(maxWidth: .infinity)
         .background(presetItem.color)
         .cornerRadius(8)
         .itemProvider { presetItem.itemProvider }
+        .contextMenu {
+            Button(action: {
+                presetItem.isRenaming = true
+                presetItem.wantsFocus = true
+            }, label: {
+                Text("Rename Preset")
+            })
+            
+            Button(action: {
+                isPresentingConfirmation = true
+            }, label: {
+                Text("Delete Preset")
+            })
+        }
+        .confirmationDialog("Are you sure you want to delete '\(presetItem.name)'?", isPresented: $isPresentingConfirmation) {
+            Button("Delete Preset", role: .destructive) {
+                deletePresetItem(presetItem)
+            }
+        }
+    }
+    
+    func deletePresetItem(_ presetItem: PresetItem) {
+            do {
+                try deconzModel.deletePresetItemInDocumentsDirectory(presetItem)
+            } catch {
+                print(error)
+            }
+        
+        withAnimation {
+            deconzModel.presets.removeAll(where: { $0.name == presetItem.name })
+        }
     }
     
     func isDark(_ color: Color) -> Bool {

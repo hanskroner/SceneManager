@@ -54,16 +54,30 @@ class SceneManagerModel: ObservableObject {
         }
     }
     
+    // Binding a TextEditor directly to a @Published property results in very slow typing performance.
+    // SwiftUI ends up re-evaluating the body property of every View that depends on this model on every
+    // keystroke. Because the text contents can be changed by either the View or the Model and because
+    // the text contents are needed by other Views in the App, this being a @Published property makes sense,
+    // but the performance is unacceptable. A compromise that seems to work is to have the TextEditor bound
+    // to a regular property which lets the Model be informed when the View makes changes with no performance
+    // impact. So the Model can let the View know when it makes changes, the Model uses a @Published property,
+    // which the view observes with 'onChange(of:)' - in there, it writes the text content back into the
+    // Model's non-Published property, so that it always has the correct value for other Views to get.
     @Published var jsonStateText = ""
+    var lightStateText = ""
     
-    @Published var scrollToItem: String? {
+    @Published var scrollToSidebarItemID: String? {
         didSet {
             prepareListSnapshot()
         }
     }
     
+    @Published var scrollToPresetItemID: String?
+    
     @Published var sidebarItems = [SidebarItem]()
     @Published var lightsList = [LightItem]()
+    
+    @Published var presets = [PresetItem]()
 
     private var cacheLights: [Int: deCONZLight]?
     private var cacheGroups: [Int: deCONZGroup]?
@@ -73,6 +87,18 @@ class SceneManagerModel: ObservableObject {
 
     init() {
         Task {
+            if let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+                let documentsContents = try FileManager.default.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
+                
+                if documentsContents.isEmpty {
+                    try copyFilesFromBundleToDocumentsDirectoryConformingTo(.json)
+                }
+                
+                try await MainActor.run {
+                    self.presets = try loadPresetItemsFromDocumentsDirectory()
+                }
+            }
+            
             self.cacheLights = try await deconzClient.getAllLights()
             (self.cacheGroups, self.cacheScenes) = try await deconzClient.getAllGroups()
             
@@ -148,7 +174,7 @@ class SceneManagerModel: ObservableObject {
     
     func removeListSnapshot() {
         guard let copyForSnapshot = self.copyForSnapshot else { return }
-        self.scrollToItem = nil
+        self.scrollToSidebarItemID = nil
         self.sidebarItems = copyForSnapshot
         self.copyForSnapshot = nil
     }
@@ -340,7 +366,7 @@ class SceneManagerModel: ObservableObject {
             }
             
             // Scroll to the new Sidebar Item to make it visible for the user
-            self.scrollToItem = newName
+            self.scrollToSidebarItemID = newName
         }
     }
     
@@ -552,7 +578,7 @@ class SceneManagerModel: ObservableObject {
         }
     }
     
-    func filesInDocumentsDirectoryConformingTo(_ fileType: UTType) throws -> [URL] {
+    private func filesInDocumentsDirectoryConformingTo(_ fileType: UTType) throws -> [URL] {
         var fileURLs = [URL]()
         guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return fileURLs }
         let dirContents = try FileManager.default.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
@@ -562,6 +588,23 @@ class SceneManagerModel: ObservableObject {
         }
         
         return fileURLs
+    }
+    
+    enum PresetFileError: Error {
+        case noURLError(String)
+    }
+    
+    private func urlForPresetItem(_ presetItem: PresetItem) throws -> URL {
+        // Create file name from Preset name
+        let fileName = presetItem.name.lowercased().replacing(" ", with: "_").appending(".json")
+        
+        guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            throw PresetFileError.noURLError("Could not get URL for '\(presetItem.name)'")
+        }
+        
+        let url = documentsURL.appendingPathComponent(fileName)
+        
+        return url
     }
     
     func loadPresetItemsFromDocumentsDirectory() throws -> [PresetItem] {
@@ -575,5 +618,31 @@ class SceneManagerModel: ObservableObject {
         }
 
         return presets.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+    }
+    
+    func savePresetItemToDocumentsDirectory(_ presetItem: PresetItem) throws {
+        let fileContents = Data(presetItem.state.prettyPrint.utf8)
+        let destURL = try urlForPresetItem(presetItem)
+        try fileContents.write(to: destURL)
+    }
+    
+    func renamePresetItemInDocumentsDirectory(_ presetItem: PresetItem, newName: String) throws {
+        var renamedPresetItem = presetItem
+        renamedPresetItem.name = newName
+        
+        var existingFileURL = try urlForPresetItem(presetItem)
+        let newFileURL = try urlForPresetItem(renamedPresetItem)
+        
+        var resourceValues = URLResourceValues()
+        resourceValues.name = newFileURL.lastPathComponent
+        
+        try existingFileURL.setResourceValues(resourceValues)
+        try savePresetItemToDocumentsDirectory(renamedPresetItem)
+        
+    }
+    
+    func deletePresetItemInDocumentsDirectory(_ presetItem: PresetItem) throws {
+        let url = try urlForPresetItem(presetItem)
+        try FileManager.default.removeItem(at: url)
     }
 }

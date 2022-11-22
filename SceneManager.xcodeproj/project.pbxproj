@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3A0FFCB0292BB47800C4EDCE /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 3A0FFCAF292BB47800C4EDCE /* InfoPlist.strings */; };
+		3A0FFCB3292D560E00C4EDCE /* AddPresetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A0FFCB2292D560E00C4EDCE /* AddPresetView.swift */; };
 		3A37157529241D6E00390154 /* deCONZWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A37157429241D6E00390154 /* deCONZWebSocketClient.swift */; };
 		3A37157A2924CA2400390154 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3715792924CA2400390154 /* SidebarView.swift */; };
 		3A37157C2924CAAB00390154 /* AddLightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A37157B2924CAAB00390154 /* AddLightView.swift */; };
@@ -50,6 +52,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		3A0FFCAD292BB2A300C4EDCE /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
+		3A0FFCAF292BB47800C4EDCE /* InfoPlist.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = InfoPlist.strings; sourceTree = "<group>"; };
+		3A0FFCB1292CC61700C4EDCE /* screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screenshot.png; sourceTree = "<group>"; };
+		3A0FFCB2292D560E00C4EDCE /* AddPresetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddPresetView.swift; sourceTree = "<group>"; };
 		3A37157429241D6E00390154 /* deCONZWebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = deCONZWebSocketClient.swift; sourceTree = "<group>"; };
 		3A3715792924CA2400390154 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		3A37157B2924CAAB00390154 /* AddLightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddLightView.swift; sourceTree = "<group>"; };
@@ -104,6 +110,7 @@
 				3A58D4A52916F813000FC97D /* PresetView.swift */,
 				3A58D4AC2917A74C000FC97D /* SettingsView.swift */,
 				3A37157B2924CAAB00390154 /* AddLightView.swift */,
+				3A0FFCB2292D560E00C4EDCE /* AddPresetView.swift */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -113,6 +120,7 @@
 			children = (
 				3AF928652916A8C400CD2D33 /* deCONZModel.swift */,
 				3AF928632916A88700CD2D33 /* deCONZRESTClient.swift */,
+				3A37157429241D6E00390154 /* deCONZWebSocketClient.swift */,
 			);
 			name = deCONZ;
 			sourceTree = "<group>";
@@ -121,9 +129,12 @@
 			isa = PBXGroup;
 			children = (
 				3A88304B29261D8900D7203B /* Presets */,
-				3A58D4AA2916FD70000FC97D /* Info.plist */,
 				3AF928582916A6D800CD2D33 /* Assets.xcassets */,
+				3A58D4AA2916FD70000FC97D /* Info.plist */,
+				3A0FFCAF292BB47800C4EDCE /* InfoPlist.strings */,
+				3A0FFCAD292BB2A300C4EDCE /* README.md */,
 				3AF9285D2916A6D800CD2D33 /* SceneManager.entitlements */,
+				3A0FFCB1292CC61700C4EDCE /* screenshot.png */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -172,7 +183,6 @@
 				3A58D4A32916F50B000FC97D /* SimpleJSONTextView.swift */,
 				3A3715842924D45100390154 /* Resources */,
 				3AF9285A2916A6D800CD2D33 /* Preview Content */,
-				3A37157429241D6E00390154 /* deCONZWebSocketClient.swift */,
 			);
 			path = SceneManager;
 			sourceTree = "<group>";
@@ -245,6 +255,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3A88305F2926332F00D7203B /* relax.json in Resources */,
+				3A0FFCB0292BB47800C4EDCE /* InfoPlist.strings in Resources */,
 				3AF9285C2916A6D800CD2D33 /* Preview Assets.xcassets in Resources */,
 				3A88305E2926332F00D7203B /* nightlight.json in Resources */,
 				3A88305B2926332F00D7203B /* cold_medium.json in Resources */,
@@ -270,6 +281,7 @@
 				3A58D4A82916F8D2000FC97D /* Colors.swift in Sources */,
 				3A58D4A42916F50B000FC97D /* SimpleJSONTextView.swift in Sources */,
 				3AF928572916A6D600CD2D33 /* ContentView.swift in Sources */,
+				3A0FFCB3292D560E00C4EDCE /* AddPresetView.swift in Sources */,
 				3A3715822924CC0E00390154 /* LightStateView.swift in Sources */,
 				3A3715802924CB3500390154 /* LightView.swift in Sources */,
 				3AF928552916A6D600CD2D33 /* SceneManagerApp.swift in Sources */,
@@ -415,6 +427,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SceneManager/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SceneManager;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -444,6 +457,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SceneManager/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SceneManager;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

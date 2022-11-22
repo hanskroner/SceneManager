@@ -89,7 +89,7 @@ struct SidebarView: View {
             
             .frame(minWidth: 200)
             .listStyle(.sidebar)
-            .onChange(of: deconzModel.scrollToItem) { item in
+            .onChange(of: deconzModel.scrollToSidebarItemID) { item in
                 if let item = item {
                     withAnimation {
                         scrollReader.scrollTo(item, anchor: .center)
@@ -200,25 +200,25 @@ struct SidebarItemView: View {
                 .confirmationDialog("Are you sure you want to delete '\(item.name)'?", isPresented: $isPresentingConfirmation) {
                     if (item.sceneID == nil) {
                         Button("Delete Group", role: .destructive) {
-                            deleteGroup(group: item)
+                            deleteGroup(item)
                         }
                     } else {
                         Button("Delete Scene", role: .destructive) {
-                            deleteScene(scene: item)
+                            deleteScene(item)
                         }
                     }
                 }
         }
     }
     
-    func deleteGroup(group: SidebarItem) {
+    func deleteGroup(_ group: SidebarItem) {
         Task {
             guard let groupID = group.groupID else { return }
             await deconzModel.deleteGroup(groupID: groupID)
         }
     }
     
-    func deleteScene(scene: SidebarItem) {
+    func deleteScene(_ scene: SidebarItem) {
         Task {
             guard let groupID = scene.groupID,
                   let sceneID = scene.sceneID

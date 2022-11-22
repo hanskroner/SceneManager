@@ -14,6 +14,8 @@ struct ContentView: View {
     
     @SceneStorage("inspector") private var showInspector = false
     
+    @State private var showingPopover = false
+    
     var body: some View {
         NavigationSplitView {
             SidebarView()
@@ -25,9 +27,21 @@ struct ContentView: View {
         .frame(minWidth: 960, minHeight: 300)
         .background(Color(NSColor.gridColor))
         .toolbar {
+            Button(action: { showingPopover = true }) {
+                Label("Create Scene Preset", systemImage: "rectangle.stack")
+            }
+            .popover(isPresented: $showingPopover, attachmentAnchor: .point(.bottom), arrowEdge: .bottom) {
+                AddPresetView(showingPopover: $showingPopover)
+            }
+            .disabled((deconzModel.selectedSidebarItem ==  nil ||
+                       deconzModel.selectedSidebarItem?.type == .group) ||
+                       deconzModel.selectedLightItemIDs.isEmpty)
+            .help("Store as Preset")
+            
             Button(action: { withAnimation { showInspector.toggle() }}) {
                 Label("Toggle Inspector", systemImage: "sidebar.right")
             }
+            .help("Hide or show the Scene Presets")
         }
     }
 }
