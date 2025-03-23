@@ -94,7 +94,7 @@ class Sidebar {
         // where calls to the REST API will be issued from.
         let newSidebarItem = SidebarItem(name: proposedText + proposedTextSuffix,
                                          groupId: kind == .group ? Sidebar.NEW_GROUP_ID : parent!.groupId,
-                                         sceneId: Sidebar.NEW_SCENE_ID)
+                                         sceneId: kind == .scene ? Sidebar.NEW_SCENE_ID : nil)
         newSidebarItem.isNew = true
         newSidebarItem.isRenaming = true
         
@@ -470,23 +470,15 @@ struct SidebarItemView: View {
                     // FIXME: Only scroll if item isn't visible
                     sidebar.scrollToSidebarItemId = item.id
                     
-                    // Keep the lists sorted
-                    // FIXME: Using 'withAnimation' causes duplicate UUID errors
-                    //                    withAnimation(.default) {
                     // FIXME: Handle new items
-                    guard item.groupId != Sidebar.NEW_GROUP_ID
-                            || item.sceneId != Sidebar.NEW_SCENE_ID else {
-                        logger.error("New items can't be sorted until they're processed by the REST API")
-                        return
-                    }
                     
+                    // Keep the lists sorted
                     if (item.kind == .group) {
                         sidebar.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
                     } else {
                         let parent = sidebar.items.filter({ $0.items.contains(item) }).first!
                         parent.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
                     }
-                    //                    }
                 }
                 .onAppear {
                     logger.info("Focusing '\(item.name, privacy: .public)'")
