@@ -237,6 +237,19 @@ struct SidebarView: View {
     @FocusState private var isFocused: Bool
     
     func selectionDidChange(to selectedItem: SidebarItem?) {
+        // Handle selection of placeholder items
+        if selectedItem?.groupId == Sidebar.NEW_GROUP_ID
+            || selectedItem?.sceneId == Sidebar.NEW_SCENE_ID {
+            window.navigationTitle = nil
+            window.navigationSubtitle = nil
+            
+            window.groupId = nil
+            window.sceneId = nil
+            
+            window.updateLights(forGroupId: nil, sceneId: nil)
+            return
+        }
+        
         // Update window navigation titles to selected names
         let group = sidebar.items.first(where: { $0.groupId == selectedItem?.groupId && $0.sceneId == nil })
         let scene = group?.items.first(where: { $0.sceneId == selectedItem?.sceneId })
