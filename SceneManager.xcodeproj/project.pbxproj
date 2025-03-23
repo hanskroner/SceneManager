@@ -42,6 +42,11 @@
 		3A6995672CE0989000934BD4 /* RESTModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A6995662CE0988D00934BD4 /* RESTModel.swift */; };
 		3A6995692CE4F31F00934BD4 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A6995682CE4F31A00934BD4 /* Window.swift */; };
 		3A739F812D8FF12D003D39D3 /* deCONZTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3A739F802D8FF12D003D39D3 /* deCONZTests.xctestplan */; };
+		3A739F842D900A65003D39D3 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A93B0492AD2F72B0038600F /* Preview Assets.xcassets */; };
+		3A739F852D900A65003D39D3 /* Lights.json in Resources */ = {isa = PBXBuildFile; fileRef = 3A2BDF1A2CC8CCA400B582AA /* Lights.json */; };
+		3A739F862D900A65003D39D3 /* Scenes.json in Resources */ = {isa = PBXBuildFile; fileRef = 3A2BDF1C2CC8E1C400B582AA /* Scenes.json */; };
+		3A739F872D900A65003D39D3 /* Presets.json in Resources */ = {isa = PBXBuildFile; fileRef = 3A1EDD702AE3A454001637BD /* Presets.json */; };
+		3A739F882D900A65003D39D3 /* Sidebar.json in Resources */ = {isa = PBXBuildFile; fileRef = 3A1EDD742AE3BEDE001637BD /* Sidebar.json */; };
 		3A848E2D2D04686C00BE19C6 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 3A848E2C2D04686C00BE19C6 /* Localizable.xcstrings */; };
 		3A93B0432AD2F7290038600F /* SceneManagerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A93B0422AD2F7290038600F /* SceneManagerApp.swift */; };
 		3A93B0452AD2F7290038600F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A93B0442AD2F7290038600F /* ContentView.swift */; };
@@ -469,6 +474,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3A739F842D900A65003D39D3 /* Preview Assets.xcassets in Resources */,
+				3A739F852D900A65003D39D3 /* Lights.json in Resources */,
+				3A739F862D900A65003D39D3 /* Scenes.json in Resources */,
+				3A739F872D900A65003D39D3 /* Presets.json in Resources */,
+				3A739F882D900A65003D39D3 /* Sidebar.json in Resources */,
 				3A848E2D2D04686C00BE19C6 /* Localizable.xcstrings in Resources */,
 				3A1EDD6B2AE2C54B001637BD /* cold_bright.json in Resources */,
 				3A1EDD6A2AE2C54B001637BD /* warm_medium.json in Resources */,
@@ -841,7 +851,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_ASSET_PATHS = "\"SceneManager/Resources/Preview\\ Content/Presets.json\" \"SceneManager/Resources/Preview\\ Content\" \"SceneManager/Resources/Preview\\ Content/Initializers.swift\" \"SceneManager/Resources/Preview\\ Content/Sidebar.json\"";
+				DEVELOPMENT_ASSET_PATHS = "SceneManager/Resources/Preview\\ Content/Initializers.swift SceneManager/Resources/Preview\\ Content SceneManager/Resources/Preview\\ Content/Scenes.json SceneManager/Resources/Preview\\ Content/Presets.json SceneManager/Resources/Preview\\ Content/Lights.json SceneManager/Resources/Preview\\ Content/Preview\\ Assets.xcassets SceneManager/Resources/Preview\\ Content/Sidebar.json";
 				DEVELOPMENT_TEAM = P39XGK2VAV;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -872,7 +882,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_ASSET_PATHS = "\"SceneManager/Resources/Preview\\ Content/Presets.json\" \"SceneManager/Resources/Preview\\ Content\" \"SceneManager/Resources/Preview\\ Content/Initializers.swift\" \"SceneManager/Resources/Preview\\ Content/Sidebar.json\"";
+				DEVELOPMENT_ASSET_PATHS = "SceneManager/Resources/Preview\\ Content/Initializers.swift SceneManager/Resources/Preview\\ Content SceneManager/Resources/Preview\\ Content/Scenes.json SceneManager/Resources/Preview\\ Content/Presets.json SceneManager/Resources/Preview\\ Content/Lights.json SceneManager/Resources/Preview\\ Content/Preview\\ Assets.xcassets SceneManager/Resources/Preview\\ Content/Sidebar.json";
 				DEVELOPMENT_TEAM = P39XGK2VAV;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
