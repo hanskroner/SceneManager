@@ -305,7 +305,8 @@ struct SidebarView: View {
                 // FIXME: Get selected sidebar item and set 'isRenaming'
                 //        Could be done nicer
                 for item in sidebar.items {
-                    if item.id == sidebar.selectedSidebarItemId {
+                    if item.id == sidebar.selectedSidebarItemId
+                        && item.isRenaming == false {
                         item.isRenaming = true
                         return .handled
                     }
@@ -313,7 +314,8 @@ struct SidebarView: View {
                     let children = item.items
                     guard !children.isEmpty else { continue }
                     for child in children {
-                        if child.id == sidebar.selectedSidebarItemId {
+                        if child.id == sidebar.selectedSidebarItemId
+                            && child.isRenaming == false {
                             child.isRenaming = true
                             return .handled
                         }
@@ -380,20 +382,28 @@ struct SidebarBottomBarView: View {
 struct EditableText: View {
     @Binding var text: String
     @Binding var hasFocus: Bool
+    @Binding var isRenaming: Bool
     
-    @State private var temporaryText: String
+    @State private var editingText: String
     @FocusState private var isFocused: Bool
     
-    init(text: Binding<String>, hasFocus: Binding<Bool>) {
+    init(text: Binding<String>, hasFocus: Binding<Bool>, isRenaming: Binding<Bool>) {
         self._text = text
         self._hasFocus = hasFocus
-        self.temporaryText = text.wrappedValue
+        self._isRenaming = isRenaming
+        self.editingText = text.wrappedValue
     }
     
     var body: some View {
-        TextField("", text: $temporaryText, onCommit: { text = temporaryText })
+        TextField("", text: $editingText)
             .focused($isFocused, equals: true)
-            .onExitCommand { temporaryText = text; isFocused = false }
+            .onSubmit(of: .text) {
+                text = editingText
+            }
+            .onExitCommand {
+                editingText = text
+                isRenaming = false
+            }
             .onChange(of: isFocused) { previousValue, newValue in
                 // Send the focus back to the parent
                 hasFocus = newValue
@@ -402,6 +412,10 @@ struct EditableText: View {
                 // Update the focus if it is set externally
                 if (newValue == true && isFocused == false) {
                     isFocused = true
+                }
+                
+                if (newValue == false && isFocused == true) {
+                    isFocused = false
                 }
             }
     }
@@ -429,7 +443,7 @@ struct SidebarItemView: View {
         //        Force-click rename seems possible through .onLongPressGesture{} modifier
         //        but makes list items behave strangely to selection.
         if (item.isRenaming) {
-            EditableText(text: $item.name, hasFocus: $isFocused)
+            EditableText(text: $item.name, hasFocus: $isFocused, isRenaming: $item.isRenaming)
                 .id(item.id)
                 .onChange(of: isFocused) {
                     // Only act when focus is lost by the TextField the rename is happening in
@@ -453,6 +467,7 @@ struct SidebarItemView: View {
                     }
                     
                     // Scroll to the renamed item
+                    // FIXME: Only scroll if item isn't visible
                     sidebar.scrollToSidebarItemId = item.id
                     
                     // Keep the lists sorted
