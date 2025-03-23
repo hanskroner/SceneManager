@@ -220,21 +220,6 @@ class SidebarItem: Identifiable, Codable, DecodableWithConfiguration, Hashable {
             return .scene
         }
     }
-    
-    //    var groupName: String? {
-    //        switch self.type {
-    //        case .blank: return nil
-    //        case .group: return self.name
-    //        case .scene: return self.parentName
-    //        }
-    //    }
-    //    
-    //    var sceneName: String? {
-    //        switch self.type {
-    //        case .scene: return self.name
-    //        default: return nil
-    //        }
-    //    }
 }
 
 extension SidebarItem: Equatable {
@@ -283,14 +268,11 @@ struct SidebarView: View {
             List(selection: $sidebar.selectedSidebarItemId) {
                 Section("Groups") {
                     ForEach($sidebar.items, id: \.id) { $item in
-                        //                        if let children = Binding($item.items) {
                         let children = $item.items
                         if !children.isEmpty {
                             DisclosureGroup(isExpanded: $item.isExpanded) {
                                 ForEach(children, id: \.id) { $childItem in
-                                    //                                    NavigationLink(value: childItem) {
                                     SidebarItemView(item: $childItem)
-                                    //                                    }
                                 }
                             } label: {
                                 SidebarItemView(item: $item)
@@ -300,9 +282,9 @@ struct SidebarView: View {
                         }
                     }
                 }
-                // 'safeAreaInsets' doesn't seem to allow the List's contents to "be seen" through
-                // the bottom bar's ultra-thin material. Instead, this spacer acts as the inset and
-                // the bottom bar is drawn in an overlay.
+                // 'safeAreaInsets' doesn't seem to allow the List's contents to "be seen"
+                // through the bottom bar's ultra-thin material. Instead, this spacer acts
+                // as the inset and the bottom bar is drawn in an overlay.
                 Spacer()
                     .frame(height: 1)
             }
@@ -427,7 +409,7 @@ struct SidebarItemView: View {
     //        for anything - causes focus issues. Having it present makes the Sidebar require
     //        two clicks to select an item when focus is outside of the Sidebar.
     //        Moving @FocusState to EditableText has fixed the issue.
-    //    @FocusState private var isFocused: Bool
+    // @FocusState private var isFocused: Bool
     
     var body: some View {
         // FIXME: Click-wait-rename seems impossible with SwiftUI
@@ -446,7 +428,8 @@ struct SidebarItemView: View {
                     
                     if (item.isNew) {
                         // Clear the 'isNew' flag
-                        // It's only useful for the Model to decide between a 'create' and a 'rename' operation
+                        // It's only useful for the Model to decide between a 'create'
+                        // and a 'rename' operation
                         item.isNew = false
                     }
                     else {
