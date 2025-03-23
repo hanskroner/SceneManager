@@ -2,54 +2,66 @@
 //  ContentView.swift
 //  SceneManager
 //
-//  Created by Hans Kröner on 05/11/2022.
+//  Created by Hans Kröner on 08/10/2023.
 //
 
 import SwiftUI
 
-// MARK: - Views
-
 struct ContentView: View {
-    @EnvironmentObject private var deconzModel: SceneManagerModel
+    @Environment(WindowItem.self) private var window
     
     @SceneStorage("inspector") private var showInspector = false
-    
-    @State private var showingPopover = false
     
     var body: some View {
         NavigationSplitView {
             SidebarView()
         } detail: {
-            DetailView(showInspector: $showInspector)
-                .navigationTitle(deconzModel.selectedSidebarItem?.groupName ?? "Scene Manager")
-                .navigationSubtitle(deconzModel.selectedSidebarItem?.sceneName ?? "No Scene Selected")
+            HStack {
+                HStack(spacing: 16) {
+                    LightView()
+                    
+                    LightStateView(light: window.lights?.selectedLightItems.first)
+                }
+                .padding(.horizontal)
+                .padding(.top, 8)
+            }
+            .navigationTitle(window.navigationTitle ?? "Scene Manager")
+            .navigationSubtitle(window.navigationSubtitle ?? "")
+            .toolbar {
+                Button(action: { }) {
+                    Label("Create Scene Preset", systemImage: "rectangle.stack")
+                }
+                .help("Store as Preset")
+            }
         }
-        .frame(minWidth: 960, minHeight: 300)
-        .background(Color(NSColor.gridColor))
-        .toolbar {
-            Button(action: { showingPopover = true }) {
-                Label("Create Scene Preset", systemImage: "rectangle.stack")
+        .inspector(isPresented: $showInspector) {
+            PresetsView()
+            .toolbar {
+                ToolbarItem {
+                    Spacer()
+                }
+                
+                ToolbarItem(placement: .automatic) {
+                    Button(action: { withAnimation { showInspector.toggle() }}) {
+                        Label("Toggle Inspector", systemImage: "sidebar.right")
+                    }
+                    .help("Hide or show the Scene Presets")
+                }
             }
-            .popover(isPresented: $showingPopover, attachmentAnchor: .point(.bottom), arrowEdge: .bottom) {
-                AddPresetView(showingPopover: $showingPopover)
-            }
-            .disabled((deconzModel.selectedSidebarItem ==  nil ||
-                       deconzModel.selectedSidebarItem?.type == .group) ||
-                       deconzModel.selectedLightItemIDs.isEmpty)
-            .help("Store as Preset")
-            
-            Button(action: { withAnimation { showInspector.toggle() }}) {
-                Label("Toggle Inspector", systemImage: "sidebar.right")
-            }
-            .help("Hide or show the Scene Presets")
+            .inspectorColumnWidth(min: 200, ideal: 200, max: 200)
         }
     }
 }
 
-// MARK: - Previews
-
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-    }
+#Preview {
+    let sidebar = Sidebar()
+    let lights = Lights()
+    let presets = Presets()
+    let window = WindowItem()
+    
+    return ContentView()
+        .environment(sidebar)
+        .environment(lights)
+        .environment(presets)
+        .environment(window)
 }

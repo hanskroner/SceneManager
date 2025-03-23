@@ -1,0 +1,39 @@
+{
+  "configurations" : [
+    {
+      "id" : "6CF64730-1098-493E-929E-45351BFADDC4",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "environmentVariableEntries" : [
+      {
+        "key" : "DECONZ_API_KEY",
+        "value" : "7BE250BC81"
+      },
+      {
+        "key" : "DECONZ_API_URL",
+        "value" : "http:\/\/10.0.0.95:8080"
+      }
+    ],
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:SceneManager.xcodeproj",
+      "identifier" : "3A2BDF9A2CCD682A00B582AA",
+      "name" : "deCONZTests"
+    },
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:SceneManager.xcodeproj",
+        "identifier" : "3A2BDF9A2CCD682A00B582AA",
+        "name" : "deCONZTests"
+      }
+    }
+  ],
+  "version" : 1
+}

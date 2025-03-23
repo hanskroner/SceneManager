@@ -1,13 +1,11 @@
 //
-//  SettingsView.swift
+//  Settings.swift
 //  SceneManager
 //
-//  Created by Hans Kröner on 06/11/2022.
+//  Created by Hans Kröner on 03/11/2024.
 //
 
 import SwiftUI
-
-// MARK: - Views
 
 struct SettingsView: View {
     @AppStorage("deconz_url") private var url = ""
@@ -42,10 +40,6 @@ struct SettingsView: View {
     }
 }
 
-// MARK: - Previews
-
-struct SettingsView_Previews: PreviewProvider {
-    static var previews: some View {
-        SettingsView()
-    }
+#Preview {
+    SettingsView()
 }

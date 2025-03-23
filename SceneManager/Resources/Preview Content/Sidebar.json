@@ -1,0 +1,140 @@
+[
+    {
+        "name" : "Alpha",
+        "group_id": 1,
+        "items" :
+                [
+                    {
+                        "name" : "Alpha 1",
+                        "group_id": 1,
+                        "scene_id": 1
+                    },
+                    {
+                        "name" : "Alpha 2",
+                        "group_id": 1,
+                        "scene_id": 2
+                    },
+                    {
+                        "name" : "Alpha 3",
+                        "group_id": 1,
+                        "scene_id": 3
+                    },
+                    {
+                        "name" : "Alpha 4",
+                        "group_id": 1,
+                        "scene_id": 4
+                    },
+                    {
+                        "name" : "Alpha 5",
+                        "group_id": 1,
+                        "scene_id": 5
+                    }
+                ]
+    },
+    {
+        "name" : "Bravo",
+        "group_id": 2,
+        "items" :
+        [
+            {
+                "name" : "Bravo 1",
+                "group_id": 2,
+                "scene_id": 1
+            },
+            {
+                "name" : "Bravo 2",
+                "group_id": 2,
+                "scene_id": 2
+            },
+            {
+                "name" : "Bravo 3",
+                "group_id": 2,
+                "scene_id": 3
+            }
+        ]
+    },
+    {
+        "name" : "Charlie",
+        "group_id": 3
+    },
+    {
+        "name" : "Delta",
+        "group_id": 4,
+        "items" :
+        [
+            {
+                "name" : "Delta 1",
+                "group_id": 4,
+                "scene_id": 1
+            },
+            {
+                "name" : "Delta 2",
+                "group_id": 4,
+                "scene_id": 2
+            },
+            {
+                "name" : "Delta 3",
+                "group_id": 4,
+                "scene_id": 3
+            }
+        ]
+    },
+    {
+        "name" : "Echo",
+        "group_id": 5
+    },
+    {
+        "name" : "Foxtrot",
+        "group_id": 6,
+        "items" :
+        [
+            {
+                "name" : "Foxtrot 1",
+                "group_id": 6,
+                "scene_id": 1
+            },
+            {
+                "name" : "Foxtrot 2",
+                "group_id": 6,
+                "scene_id": 2
+            },
+            {
+                "name" : "Foxtrot 3",
+                "group_id": 6,
+                "scene_id": 3
+            },
+            {
+                "name" : "Foxtrot 4",
+                "group_id": 6,
+                "scene_id": 4
+            },
+            {
+                "name" : "Foxtrot 5",
+                "group_id": 6,
+                "scene_id": 5
+            }
+        ]
+    },
+    {
+        "name" : "Golf",
+        "group_id": 7,
+        "items" :
+        [
+            {
+                "name" : "Golf 1",
+                "group_id": 7,
+                "scene_id": 1
+            },
+            {
+                "name" : "Golf 2",
+                "group_id": 7,
+                "scene_id": 2
+            },
+            {
+                "name" : "Golf 3",
+                "group_id": 7,
+                "scene_id": 3
+            }
+        ]
+    }
+]

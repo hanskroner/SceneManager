@@ -11,11 +11,11 @@
 				<string>public.data</string>
 			</array>
 			<key>UTTypeDescription</key>
-			<string>Preset Scene</string>
+			<string>Preset</string>
 			<key>UTTypeIcons</key>
 			<dict/>
 			<key>UTTypeIdentifier</key>
-			<string>com.hanskroner.scene-manager.preset-item</string>
+			<string>com.hanskroner.scenemanager.preset-item</string>
 			<key>UTTypeTagSpecification</key>
 			<dict/>
 		</dict>

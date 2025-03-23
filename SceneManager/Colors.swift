@@ -103,25 +103,26 @@ private func xy(fromCCT cct: CGFloat) -> CGPoint? {
     
     switch cct {
     case 1667 ..< 2222:
-        x = (-0.2661239 * pow(10, 9) / pow(cct, 3) -
-              0.2343589 * pow(10, 6) / pow(cct, 2) +
-              0.8776956 * pow(10, 3) / cct +
+        x = (-0.2661239 * (pow(10, 9) / pow(cct, 3)) -
+              0.2343589 * (pow(10, 6) / pow(cct, 2)) +
+              0.8776956 * (pow(10, 3) / cct) + 
               0.179910)
         y = (-1.10638140 * pow(x, 3) -
               1.34811020 * pow(x, 2) +
               2.18555832 * x -
               0.20219683)
     case 2222 ..< 4000:
-        x = (-0.2661239 * pow(10, 9) / pow(cct, 3) -
-              0.2343589 * pow(10, 6) / pow(cct, 2) +
-              0.8776956 * pow(10, 3) / cct + 0.179910)
+        x = (-0.2661239 * (pow(10, 9) / pow(cct, 3)) -
+              0.2343589 * (pow(10, 6) / pow(cct, 2)) +
+              0.8776956 * pow(10, 3) / cct +
+              0.179910)
         y = (-0.95494760 * pow(x, 3) -
               1.37418593 * pow(x, 2) +
               2.09137015 * x -
               0.16748867)
     case 4000 ... 25000:
-        x = (-3.0258469 * pow(10, 9) / pow(cct, 3) +
-              2.1070379 * pow(10, 6) / pow(cct, 2) +
+        x = (-3.0258469 * (pow(10, 9) / pow(cct, 3)) +
+              2.1070379 * (pow(10, 6) / pow(cct, 2)) +
               0.2226347 * pow(10, 3) / cct +
               0.24039)
         y = (3.08175800 * pow(x, 3) -
@@ -165,7 +166,7 @@ private func xy(fromColor color: NSColor, inGamut gamut: Gamut = .gamutC) -> CGP
 
 // MARK: - Public Methods
 
-func color(fromXY point: CGPoint, brightness: CGFloat = 1.0, inGamut gamut: Gamut = .gamutC) -> NSColor {
+func color(fromXY point: CGPoint, brightness: CGFloat = 0.5, inGamut gamut: Gamut = .gamutC) -> NSColor {
     var xy = point
     if !isPoint(xy, inGamut: gamut) {
         xy = closestPoint(toPoint: point, inGamut: gamut)

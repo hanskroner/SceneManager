@@ -1,0 +1,123 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+
+    },
+    "%lld Add Lights" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add %#@lightCount@"
+          },
+          "substitutions" : {
+            "lightCount" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Light"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Lights"
+                    }
+                  },
+                  "zero" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Light"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ABCDEF1234" : {
+
+    },
+    "Add Lights" : {
+
+    },
+    "Add Lights to '%@'" : {
+
+    },
+    "Apply to Scene" : {
+
+    },
+    "Apply to Selected" : {
+
+    },
+    "Are you sure you want to delete '%@'?" : {
+
+    },
+    "Cancel" : {
+
+    },
+    "Create Scene Preset" : {
+
+    },
+    "deCONZ" : {
+
+    },
+    "deCONZ API Key:" : {
+
+    },
+    "deCONZ URL:" : {
+
+    },
+    "Delete Preset" : {
+
+    },
+    "Groups" : {
+
+    },
+    "Hide or show the Scene Presets" : {
+
+    },
+    "http://127.0.0.1:8080" : {
+
+    },
+    "Lights" : {
+
+    },
+    "New Group" : {
+
+    },
+    "New Scene" : {
+
+    },
+    "Remove Lights" : {
+
+    },
+    "Rename Preset" : {
+
+    },
+    "Scene Presets" : {
+
+    },
+    "State" : {
+
+    },
+    "Store as Preset" : {
+
+    },
+    "Scene Manager" : {
+
+    },
+    "Toggle Inspector" : {
+
+    }
+  },
+  "version" : "1.0"
+}

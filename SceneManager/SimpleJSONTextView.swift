@@ -145,11 +145,11 @@ final class CustomTextView: NSView {
     
     private lazy var scrollView: NSScrollView = {
         let scrollView = NSScrollView()
-        scrollView.drawsBackground = true
+//        scrollView.drawsBackground = true
         scrollView.borderType = .noBorder
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalRuler = false
-        scrollView.autoresizingMask = [.width, .height]
+//        scrollView.autoresizingMask = [.width, .height]
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         
         return scrollView
@@ -172,18 +172,20 @@ final class CustomTextView: NSView {
         textLayoutManager.textContainer = textContainer
         
         let textView                     = NSTextView(frame: .zero, textContainer: textContainer)
-        textView.autoresizingMask        = .width
-        textView.backgroundColor         = NSColor.textBackgroundColor
+//        let textView                     = NSTextView(frame: CGRect(x: scrollView.frame.origin.x, y: scrollView.frame.origin.y, width: contentSize.width, height: contentSize.height), textContainer: textContainer)
+//        textView.textColor               = NSColor.labelColor
+//        textView.backgroundColor         = NSColor.textBackgroundColor
+//        textView.drawsBackground         = true
         textView.delegate                = self.delegate
-        textView.drawsBackground         = true
         textView.font                    = self.font
         textView.isEditable              = self.isEditable
         textView.isHorizontallyResizable = false
         textView.isVerticallyResizable   = true
         textView.maxSize                 = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         textView.minSize                 = NSSize(width: 0, height: contentSize.height)
-        textView.textColor               = NSColor.labelColor
         textView.allowsUndo              = true
+        textView.autoresizingMask        = .width
+//        textView.translatesAutoresizingMaskIntoConstraints = false
         
         return textView
     }()
@@ -191,9 +193,9 @@ final class CustomTextView: NSView {
     // MARK: - Init
     
     init(text: String, isEditable: Bool, font: NSFont?) {
-        self.font       = font
+        self.font = font
         self.isEditable = isEditable
-        self.text       = text
+        self.text = text
         
         super.init(frame: .zero)
     }
@@ -207,32 +209,24 @@ final class CustomTextView: NSView {
     override func viewWillDraw() {
         super.viewWillDraw()
         
-        setupScrollViewConstraints()
-        setupTextView()
-    }
-    
-    func setupScrollViewConstraints() {
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        
         addSubview(scrollView)
-        
-        NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: topAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: bottomAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: leadingAnchor)
-        ])
-    }
-    
-    func setupTextView() {
         scrollView.documentView = textView
         
+        // Create Line Number View
         lineNumberView = LineNumberRulerView(textView: self.textView)
         lineNumberView?.ruleThickness = 34
         
         scrollView.verticalRulerView = lineNumberView
         scrollView.hasVerticalRuler = true
         scrollView.rulersVisible = true
+        
+        // Set layout constraints
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: topAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: leadingAnchor)
+        ])
     }
 }
 
@@ -285,13 +279,14 @@ class LineNumberRulerView: NSRulerView {
         textLayoutManager.enumerateTextLayoutFragments(from: nil, options: [.ensuresLayout, .ensuresExtraLineFragment]) { textLayoutFragment in
             for textLineFragment in textLayoutFragment.textLineFragments.reversed() where (textLineFragment.characterRange.length == 0 || textLayoutFragment.textLineFragments.first == textLineFragment) {
                 var baselineOffset: CGFloat = 0
+                let horizontalOffset: CGFloat = -10
                 
                 if (textLineFragment.characterRange.length == 0) {
                     baselineOffset = -textLineFragment.typographicBounds.height
                 }
                 
                 let locationForFirstCharacter = textLineFragment.glyphOrigin
-                let origin = textLayoutFragment.layoutFragmentFrame.origin.applying(.init(translationX: 0, y: locationForFirstCharacter.y + baselineOffset + relativePoint.y))
+                let origin = textLayoutFragment.layoutFragmentFrame.origin.applying(.init(translationX: horizontalOffset, y: locationForFirstCharacter.y + baselineOffset + relativePoint.y))
                 let size = CGSize(width: self.ruleThickness, height: textLayoutFragment.layoutFragmentFrame.height)
                 let rect = CGRect(origin: origin, size: size)
                 let path = CGMutablePath()

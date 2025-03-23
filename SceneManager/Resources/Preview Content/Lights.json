@@ -1,0 +1,22 @@
+[
+    {
+        "light_id": 1,
+        "name": "Light 1"
+    },
+    {
+        "light_id": 2,
+        "name": "Light 2"
+    },
+    {
+        "light_id": 3,
+        "name": "Light 3"
+    },
+    {
+        "light_id": 4,
+        "name": "Light 4"
+    },
+    {
+        "light_id": 5,
+        "name": "Light 5"
+    }
+]

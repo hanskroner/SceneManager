@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "C573BC5B-5DA7-4745-A19C-38327A2930E4",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:SceneManager.xcodeproj",
+        "identifier" : "3A635B602CDF830700018B40",
+        "name" : "ColorTests"
+      }
+    }
+  ],
+  "version" : 1
+}

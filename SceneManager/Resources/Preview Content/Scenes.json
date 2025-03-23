@@ -1,0 +1,362 @@
+[
+    {
+        "group_id": 1,
+        "name": "Alpha",
+        "lights":
+        [
+            {
+                "light_id" : 1,
+                "name": "Light 1"
+            },
+            {
+                "light_id" : 2,
+                "name": "Light 2"
+            },
+            {
+                "light_id" : 3,
+                "name": "Light 3"
+            },
+            {
+                "light_id" : 4,
+                "name": "Light 4"
+            },
+            {
+                "light_id" : 5,
+                "name": "Light 5"
+            }
+        ],
+        "scenes":
+        [
+            {
+                "scene_id": 1,
+                "name": "Alpha 1",
+                "lights":
+                [
+                    {
+                        "light_id" : 1,
+                        "name": "Light 1",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    }
+                ]
+            },
+            {
+                "scene_id": 2,
+                "name": "Alpha 2",
+                "lights":
+                [
+                    {
+                        "light_id" : 1,
+                        "name": "Light 1",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    },
+                    {
+                        "light_id" : 2,
+                        "name": "Light 2",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    }
+                ]
+            },
+            {
+                "scene_id": 3,
+                "name": "Alpha 3",
+                "lights":
+                [
+                    {
+                        "light_id" : 1,
+                        "name": "Light 1",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    },
+                    {
+                        "light_id" : 2,
+                        "name": "Light 2",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    },
+                    {
+                        "light_id" : 3,
+                        "name": "Light 3",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    }
+                ]
+            },
+            {
+                "scene_id": 4,
+                "name": "Alpha 4",
+                "lights":
+                [
+                    {
+                        "light_id" : 1,
+                        "name": "Light 1",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    },
+                    {
+                        "light_id" : 2,
+                        "name": "Light 2",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    },
+                    {
+                        "light_id" : 3,
+                        "name": "Light 3",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    },
+                    {
+                        "light_id" : 4,
+                        "name": "Light 4",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    }
+                ]
+            },
+            {
+                "scene_id": 5,
+                "name": "Alpha 5",
+                "lights":
+                [
+                    {
+                        "light_id" : 1,
+                        "name": "Light 1",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    },
+                    {
+                        "light_id" : 2,
+                        "name": "Light 2",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    },
+                    {
+                        "light_id" : 3,
+                        "name": "Light 3",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    },
+                    {
+                        "light_id" : 4,
+                        "name": "Light 4",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    },
+                    {
+                        "light_id" : 5,
+                        "name": "Light 5",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "group_id": 2,
+        "name": "Bravo",
+        "lights":
+        [
+            {
+                "light_id" : 1,
+                "name": "Light 1"
+            },
+            {
+                "light_id" : 2,
+                "name": "Light 2"
+            },
+            {
+                "light_id" : 3,
+                "name": "Light 3"
+            }
+        ],
+        "scenes":
+        [
+            {
+                "scene_id": 1,
+                "name": "Bravo 1",
+                "lights":
+                [
+                    {
+                        "light_id" : 1,
+                        "name": "Light 1",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    }
+                ]
+            },
+            {
+                "scene_id": 2,
+                "name": "Bravo 2",
+                "lights":
+                [
+                    {
+                        "light_id" : 1,
+                        "name": "Light 1",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    },
+                    {
+                        "light_id" : 2,
+                        "name": "Light 2",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    }
+                ]
+            },
+            {
+                "scene_id": 3,
+                "name": "Bravo 3",
+                "lights":
+                [
+                    {
+                        "light_id" : 1,
+                        "name": "Light 1",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    },
+                    {
+                        "light_id" : 2,
+                        "name": "Light 2",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    },
+                    {
+                        "light_id" : 3,
+                        "name": "Light 3",
+                        "state":
+                        {
+                            "bri" : 1,
+                            "colormode" : "xy",
+                            "on" : true,
+                            "transitiontime" : 4,
+                            "xy" : [0.3328, 0.2288]
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+]

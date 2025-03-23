@@ -1,0 +1,113 @@
+//
+//  Window.swift
+//  SceneManager
+//
+//  Created by Hans Kröner on 13/11/2024.
+//
+
+import SwiftUI
+import Combine
+import OSLog
+
+import deCONZ
+
+private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "window")
+
+@Observable
+class WindowItem {
+    weak var sidebar: Sidebar? = nil
+    weak var lights: Lights? = nil
+    
+    var navigationTitle: String? = nil
+    var navigationSubtitle: String? = nil
+    
+    var groupId: Int? = nil
+    var sceneId: Int? = nil
+    
+    var modelRefreshedSubscription: AnyCancellable? = nil
+        
+    init() {
+        modelRefreshedSubscription = RESTModel.shared.onDataRefreshed.sink { [weak self] _ in
+            let groups = RESTModel.shared.groups
+            
+            var newItems = [SidebarItem]()
+            for group in groups {
+                let groupItem = SidebarItem(name: group.name, groupId: group.groupId)
+                for sceneId in group.sceneIds {
+                    let scene = RESTModel.shared.scene(withGroupId: group.groupId, sceneId: sceneId)!
+                    let sceneItem = SidebarItem(name: scene.name, groupId: group.groupId, sceneId: sceneId)
+                    groupItem.items.append(sceneItem)
+                }
+                
+                newItems.append(groupItem)
+            }
+            
+            self?.sidebar?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+        }
+    }
+    
+    // MARK: - Update Methods
+    
+    func updateLights(forGroupId groupId: Int?, sceneId: Int?) {
+        // No lights
+        guard let groupId else {
+            self.lights?.items = []
+            return
+        }
+        
+        // Group lights
+        guard let sceneId else {
+            let newItems = RESTModel.shared.group(withGroupId: groupId)!.lightIds.map({
+                LightItem(lightId: $0, name: RESTModel.shared.light(withLightId: $0)!.name)
+            })
+            self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+            
+            let ids = Array(self.lights!.selectedLightItemIds)//.joined(separator: ", ")
+            logger.info("Selection is '\(ids, privacy: .public)'")
+            
+            return
+        }
+        
+        // Scene lights
+        let newItems = RESTModel.shared.scene(withGroupId: groupId, sceneId: sceneId)!.lightIds.map({
+            LightItem(lightId: $0, name: RESTModel.shared.light(withLightId: $0)!.name)
+        })
+        self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+        
+        let ids = Array(self.lights!.selectedLightItemIds)//.joined(separator: ", ")
+        let avail = self.lights!.items.map { $0.id }
+        logger.info("Selection is '\(ids, privacy: .public)'")
+        logger.info("Available are '\(avail, privacy: .public)'")
+    }
+    
+    // MARK: - Light State Methods
+    
+    func jsonLightState(forLightId lightId: Int, groupId: Int? = nil, sceneId: Int? = nil) async -> String {
+        return await RESTModel.shared.lightState(withLightId: lightId, groupId: groupId, sceneId: sceneId)
+    }
+    
+    // MARK: - Light Methods
+    
+    func lights(inGroupId groupId: Int) -> [Light] {
+        let groupLightIds = RESTModel.shared.group(withGroupId: groupId)?.lightIds ?? []
+        return RESTModel.shared.lights.filter { groupLightIds.contains($0.lightId) }
+    }
+    
+    func lights(notInGroupId groupId: Int) -> [Light] {
+        let groupLightIds = RESTModel.shared.group(withGroupId: groupId)?.lightIds ?? []
+        return RESTModel.shared.lights.filter { !groupLightIds.contains($0.lightId) }
+    }
+    
+    func lights(inGroupId groupId: Int, sceneId: Int) -> [Light] {
+        let sceneLightIds = RESTModel.shared.scene(withGroupId: groupId, sceneId: sceneId)?.lightIds ?? []
+        return RESTModel.shared.lights.filter { sceneLightIds.contains($0.lightId) }
+    }
+    
+    func lights(inGroupId groupId: Int, butNotIntSceneId sceneId: Int) -> [Light] {
+        let groupLightIds = RESTModel.shared.group(withGroupId: groupId)?.lightIds ?? []
+        let sceneLightIds = RESTModel.shared.scene(withGroupId: groupId, sceneId: sceneId)?.lightIds ?? []
+        let inGroupButNotInSceneLightIds = groupLightIds.filter { !sceneLightIds.contains($0) }
+        
+        return RESTModel.shared.lights.filter { inGroupButNotInSceneLightIds.contains($0.lightId) }
+    }
+}
