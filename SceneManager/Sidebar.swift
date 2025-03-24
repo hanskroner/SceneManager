@@ -470,14 +470,40 @@ struct SidebarItemView: View {
                     // FIXME: Only scroll if item isn't visible
                     sidebar.scrollToSidebarItemId = item.id
                     
-                    // FIXME: Handle new items
-                    
-                    // Keep the lists sorted
-                    if (item.kind == .group) {
-                        sidebar.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
-                    } else {
-                        let parent = sidebar.items.filter({ $0.items.contains(item) }).first!
-                        parent.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+                    // Select between a create or rename operation
+                    Task {
+                        if ((item.groupId == Sidebar.NEW_GROUP_ID) && (item.sceneId == nil)) {
+                            let groupId = await RESTModel.shared.createGroup(name: item.name)
+                            
+                            guard let groupId else {
+                                sidebar.deleteSidebarItem(item)
+                                return
+                            }
+                            
+                            item.groupId = groupId
+                        } else if ((item.groupId != Sidebar.NEW_GROUP_ID) && (item.sceneId == Sidebar.NEW_SCENE_ID)) {
+                            let sceneId = await RESTModel.shared.createScene(groupId: item.groupId, name: item.name)
+                            
+                            guard let sceneId else {
+                                sidebar.deleteSidebarItem(item)
+                                return
+                            }
+                            
+                            item.sceneId = sceneId
+                        } else if ((item.groupId != Sidebar.NEW_GROUP_ID) && (item.sceneId == nil)) {
+                            await RESTModel.shared.renameGroup(groupId: item.groupId, name: item.name)
+                        } else {
+                            await RESTModel.shared.renameScene(groupId: item.groupId, sceneId: item.sceneId!, name: item.name)
+                        }
+                        
+                        // Keep the lists sorted
+                        // Sorting happens as part of the Task, otherwise the reference to 'item' will change
+                        if (item.kind == .group) {
+                            sidebar.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+                        } else {
+                            let parent = sidebar.items.filter({ $0.items.contains(item) }).first!
+                            parent.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+                        }
                     }
                 }
                 .onAppear {
@@ -514,7 +540,15 @@ struct SidebarItemView: View {
                 }
                 .confirmationDialog("Are you sure you want to delete '\(item.name)'?", isPresented: $isPresentingConfirmation) {
                     Button("Delete " + (item.kind == .group ? "Group" : "Scene"), role: .destructive) {
-                        withAnimation {
+                        // Call on the REST API to perform deletion
+                        Task {
+                            if (item.kind == .group) {
+                                await RESTModel.shared.deleteGroup(groupId: item.groupId)
+                            } else {
+                                await RESTModel.shared.deleteScene(groupId: item.groupId, sceneId: item.sceneId!)
+                            }
+                            
+                            // Deleting happens as part of the Task, otherwise the reference to 'item' will change
                             sidebar.deleteSidebarItem(item)
                         }
                     }

@@ -75,6 +75,42 @@ public final class RESTModel {
     
     // MARK: Groups
     
+    public func createGroup(name: String) async -> Int? {
+        do {
+            let groupId = try await self._client.createGroup(name: name)
+            
+            // Insert a new, empty Group into the model's cache
+            self._groups[groupId] = Group(groupId: groupId, name: name)
+            self._scenes[groupId] = [Int: Scene]()
+            return groupId
+        } catch {
+            logger.error("\(error, privacy: .public)")
+            return nil
+        }
+    }
+    
+    public func renameGroup(groupId: Int, name: String) async {
+        do {
+            try await self._client.setGroupAttributes(groupId: groupId, name: name)
+            
+            // Update the model's cache
+            self._groups[groupId]?.name = name
+        } catch {
+            logger.error("\(error, privacy: .public)")
+        }
+    }
+    
+    public func deleteGroup(groupId: Int) async {
+        do {
+            try await self._client.deleteGroup(groupId: groupId)
+            
+            // Uodate the model's cache
+            self._groups.removeValue(forKey: groupId)
+        } catch {
+            logger.error("\(error, privacy: .public)")
+        }
+    }
+    
     public var groups: [Group] {
         Array(self._groups.values)
     }
@@ -84,6 +120,41 @@ public final class RESTModel {
     }
     
     // MARK: Scenes
+    
+    public func createScene(groupId: Int, name: String) async -> Int? {
+        do {
+            let sceneId = try await self._client.createScene(groupId: groupId, name: name)
+            
+            // Insert a new, empty Scene into the model's cache
+            self._scenes[groupId]?[sceneId] = Scene(sceneId: sceneId, groupId: groupId, name: name)
+            return sceneId
+        } catch {
+            logger.error("\(error, privacy: .public)")
+            return nil
+        }
+    }
+    
+    public func renameScene(groupId: Int, sceneId: Int, name: String) async {
+        do {
+            try await self._client.setSceneAttributes(groupId: groupId, sceneId: sceneId, name: name)
+            
+            // Update the model's cache
+            self._scenes[groupId]?[sceneId]?.name = name
+        } catch {
+            logger.error("\(error, privacy: .public)")
+        }
+    }
+    
+    public func deleteScene(groupId: Int, sceneId: Int) async {
+        do {
+            try await self._client.deleteScene(groupId: groupId, sceneId: sceneId)
+            
+            // Update the model's cache
+            self._scenes[groupId]?.removeValue(forKey: sceneId)
+        } catch {
+            logger.error("\(error, privacy: .public)")
+        }
+    }
     
     public func scenes(forGroupId id: Int) -> [Scene] {
         guard let values = self._scenes[id]?.values else { return [] }
