@@ -184,6 +184,47 @@ public final class RESTModel {
         }
     }
     
+    public func addLightsToScene(groupId: Int, sceneId: Int, lightIds: [Int]) async throws {
+        // Fetch the current light state of each lightId that is passed in.
+        // Modifying a scene requires also providing a light state, and the
+        // light's current state will be what we use.
+        var fetchedLightStates: [Int: RESTLightState] = [:]
+        for lightId in lightIds {
+            let lightState = try await self._client.getLightState(lightID: lightId)
+            fetchedLightStates[lightId] = lightState
+            try await self._client.modifyScene(groupId: groupId, sceneId: sceneId, lightIds: [lightId], lightState: lightState)
+        }
+        
+        // Update the model's cache
+        // Get the IDs of the lights currently in the Scene, add the new light IDs to
+        // that list, remove duplicates (by making them into a Set and then back to an Array),
+        // and sort the list for consistency across operations.
+        guard let cachedScene = self._scenes[groupId]?[sceneId] else { return }
+        let newLightsInScene = Array(Set([cachedScene.lightIds, lightIds].joined())).sorted()
+        cachedScene.lightIds = newLightsInScene
+        
+        cachedScene.lightStates = lightIds.reduce(into: [Int: LightState](), { stateDictionary, lightId in
+            stateDictionary[lightId] = LightState(from: fetchedLightStates[lightId]!)
+        })
+    }
+    
+    public func removeLightsFromScene(groupId: Int, sceneId: Int, lightIds: [Int]) async throws {
+        // FIXME: Bug when removing last light
+        //        Removing a scene's last light causes deCONZ to also
+        //        delete the scene. That needs to be taken into account here.
+        // Calling 'modifyScene' with a 'nil' LightState removes the lightIds from the Scene
+        for lightId in lightIds {
+            try await self._client.modifyScene(groupId: groupId, sceneId: sceneId, lightIds: [lightId], lightState: nil)
+        }
+        
+        // Update the model's cache
+        guard let cachedScene = self._scenes[groupId]?[sceneId] else { return }
+        let newLightsInScene = cachedScene.lightIds.filter { !lightIds.contains($0) }
+        cachedScene.lightIds = newLightsInScene
+        cachedScene.lightStates = cachedScene.lightStates.filter{ !lightIds.contains($0.key) }
+        self._scenes[groupId]?[sceneId] = cachedScene
+    }
+    
     public func deleteScene(groupId: Int, sceneId: Int) async {
         do {
             try await self._client.deleteScene(groupId: groupId, sceneId: sceneId)

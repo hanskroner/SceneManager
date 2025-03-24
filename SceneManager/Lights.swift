@@ -210,15 +210,9 @@ struct LightBottomBarView: View {
                     switch (sidebar.selectedSidebarItem?.kind) {
                     case .group:
                         window.remove(lightIds: Array(lights.selectedLightItems).map({ $0.lightId }), fromGroupId: window.groupId!)
-//                    case .scene:
-//                        Task {
-//                            let removingLightItems = LightItemAction.removeFromScene(lightItems: Array(deconzModel.selectedLightItems))
-//                            await deconzModel.modifySceneLights(groupID: deconzModel.selectedSidebarItem!.groupID!,
-//                                                                sceneID: deconzModel.selectedSidebarItem!.sceneID!,
-//                                                                sceneLightAction: removingLightItems)
-//                            
-//                            deconzModel.selectedLightItemIDs.removeAll()
-//                        }
+                    
+                    case .scene:
+                        window.remove(lightIds: Array(lights.selectedLightItems).map({ $0.lightId }), fromGroupId: window.groupId!, sceneId: window.sceneId!)
                     default:
                         break
                     }
@@ -311,24 +305,14 @@ struct AddLightView: View {
                     case .group:
                         window.add(lightIds: Array(addLightItems).map({ $0.lightId }), toGroupId: window.groupId!)
                         
+                    case .scene:
+                        window.add(lightIds: Array(addLightItems).map({ $0.lightId }), toGroupId: window.groupId!, sceneId: window.sceneId!)
+                        
                     default:
                         break
-                        }
-//                    var lightItems = deconzModel.lightsList
+                    }
                     
-//                    Task {
-//                        if (deconzModel.selectedSidebarItem!.type == .group) {
-//                            lightItems.append(contentsOf: addLightItems)
-//                            await deconzModel.modifyGroupLights(groupID: deconzModel.selectedSidebarItem!.groupID!, groupLights: lightItems)
-//                        } else if (deconzModel.selectedSidebarItem!.type == .scene) {
-//                            let addingLightItems = LightItemAction.addToScene(lightItems: Array(addLightItems))
-//                            await deconzModel.modifySceneLights(groupID: deconzModel.selectedSidebarItem!.groupID!,
-//                                                                sceneID: deconzModel.selectedSidebarItem!.sceneID!,
-//                                                                sceneLightAction: addingLightItems)
-//                        }
-//                        
-                        dismiss()
-//                    }
+                    dismiss()
                 }
                 .fixedSize()
                 .keyboardShortcut(.defaultAction)
