@@ -156,9 +156,39 @@ struct LightView: View {
 }
 
 struct LightBottomBarView: View {
-//    @EnvironmentObject private var deconzModel: SceneManagerModel
+    @Environment(Sidebar.self) private var sidebar
+    @Environment(Lights.self) private var lights
+    @Environment(WindowItem.self) private var window
     
     @Binding var isPresentingSheet: Bool
+    
+    func shouldDisableAddButton() -> Bool {
+        // Check if a Group or Scene is selected
+        guard let selectedSidebarItem = sidebar.selectedSidebarItem else { return true }
+        
+        // If a Scene is selected, check if all the lights
+        // of its parent Group are already part of the Scene
+        if (selectedSidebarItem.kind == .scene) {
+            guard window.sceneId != nil else { return true }
+            return window.lights(inGroupId: window.groupId!, butNotIntSceneId: window.sceneId!).isEmpty
+        }
+        
+        // If a Group is selected, check if all the lights
+        // are already part of the Group
+        if (selectedSidebarItem.kind == .group) {
+            guard window.groupId != nil else { return true }
+            return window.lights(notInGroupId: window.groupId!).isEmpty
+        }
+        
+        return false
+    }
+    
+    func shouldDisableRemoveButton() -> Bool {
+        // Check if any Lights are selected
+        guard !lights.selectedLightItems.isEmpty else { return true }
+        
+        return false
+    }
     
     var body: some View {
         VStack {
@@ -195,8 +225,7 @@ struct LightBottomBarView: View {
                 .buttonStyle(.plain)
                 .font(.system(size: 14))
                 .help("Add Lights")
-                // FIXME: Also disable if all lights in the group are already in the selected scene
-//                .disabled(deconzModel.selectedSidebarItem == nil)
+                .disabled(shouldDisableAddButton())
                 
                 Button(action: {
 //                    switch (deconzModel.selectedSidebarItem?.type) {
@@ -226,8 +255,7 @@ struct LightBottomBarView: View {
                 .buttonStyle(.plain)
                 .font(.system(size: 14))
                 .help("Remove Lights")
-//                .disabled(deconzModel.selectedSidebarItem == nil ||
-//                          deconzModel.selectedLightItemIDs.isEmpty)
+                .disabled(shouldDisableRemoveButton())
                 
                 Spacer()
             }
