@@ -28,6 +28,7 @@
   },
   "testTargets" : [
     {
+      "parallelizable" : false,
       "target" : {
         "containerPath" : "container:SceneManager.xcodeproj",
         "identifier" : "3A2BDF9A2CCD682A00B582AA",

@@ -135,24 +135,24 @@ actor RESTClient {
     
     // MARK: - deCONZ Groups REST API Methods
     
-//    func createGroup(name: String) async throws -> Int {
-//        let group = deCONZGroupRESTParameter(name: name)
-//        
-//        let path = "/api/\(self.keyAPI)/groups/"
-//        var request = request(forPath: path, using: .post)
-//        encoder.outputFormatting = []
-//        request.httpBody = try encoder.encode(group)
-//        
-//        let (data, response) = try await URLSession.shared.data(for: request)
-//        try check(data: data, from: response)
-//        
-//        let successResponse: [deCONZSuccessContext] = try decoder.decode([deCONZSuccessContext].self, from: data)
-//        guard let successContext = successResponse.first,
-//              let responseID = Int(successContext.id)
-//        else { throw deCONZError.unknownResponse(data: data, response: response) }
-//        
-//        return responseID
-//    }
+    func createGroup(name: String) async throws -> Int {
+        let group = RESTGroupObject(name: name)
+        
+        let path = "/api/\(self.apiKey)/groups/"
+        var request = request(forPath: path, using: .post)
+        encoder.outputFormatting = []
+        request.httpBody = try encoder.encode(group)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
+        
+        let successResponse: [APISuccessContext] = try decoder.decode([APISuccessContext].self, from: data)
+        guard let successContext = successResponse.first,
+              let responseId = Int(successContext.id)
+        else { throw APIError.unknownResponse(data: data, response: response) }
+        
+        return responseId
+    }
     
     func getAllGroups() async throws -> [Int: RESTGroup] {
         let path = "/api/\(self.apiKey)/groups/"
@@ -167,21 +167,25 @@ actor RESTClient {
         // These groups are created by switches or sensors.
         return groups.filter { $0.1.devicemembership.isEmpty }
     }
-    
-    func getAllScenes() async throws -> [Int: [Int: RESTScene]] {
-        let path = "/api/\(self.apiKey)/scenes/"
-        let request = request(forPath: path, using: .get)
-        
+
+    func setGroupAttributes(groupId: Int, name: String? = nil, lights: [Int]? = nil) async throws {
+        let group = RESTGroupObject(name: name, lights: lights?.map({ String($0) }))
+
+        let path = "/api/\(self.apiKey)/groups/\(groupId)/"
+        var request = request(forPath: path, using: .put)
+        encoder.outputFormatting = []
+        request.httpBody = try encoder.encode(group)
+
         let (data, response) = try await URLSession.shared.data(for: request)
         try check(data: data, from: response)
-        
-        let groups = try decoder.decode([Int: RESTSceneGroup].self, from: data)
-        
-        return groups.reduce(into: [Int: [Int: RESTScene]](), { groupDictionary, groupEntry in
-            groupDictionary[groupEntry.0] = groupEntry.1.scenes.reduce(into: [Int: RESTScene](), { sceneDictionary, sceneEntry in
-                sceneDictionary[sceneEntry.0] = sceneEntry.1
-            })
-        })
+    }
+
+    func deleteGroup(groupId: Int) async throws {
+        let path = "/api/\(self.apiKey)/groups/\(groupId)/"
+        let request = request(forPath: path, using: .delete)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
     }
     
 //    public func getAllGroups() async throws -> ([Int: Group], [Int: [Int: Scene]]) {
@@ -218,27 +222,23 @@ actor RESTClient {
 //        return (groups, scenes)
 //    }
     
-//    func setGroupAttributes(groupID: Int, name: String? = nil, lights: [Int]? = nil) async throws {
-//        let group = deCONZGroupRESTParameter(name: name, lights: lights?.map({ String($0) }))
-//        
-//        let path = "/api/\(self.keyAPI)/groups/\(groupID)/"
-//        var request = request(forPath: path, using: .put)
-//        encoder.outputFormatting = []
-//        request.httpBody = try encoder.encode(group)
-//        
-//        let (data, response) = try await URLSession.shared.data(for: request)
-//        try check(data: data, from: response)
-//    }
-//    
-//    func deleteGroup(groupID: Int) async throws {
-//        let path = "/api/\(self.keyAPI)/groups/\(groupID)/"
-//        let request = request(forPath: path, using: .delete)
-//        
-//        let (data, response) = try await URLSession.shared.data(for: request)
-//        try check(data: data, from: response)
-//    }
-    
     // MARK: - deCONZ Scenes REST API Methods
+    
+    func getAllScenes() async throws -> [Int: [Int: RESTScene]] {
+        let path = "/api/\(self.apiKey)/scenes/"
+        let request = request(forPath: path, using: .get)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
+        
+        let groups = try decoder.decode([Int: RESTSceneGroup].self, from: data)
+        
+        return groups.reduce(into: [Int: [Int: RESTScene]](), { groupDictionary, groupEntry in
+            groupDictionary[groupEntry.0] = groupEntry.1.scenes.reduce(into: [Int: RESTScene](), { sceneDictionary, sceneEntry in
+                sceneDictionary[sceneEntry.0] = sceneEntry.1
+            })
+        })
+    }
     
 //    func createScene(groupID: Int, name: String) async throws -> Int {
 //        let scene = deCONZSceneRESTParameter(name: name)
