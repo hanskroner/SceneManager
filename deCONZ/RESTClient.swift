@@ -224,6 +224,25 @@ actor RESTClient {
     
     // MARK: - deCONZ Scenes REST API Methods
     
+    func createScene(groupId: Int, name: String) async throws -> Int {
+        let scene = RESTSceneObject(name: name)
+
+        let path = "/api/\(self.apiKey)/groups/\(groupId)/scenes"
+        var request = request(forPath: path, using: .post)
+        encoder.outputFormatting = []
+        request.httpBody = try encoder.encode(scene)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
+
+        let successResponse: [APISuccessContext] = try decoder.decode([APISuccessContext].self, from: data)
+        guard let successContext = successResponse.first,
+              let responseId = Int(successContext.id)
+        else { throw APIError.unknownResponse(data: data, response: response) }
+
+        return responseId
+    }
+    
     func getAllScenes() async throws -> [Int: [Int: RESTScene]] {
         let path = "/api/\(self.apiKey)/scenes/"
         let request = request(forPath: path, using: .get)
@@ -239,25 +258,6 @@ actor RESTClient {
             })
         })
     }
-    
-//    func createScene(groupID: Int, name: String) async throws -> Int {
-//        let scene = deCONZSceneRESTParameter(name: name)
-//        
-//        let path = "/api/\(self.keyAPI)/groups/\(groupID)/scenes"
-//        var request = request(forPath: path, using: .post)
-//        encoder.outputFormatting = []
-//        request.httpBody = try encoder.encode(scene)
-//        
-//        let (data, response) = try await URLSession.shared.data(for: request)
-//        try check(data: data, from: response)
-//        
-//        let successResponse: [deCONZSuccessContext] = try decoder.decode([deCONZSuccessContext].self, from: data)
-//        guard let successContext = successResponse.first,
-//              let responseID = Int(successContext.id)
-//        else { throw deCONZError.unknownResponse(data: data, response: response) }
-//        
-//        return responseID
-//    }
     
     func getSceneState(lightId: Int, groupID: Int, sceneID: Int) async throws -> RESTLightState? {
         struct SceneLightState: Decodable {
@@ -329,19 +329,19 @@ actor RESTClient {
 //        
 //        return lightStates
 //    }
-//    
-//    func setSceneAttributes(groupID: Int, sceneID: Int, name: String) async throws {
-//        let scene = deCONZSceneRESTParameter(name: name)
-//        
-//        let path = "/api/\(self.keyAPI)/groups/\(groupID)/scenes/\(sceneID)/"
-//        var request = request(forPath: path, using: .put)
-//        encoder.outputFormatting = []
-//        request.httpBody = try encoder.encode(scene)
-//        
-//        let (data, response) = try await URLSession.shared.data(for: request)
-//        try check(data: data, from: response)
-//    }
-//    
+    
+    func setSceneAttributes(groupId: Int, sceneId: Int, name: String) async throws {
+        let scene = RESTSceneObject(name: name)
+        
+        let path = "/api/\(self.apiKey)/groups/\(groupId)/scenes/\(sceneId)/"
+        var request = request(forPath: path, using: .put)
+        encoder.outputFormatting = []
+        request.httpBody = try encoder.encode(scene)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
+    }
+    
 //    func modifyScene(groupID: Int, sceneID: Int, lightIDs: [Int], state: deCONZLightState?) async throws {
 //        // Build the request body by decoding and re-encoding 'state' to JSON (to 'validate' it).
 //        // Since 'state' is the same for all passed-in lights, this only needs to be done once.
@@ -372,12 +372,12 @@ actor RESTClient {
 //        let (data, response) = try await URLSession.shared.data(for: request)
 //        try check(data: data, from: response)
 //    }
-//    
-//    func deleteScene(groupID: Int, sceneID: Int) async throws {
-//        let path = "/api/\(self.keyAPI)/groups/\(groupID)/scenes/\(sceneID)/"
-//        let request = request(forPath: path, using: .delete)
-//        
-//        let (data, response) = try await URLSession.shared.data(for: request)
-//        try check(data: data, from: response)
-//    }
+    
+    func deleteScene(groupId: Int, sceneId: Int) async throws {
+        let path = "/api/\(self.apiKey)/groups/\(groupId)/scenes/\(sceneId)/"
+        let request = request(forPath: path, using: .delete)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
+    }
 }
