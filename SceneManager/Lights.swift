@@ -196,27 +196,6 @@ struct LightBottomBarView: View {
             HStack(alignment: .firstTextBaseline, spacing: 0) {
                 Button(action: {
                     isPresentingSheet = true
-//                    let window = NSWindow(
-//                        contentRect: .zero,
-//                        styleMask: [.titled, .closable],
-//                        backing: .buffered,
-//                        defer: false
-//                    )
-//                    
-//                    window.titlebarAppearsTransparent = true
-//                    
-//                    window.center()
-//                    window.isReleasedWhenClosed = false
-//                    
-//                    let view = AddLightView(window: window, deconzModel: deconzModel)
-//                        .padding()
-//                        .frame( width: 340, height: 400)
-//                    
-//                    let hosting = NSHostingView(rootView: view)
-//                    window.contentView = hosting
-//                    hosting.autoresizingMask = [.width, .height]
-//                    
-//                    NSApp.keyWindow?.beginSheet(window)
                 }) {
                     Label("", systemImage: "plus")
                         .padding([.leading, .bottom], 8)
@@ -228,12 +207,9 @@ struct LightBottomBarView: View {
                 .disabled(shouldDisableAddButton())
                 
                 Button(action: {
-//                    switch (deconzModel.selectedSidebarItem?.type) {
-//                    case .group:
-//                        Task {
-//                            let groupLightItems = deconzModel.lightsList.filter({ !deconzModel.selectedLightItemIDs.contains($0.lightID) })
-//                            await deconzModel.modifyGroupLights(groupID: deconzModel.selectedSidebarItem!.groupID!, groupLights: groupLightItems)
-//                        }
+                    switch (sidebar.selectedSidebarItem?.kind) {
+                    case .group:
+                        window.remove(lightIds: Array(lights.selectedLightItems).map({ $0.lightId }), fromGroupId: window.groupId!)
 //                    case .scene:
 //                        Task {
 //                            let removingLightItems = LightItemAction.removeFromScene(lightItems: Array(deconzModel.selectedLightItems))
@@ -243,9 +219,12 @@ struct LightBottomBarView: View {
 //                            
 //                            deconzModel.selectedLightItemIDs.removeAll()
 //                        }
-//                    default:
-//                        break
-//                    }
+                    default:
+                        break
+                    }
+                    
+                    // Remove selection
+                    lights.selectedLightItemIds.removeAll()
                 }) {
                     Label("", systemImage: "minus")
                         .padding(.bottom, 4)
@@ -264,13 +243,13 @@ struct LightBottomBarView: View {
     }
 }
 
+// MARK: - Add Light View
+
 struct AddLightView: View {
     @Environment(Sidebar.self) private var sidebar
     @Environment(WindowItem.self) private var window
     
     @Environment(\.dismiss) private var dismiss
-//    let window: NSWindow
-//    let deconzModel: SceneManagerModel
     
     @State private var lightItems = [LightItem]()
     @State private var addLightItems = Set<LightItem>()
@@ -311,7 +290,8 @@ struct AddLightView: View {
                     .listRowSeparator(.hidden)
             }
             // When inside a VStack, a List's size must be set explicitly
-            .frame(idealHeight: lightItems.count <= 10 ? CGFloat(lightItems.count) * 28 : 300, maxHeight: 300)
+            // FIXME: Dynamic Type will probably not work with this
+            .frame(idealHeight: lightItems.count <= 7 ? CGFloat(lightItems.count) * 44 : 308, maxHeight: 308)
             .padding([.leading, .trailing], 12)
             .task {
                 loadLightItems()
@@ -327,6 +307,13 @@ struct AddLightView: View {
                 .keyboardShortcut(.cancelAction)
                 
                 Button("\(addLightItems.count) Add Lights") {
+                    switch (sidebar.selectedSidebarItem?.kind) {
+                    case .group:
+                        window.add(lightIds: Array(addLightItems).map({ $0.lightId }), toGroupId: window.groupId!)
+                        
+                    default:
+                        break
+                        }
 //                    var lightItems = deconzModel.lightsList
                     
 //                    Task {

@@ -110,4 +110,40 @@ class WindowItem {
         
         return RESTModel.shared.lights.filter { inGroupButNotInSceneLightIds.contains($0.lightId) }
     }
+    
+    func add(lightIds: [Int], toGroupId groupId: Int) {
+        Task {
+            do {
+                try await RESTModel.shared.addLightsToGroup(groupId: groupId, lightIds: lightIds)
+            } catch {
+                // FIXME: Error handling
+                logger.error("\(error, privacy: .public)")
+                return
+            }
+            
+            // Update UI models
+            let addedItems = lightIds.map({
+                LightItem(lightId: $0, name: RESTModel.shared.light(withLightId: $0)!.name)
+            })
+            
+            let newItems = Array(Set([self.lights?.items ?? [], addedItems].joined()))
+            self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+        }
+    }
+    
+    func remove(lightIds: [Int], fromGroupId groupId: Int) {
+        Task {
+            do {
+                try await RESTModel.shared.removeLightsFromGroup(groupId: groupId, lightIds: lightIds)
+            } catch {
+                // FIXME: Error handling
+                logger.error("\(error, privacy: .public)")
+                return
+            }
+            
+            // Update UI models
+            let newItems = self.lights?.items.filter { !lightIds.contains($0.lightId) } ?? []
+            self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+        }
+    }
 }

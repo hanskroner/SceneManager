@@ -100,6 +100,45 @@ public final class RESTModel {
         }
     }
     
+    public func addLightsToGroup(groupId: Int, lightIds: [Int]) async throws {
+        // Get the IDs of the lights currently in the Group, add the new light IDs to
+        // that list, remove duplicates (by making them into a Set and then back to an Array),
+        // and sort the list for consistency across operations.
+        let lightsInGroup = self.group(withGroupId: groupId)?.lightIds ?? []
+        let newLightsInGroup = Array(Set([lightsInGroup, lightIds].joined())).sorted()
+        
+        try await self._client.setGroupAttributes(groupId: groupId, lights: newLightsInGroup)
+        
+        // Update the model's cache
+        let cachedGroup = self._groups[groupId]!
+        cachedGroup.lightIds = newLightsInGroup
+        self._groups[groupId] = cachedGroup
+    }
+    
+    public func removeLightsFromGroup(groupId: Int, lightIds: [Int]) async throws {
+        // Get the IDs of the lights currently in the Group, remove the light IDs from
+        // that list and sort it for consistency across operations.
+        let lightsInGroup = self.group(withGroupId: groupId)?.lightIds ?? []
+        let newLightsInGroup = Array(Set(lightsInGroup).subtracting(lightIds)).sorted()
+        
+        try await self._client.setGroupAttributes(groupId: groupId, lights: newLightsInGroup)
+        
+        // Update the model's cache
+        // Removing Lights from a Group also removes them from any Scenes in the
+        // Group. Both cached resources need to be updated.
+        let cachedGroup = self._groups[groupId]!
+        cachedGroup.lightIds = newLightsInGroup
+        self._groups[groupId] = cachedGroup
+        
+        guard let cachedGroupScenes = self._scenes[groupId] else { return }
+        for (sceneId, cachedScene) in cachedGroupScenes {
+            let newLightsInScene = cachedScene.lightIds.filter { newLightsInGroup.contains($0) }
+            cachedScene.lightIds = newLightsInScene
+            cachedScene.lightStates = cachedScene.lightStates.filter{ !lightIds.contains($0.key) }
+            self._scenes[groupId]?[sceneId] = cachedScene
+        }
+    }
+    
     public func deleteGroup(groupId: Int) async {
         do {
             try await self._client.deleteGroup(groupId: groupId)
