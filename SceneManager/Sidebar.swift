@@ -425,6 +425,7 @@ struct EditableText: View {
 
 struct SidebarItemView: View {
     @Environment(Sidebar.self) private var sidebar
+    @Environment(WindowItem.self) private var window
     
     @Binding var item: SidebarItem
     
@@ -496,6 +497,15 @@ struct SidebarItemView: View {
                             await RESTModel.shared.renameScene(groupId: item.groupId, sceneId: item.sceneId!, name: item.name)
                         }
                         
+                        // Update Window properties
+                        let group = sidebar.items.first(where: { $0.groupId == item.groupId && $0.sceneId == nil })
+                        let scene = group?.items.first(where: { $0.sceneId == item.sceneId })
+                        
+                        window.navigationTitle = item.kind == .group ? group?.name : nil
+                        window.navigationSubtitle = item.kind == .scene ? scene?.name : nil
+                        window.groupId = item.groupId
+                        window.sceneId = item.sceneId
+                        
                         // Keep the lists sorted
                         // Sorting happens as part of the Task, otherwise the reference to 'item' will change
                         if (item.kind == .group) {
@@ -550,6 +560,12 @@ struct SidebarItemView: View {
                             
                             // Deleting happens as part of the Task, otherwise the reference to 'item' will change
                             sidebar.deleteSidebarItem(item)
+                            
+                            // Update Window properties
+                            window.navigationTitle = nil
+                            window.navigationSubtitle = nil
+                            window.groupId = nil
+                            window.sceneId = nil
                         }
                     }
                 }
