@@ -4,7 +4,6 @@
         "image" : "lightbulb.2",
         "state" : {
             "bri" : 1,
-            "colormode" : "xy",
             "on" : true,
             "transitiontime" : 4,
             "xy" : [0.3328, 0.2288]
@@ -15,7 +14,6 @@
         "image" : "lightbulb.2",
         "state" : {
             "bri" : 1,
-            "colormode" : "xy",
             "on" : true,
             "transitiontime" : 4,
             "xy" : [0.2330, 0.2353]
@@ -26,7 +24,6 @@
         "image" : "lightbulb.2",
         "state" : {
             "bri" : 1,
-            "colormode" : "xy",
             "on" : true,
             "transitiontime" : 4,
             "xy" : [0.2822, 0.4419]
@@ -37,7 +34,6 @@
         "image" : "lightbulb.2",
         "state" : {
             "bri" : 1,
-            "colormode" : "xy",
             "on" : true,
             "transitiontime" : 4,
             "xy" : [0.4546, 0.4393]
@@ -48,7 +44,6 @@
         "image" : "lightbulb.2",
         "state" : {
             "bri" : 1,
-            "colormode" : "xy",
             "on" : true,
             "transitiontime" : 4,
             "xy" : [0.5188, 0.3296]

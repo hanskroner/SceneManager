@@ -3,7 +3,6 @@
     "image" : "lightbulb.2",
     "state" : {
         "bri" : 140,
-        "colormode" : "ct",
         "ct" : 447,
         "on" : true,
         "transitiontime" : 4

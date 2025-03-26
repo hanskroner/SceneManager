@@ -320,7 +320,6 @@ struct MacEditorTextView_Previews: PreviewProvider {
 """
 {
   "bri" : 229,
-  "colormode" : "ct",
   "ct" : 346,
   "on" : true,
   "transitiontime" : 4
@@ -338,7 +337,6 @@ struct MacEditorTextView_Previews: PreviewProvider {
 """
 {
   "bri" : 229,
-  "colormode" : "ct",
   "ct" : 346,
   "on" : true,
   "transitiontime" : 4
