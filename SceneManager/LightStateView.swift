@@ -20,9 +20,8 @@ struct LightStateView: View {
     @Environment(Lights.self) private var lights
     @Environment(WindowItem.self) private var window
     
-    @State var text: String = ""
-    
     var body: some View {
+        @Bindable var window = window
         VStack(alignment: .leading) {
             Text("State")
                 .font(.title2)
@@ -30,7 +29,7 @@ struct LightStateView: View {
                 .padding([.bottom], -4)
             
             ZStack {
-                SimpleJSONTextView(text: $text, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
+                SimpleJSONTextView(text: $window.stateEditorText, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
                     .clipped()
                 
                 // !!!: Transparent view to recieve 'PresetItem' drag'n'drops
@@ -44,7 +43,7 @@ struct LightStateView: View {
                     .drop(if: (sidebar.selectedSidebarItem?.kind == .scene), for: PresetItem.self, action: { items, location in
                         guard let first = items.first else { return false }
                         logger.info("Dropped \(first.name)")
-                        text = first.state.prettyPrint()
+                        window.stateEditorText = first.state.prettyPrint()
                         
                         return true
                     })
@@ -54,21 +53,21 @@ struct LightStateView: View {
                 Spacer()
                 Button("Apply to Scene") {
                     Task {
-                        await window.modify(jsonLightState: text, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
+                        await window.modify(jsonLightState: window.stateEditorText, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
                     }
                 }
                 .disabled(sidebar.selectedSidebarItem == nil
                           || sidebar.selectedSidebarItem?.kind != .scene
-                          || text.isEmpty)
+                          || window.stateEditorText.isEmpty)
                 .fixedSize(horizontal: true, vertical: true)
                 
                 Button("Apply to Selected") {
                     Task {
-                        await window.modify(jsonLightState: text, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.selectedLightItems.map{ $0.lightId })
+                        await window.modify(jsonLightState: window.stateEditorText, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.selectedLightItems.map{ $0.lightId })
                     }
                 }
                 .disabled(lights.selectedLightItems.isEmpty
-                          || text.isEmpty)
+                          || window.stateEditorText.isEmpty)
                 .fixedSize(horizontal: true, vertical: true)
             }
         }
@@ -76,12 +75,12 @@ struct LightStateView: View {
         .padding(.bottom, 8)
         .onChange(of: light) { oldValue, newValue in
             guard let newValue else {
-                text = ""
+                window.stateEditorText = ""
                 return
             }
             
             Task {
-                text = await window.jsonLightState(forLightId: newValue.lightId,
+                window.stateEditorText = await window.jsonLightState(forLightId: newValue.lightId,
                                                    groupId: window.groupId,
                                                    sceneId: window.sceneId)
             }

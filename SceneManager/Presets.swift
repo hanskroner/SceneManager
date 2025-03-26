@@ -18,7 +18,7 @@ private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: 
 class Presets {
     var items: [PresetItem] = [PresetItem]()
     
-    var scrollToPresetItemID: UUID? = nil
+    var scrollToPresetItemId: UUID? = nil
     
     private let decoder = JSONDecoder()
     private let encoder = JSONEncoder()
@@ -148,23 +148,22 @@ class PresetItem: Identifiable, Codable, Transferable {
     var isRenaming: Bool = false
     
     var color: Color {
-        // FIXME: This was nicer when there was a specific type instead of 'JSON'
-        switch self.state["colormode"]!.stringValue {
-        case "ct":
+        if self.state["ct"] != nil {
             return Color(SceneManager.color(fromMired: self.state["ct"]!.intValue!)!)
-        case "xy":
+        }
+        
+        if self.state["xy"] != nil {
             let xy = self.state["xy"]!
             return Color(SceneManager.color(fromXY: CGPoint(x: xy[0]!.doubleValue!, y: xy[1]!.doubleValue!), brightness: 0.5))
-            
-        default:
-            return .white
         }
-//        switch self.state.colormode {
-//        case .ct(let ct):
-//            return Color(SceneManager.color(fromMired: ct)!)
-//        case .xy(let x, let y):
-//            return Color(SceneManager.color(fromXY: CGPoint(x: x, y: y), brightness: 0.5))
-//        }
+            
+        return .white
+    }
+    
+    init(name: String, systemImage: String, state: JSON) {
+        self.name = name
+        self.systemImage = systemImage
+        self.state = state
     }
     
     enum CodingKeys: CodingKey {
@@ -260,7 +259,7 @@ struct PresetsView: View {
                     }
                 }
             }
-            .onChange(of: presets.scrollToPresetItemID) { previousItem, newItem in
+            .onChange(of: presets.scrollToPresetItemId) { previousItem, newItem in
                 if let item = newItem {
                     withAnimation {
                         scrollReader.scrollTo(item, anchor: .center)
@@ -305,7 +304,9 @@ struct PresetItemView: View {
                         do {
                             try presets.renamePresetItemInDocumentsDirectory(presetItem)
                         } catch {
+                            // FIXME: Error handling
                             logger.error("\(error, privacy: .public)")
+                            return
                         }
                         
                         withAnimation {
@@ -367,6 +368,87 @@ struct PresetItemView: View {
         NSColor(color).getRed(&r, green: &g, blue: &b, alpha: &a)
         let lum = 0.2126 * r + 0.7152 * g + 0.0722 * b
         return  lum < 0.77
+    }
+}
+
+struct AddPresetView: View {
+    @Environment(Presets.self) private var presets
+    @Environment(WindowItem.self) private var window
+    
+    @State private var newPresetName = ""
+    
+    @Binding var showingPopover: Bool
+    
+    private let _encoder = JSONEncoder()
+    private let _decoder = JSONDecoder()
+    
+    var body: some View {
+        VStack {
+            Text("Give the current State a name to store it as a Preset")
+                .font(.subheadline)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: 150, maxHeight: 40)
+            
+            TextField("Preset Name", text: $newPresetName)
+                .frame(minWidth: 150)
+            
+            HStack {
+                Spacer()
+                Button("Store Preset") {
+                    guard let lightState = try? _decoder.decode(LightState.self, from: window.stateEditorText.data(using: .utf8)!) else { return }
+                    
+                    // If a Preset with the same name already exits, overwrite its state
+                    if let index = presets.items.firstIndex(where: { $0.name == newPresetName }) {
+                        withAnimation {
+                            let encoded = try! _encoder.encode(lightState)
+                            let decoded = try! _decoder.decode(JSON.self, from: encoded)
+                            
+                            presets.items[index].state = decoded
+                            showingPopover = false
+                        }
+                        
+                        do {
+                            try presets.savePresetItemToDocumentsDirectory(presets.items[index])
+                        } catch {
+                            // FIXME: Error handling
+                            logger.error("\(error, privacy: .public)")
+                            return
+                        }
+                        
+                        presets.scrollToPresetItemId = presets.items[index].id
+                    } else {
+                        let encoded = try! _encoder.encode(lightState)
+                        let decoded = try! _decoder.decode(JSON.self, from: encoded)
+                        let newPresetItem = PresetItem(name: newPresetName, systemImage: "lightbulb.2", state: decoded)
+                        
+                        var presetItems = presets.items
+                        presetItems.append(newPresetItem)
+                        
+                        withAnimation {
+                            presets.items = presetItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+                            showingPopover = false
+                        }
+                        
+                        do {
+                            try presets.savePresetItemToDocumentsDirectory(newPresetItem)
+                        } catch {
+                            // FIXME: Error handling
+                            logger.error("\(error, privacy: .public)")
+                            return
+                        }
+                        
+                        presets.scrollToPresetItemId = newPresetItem.id
+                    }
+                    
+                    newPresetName = ""
+                }
+                .disabled(newPresetName.isEmpty)
+                .keyboardShortcut(.defaultAction)
+            }
+            .padding(.top, 6)
+        }
+        .padding()
     }
 }
 

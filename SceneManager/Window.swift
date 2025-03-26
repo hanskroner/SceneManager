@@ -23,6 +23,7 @@ class WindowItem {
     
     var groupId: Int? = nil
     var sceneId: Int? = nil
+    var stateEditorText: String = ""
     
     var modelRefreshedSubscription: AnyCancellable? = nil
         

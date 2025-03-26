@@ -79,6 +79,9 @@
     "Delete Preset" : {
 
     },
+    "Give the current State a name to store it as a Preset" : {
+
+    },
     "Groups" : {
 
     },
@@ -97,10 +100,16 @@
     "New Scene" : {
 
     },
+    "Preset Name" : {
+
+    },
     "Remove Lights" : {
 
     },
     "Rename Preset" : {
+
+    },
+    "Scene Manager" : {
 
     },
     "Scene Presets" : {
@@ -112,7 +121,7 @@
     "Store as Preset" : {
 
     },
-    "Scene Manager" : {
+    "Store Preset" : {
 
     },
     "Toggle Inspector" : {

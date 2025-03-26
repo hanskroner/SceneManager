@@ -8,9 +8,13 @@
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(Sidebar.self) private var sidebar
+    @Environment(Lights.self) private var lights
     @Environment(WindowItem.self) private var window
     
     @SceneStorage("inspector") private var showInspector = false
+    
+    @State private var showingPopover = false
     
     var body: some View {
         NavigationSplitView {
@@ -28,9 +32,15 @@ struct ContentView: View {
             .navigationTitle(window.navigationTitle ?? "Scene Manager")
             .navigationSubtitle(window.navigationSubtitle ?? "")
             .toolbar {
-                Button(action: { }) {
+                Button(action: { showingPopover = true }) {
                     Label("Create Scene Preset", systemImage: "rectangle.stack")
                 }
+                .popover(isPresented: $showingPopover, arrowEdge: .bottom) {
+                    AddPresetView(showingPopover: $showingPopover)
+                }
+                .disabled((sidebar.selectedSidebarItem ==  nil
+                           || sidebar.selectedSidebarItem?.kind != .scene)
+                           || lights.selectedLightItems.isEmpty)
                 .help("Store as Preset")
             }
         }
