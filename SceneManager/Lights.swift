@@ -332,11 +332,13 @@ struct AddLightView: View {
 #Preview("LightView") {
     let contentURL = Bundle.main.url(forResource: "Lights", withExtension: "json")
     let contentData = try! Data(contentsOf: contentURL!)
+    let sidebar = Sidebar()
     let lights = Lights(json: contentData)
     let window = WindowItem()
     
     return LightView()
         .frame(width: 250, height: 380, alignment: .center)
+        .environment(sidebar)
         .environment(lights)
         .environment(window)
 }
