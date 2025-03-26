@@ -225,6 +225,26 @@ public final class RESTModel {
         self._scenes[groupId]?[sceneId] = cachedScene
     }
     
+    public func modifyLightStateInScene(groupId: Int, sceneId: Int, lightIds: [Int], jsonLightState: String) async throws {
+        let lightState = try _decoder.decode(LightState.self, from: Data(jsonLightState.utf8))
+        try await self._client.modifyScene(groupId: groupId,
+                                           sceneId: sceneId,
+                                           lightIds: lightIds,
+                                           lightState: RESTLightState(alert: lightState.alert,
+                                                                      bri: lightState.bri,
+                                                                      colormode: nil,
+                                                                      ct: lightState.ct,
+                                                                      effect: lightState.effect,
+                                                                      hue: nil,
+                                                                      on: lightState.on,
+                                                                      reachable: nil,
+                                                                      sat: nil,
+                                                                      xy: lightState.xy,
+                                                                      transitiontime: lightState.transitiontime,
+                                                                      effect_duration: lightState.effect_duration,
+                                                                      effect_speed: lightState.effect_speed))
+    }
+    
     public func deleteScene(groupId: Int, sceneId: Int) async {
         do {
             try await self._client.deleteScene(groupId: groupId, sceneId: sceneId)

@@ -23,8 +23,6 @@ struct LightStateView: View {
     @State var text: String = ""
     
     var body: some View {
-//        @Bindable var deconzModel = deconzModel
-        
         VStack(alignment: .leading) {
             Text("State")
                 .font(.title2)
@@ -55,10 +53,9 @@ struct LightStateView: View {
             HStack {
                 Spacer()
                 Button("Apply to Scene") {
-//                    Task {
-//                        deconzModel.jsonStateText = deconzModel.lightStateText
-//                        await deconzModel.modifyScene(range: .allLightsInScene)
-//                    }
+                    Task {
+                        await window.modify(jsonLightState: text, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
+                    }
                 }
                 .disabled(sidebar.selectedSidebarItem == nil
                           || sidebar.selectedSidebarItem?.kind != .scene
@@ -66,10 +63,9 @@ struct LightStateView: View {
                 .fixedSize(horizontal: true, vertical: true)
                 
                 Button("Apply to Selected") {
-//                    Task {
-//                        deconzModel.jsonStateText = deconzModel.lightStateText
-//                        await deconzModel.modifyScene(range: .selectedLightsOnly)
-//                    }
+                    Task {
+                        await window.modify(jsonLightState: text, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.selectedLightItems.map{ $0.lightId })
+                    }
                 }
                 .disabled(lights.selectedLightItems.isEmpty
                           || text.isEmpty)

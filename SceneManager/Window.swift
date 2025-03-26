@@ -182,4 +182,16 @@ class WindowItem {
             self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
         }
     }
+    
+    // MARK: - Scene Methods
+    
+    func modify(jsonLightState: String, forGroupId groupId: Int, sceneId: Int, lightIds: [Int]) async {
+        do {
+            return try await RESTModel.shared.modifyLightStateInScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonLightState: jsonLightState)
+        } catch {
+            // FIXME: Error handling
+            logger.error("\(error, privacy: .public)")
+            return
+        }
+    }
 }

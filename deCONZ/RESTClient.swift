@@ -260,6 +260,12 @@ actor RESTClient {
     }
     
     func getSceneState(lightId: Int, groupID: Int, sceneID: Int) async throws -> RESTLightState? {
+        // The deCONZ REST API is inconsistent in the way it handles xy Color Mode values.
+        // When modifying a Scene that uses xy Color Mode, the values must be passed in as an array under
+        // the "xy" JSON key. When getting the attributes of a Scene that uses xy Color Mode, the REST
+        // API returns the values in separate "x" and "y" JSON keys.
+        // To provide consisten and stable objects,'SceneLightState' is used to fetch the values from
+        // the REST API and they are then re-packed into a 'RESTLightState'.
         struct SceneLightState: Decodable {
             let id: String?
             let bri: Int?
@@ -343,17 +349,10 @@ actor RESTClient {
     }
     
     func modifyScene(groupId: Int, sceneId: Int, lightIds: [Int], lightState: RESTLightState?) async throws {
-        // Build the request body by decoding and re-encoding 'state' to JSON (to 'validate' it).
-        // Since 'state' is the same for all passed-in lights, this only needs to be done once.
-        // Note that the deCONZ REST API is inconsistent in the way it handles xy Color Mode values.
+        // The deCONZ REST API is inconsistent in the way it handles xy Color Mode values.
         // When modifying a Scene that uses xy Color Mode, the values must be passed in as an array under
         // the "xy" JSON key. When getting the attributes of a Scene that uses xy Color Mode, the REST
         // API returns the values in separate "x" and "y" JSON keys.
-        
-        // Note that 'deconzLightStateRESTParameter' sets 'id' to nil and only returns 'xy'
-        // colormode as an Array of Doubles.
-//        let restLightState = deconzLightStateRESTParameter(from: state)
-        
         for (lightId) in lightIds {
             let path = "/api/\(self.apiKey)/groups/\(groupId)/scenes/\(sceneId)/lights/\(lightId)/state/"
             var request = request(forPath: path, using: .put)
