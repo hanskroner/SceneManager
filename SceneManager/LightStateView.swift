@@ -43,7 +43,7 @@ struct LightStateView: View {
                 Rectangle()
                     .fill(Color.white.opacity(0.0))
                     .allowsHitTesting(false)
-                    .drop(if: (sidebar.selectedSidebarItem?.kind == .scene) && (!lights.selectedLightItems.isEmpty), for: PresetItem.self, action: { items, location in
+                    .drop(if: (sidebar.selectedSidebarItem?.kind == .scene), for: PresetItem.self, action: { items, location in
                         guard let first = items.first else { return false }
                         logger.info("Dropped \(first.name)")
                         text = first.state.prettyPrint()
@@ -60,8 +60,9 @@ struct LightStateView: View {
 //                        await deconzModel.modifyScene(range: .allLightsInScene)
 //                    }
                 }
-//                .disabled(deconzModel.selectedSidebarItem == nil
-//                          || deconzModel.jsonStateText.isEmpty)
+                .disabled(sidebar.selectedSidebarItem == nil
+                          || sidebar.selectedSidebarItem?.kind != .scene
+                          || text.isEmpty)
                 .fixedSize(horizontal: true, vertical: true)
                 
                 Button("Apply to Selected") {
@@ -70,8 +71,8 @@ struct LightStateView: View {
 //                        await deconzModel.modifyScene(range: .selectedLightsOnly)
 //                    }
                 }
-//                .disabled(deconzModel.selectedLightItems.isEmpty
-//                          || deconzModel.jsonStateText.isEmpty)
+                .disabled(lights.selectedLightItems.isEmpty
+                          || text.isEmpty)
                 .fixedSize(horizontal: true, vertical: true)
             }
         }
@@ -89,7 +90,8 @@ struct LightStateView: View {
                                                    sceneId: window.sceneId)
             }
         }
-//        .disabled(deconzModel.selectedSidebarItem ==  nil || deconzModel.selectedSidebarItem?.type == .group)
+        .disabled(sidebar.selectedSidebarItem == nil
+                  || sidebar.selectedSidebarItem?.kind != .scene)
     }
 }
 
