@@ -148,7 +148,6 @@ struct LightView: View {
         }
         .frame(minWidth: 250)
         .sheet(isPresented: $isPresentingSheet) {
-//        isPresentingSheet = false
         } content: {
             AddLightView()
         }
@@ -319,10 +318,6 @@ struct AddLightView: View {
                 .disabled(addLightItems.isEmpty)
             }
             .padding(18)
-            .background {
-                GeometryReader { geometry in
-                }
-            }
         }
     }
 }

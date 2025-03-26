@@ -254,18 +254,6 @@ public final class Scene: APIItem, Codable {
         self.id = UUID(namespace: uuidNamespace, input: "\(groupId)-\(sceneId)")!
     }
     
-//    public init(from decoder: Decoder, configuration: GroupDecodingConfiguration) throws {
-//        let container = try decoder.container(keyedBy: CodingKeys.self)
-//        
-//        name = try container.decode(String.self, forKey: .name)
-//        sceneId = try container.decode(Int.self, forKey: .scene_id)
-//        groupId = configuration.groupId
-//        lightIds = try container.decodeIfPresent([Int].self, forKey: .light_ids) ?? []
-//        lightStates = try container.decodeIfPresent([Int: LightState].self, forKey: .light_states) ?? [:]
-//        
-//        self.id = UUID(namespace: uuidNamespace, input: "\(groupId)-\(sceneId)")!
-//    }
-    
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         

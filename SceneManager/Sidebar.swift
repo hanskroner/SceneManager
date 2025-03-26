@@ -125,7 +125,6 @@ class Sidebar {
         for parentItem in self.items {
             if (parentItem.items.contains(deleteItem)) {
                 parentItem.items.removeAll { $0 == deleteItem }
-                
                 return
             }
         }

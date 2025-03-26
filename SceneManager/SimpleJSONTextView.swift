@@ -145,11 +145,9 @@ final class CustomTextView: NSView {
     
     private lazy var scrollView: NSScrollView = {
         let scrollView = NSScrollView()
-//        scrollView.drawsBackground = true
         scrollView.borderType = .noBorder
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalRuler = false
-//        scrollView.autoresizingMask = [.width, .height]
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         
         return scrollView
@@ -172,10 +170,6 @@ final class CustomTextView: NSView {
         textLayoutManager.textContainer = textContainer
         
         let textView                     = NSTextView(frame: .zero, textContainer: textContainer)
-//        let textView                     = NSTextView(frame: CGRect(x: scrollView.frame.origin.x, y: scrollView.frame.origin.y, width: contentSize.width, height: contentSize.height), textContainer: textContainer)
-//        textView.textColor               = NSColor.labelColor
-//        textView.backgroundColor         = NSColor.textBackgroundColor
-//        textView.drawsBackground         = true
         textView.delegate                = self.delegate
         textView.font                    = self.font
         textView.isEditable              = self.isEditable
@@ -185,7 +179,6 @@ final class CustomTextView: NSView {
         textView.minSize                 = NSSize(width: 0, height: contentSize.height)
         textView.allowsUndo              = true
         textView.autoresizingMask        = .width
-//        textView.translatesAutoresizingMaskIntoConstraints = false
         
         return textView
     }()

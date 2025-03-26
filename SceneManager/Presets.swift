@@ -195,54 +195,6 @@ extension UTType {
     static var presetItem = UTType(exportedAs: "com.hanskroner.scenemanager.preset-item")
 }
 
-//extension PresetItem {
-//    static var draggableType = UTType(exportedAs: "com.hanskroner.scenemanager.preset-item")
-//    
-//    static func fromItemProviders(_ itemProviders: [NSItemProvider], completion: @escaping ([PresetItem]) -> Void) {
-//        let typeIdentifier = Self.draggableType.identifier
-//        let filteredProviders = itemProviders.filter {
-//            $0.hasItemConformingToTypeIdentifier(typeIdentifier)
-//        }
-//        
-//        let group = DispatchGroup()
-//        var result = [Int: PresetItem]()
-//        
-//        for (index, provider) in filteredProviders.enumerated() {
-//            group.enter()
-//            provider.loadDataRepresentation(forTypeIdentifier: typeIdentifier) { (data, error) in
-//                defer { group.leave() }
-//                guard let data = data else { return }
-//                let decoder = JSONDecoder()
-//                guard let preset = try? decoder.decode(PresetItem.self, from: data)
-//                else { return }
-//                result[index] = preset
-//            }
-//        }
-//        
-//        group.notify(queue: .global(qos: .userInitiated)) {
-//            let presets = result.keys.sorted().compactMap { result[$0] }
-//            DispatchQueue.main.async {
-//                completion(presets)
-//            }
-//        }
-//    }
-//    
-//    var itemProvider: NSItemProvider {
-//        let provider = NSItemProvider()
-//        provider.registerDataRepresentation(forTypeIdentifier: Self.draggableType.identifier, visibility: .all) {
-//            let encoder = JSONEncoder()
-//            do {
-//                let data = try encoder.encode(self)
-//                $0(data, nil)
-//            } catch {
-//                $0(nil, error)
-//            }
-//            return nil
-//        }
-//        return provider
-//    }
-//}
-
 // MARK: - Presets View
 
 struct PresetsView: View {
@@ -328,7 +280,6 @@ struct PresetItemView: View {
         .frame(maxWidth: .infinity)
         .background(presetItem.color)
         .cornerRadius(8)
-//        .itemProvider { presetItem.itemProvider }
         .draggable(presetItem)
         .contextMenu {
             Button(action: {

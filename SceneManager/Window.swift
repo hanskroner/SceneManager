@@ -63,7 +63,7 @@ class WindowItem {
             })
             self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
             
-            let ids = Array(self.lights!.selectedLightItemIds)//.joined(separator: ", ")
+            let ids = Array(self.lights!.selectedLightItemIds)
             logger.info("Selection is '\(ids, privacy: .public)'")
             
             return
@@ -75,7 +75,7 @@ class WindowItem {
         })
         self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
         
-        let ids = Array(self.lights!.selectedLightItemIds)//.joined(separator: ", ")
+        let ids = Array(self.lights!.selectedLightItemIds)
         let avail = self.lights!.items.map { $0.id }
         logger.info("Selection is '\(ids, privacy: .public)'")
         logger.info("Available are '\(avail, privacy: .public)'")
