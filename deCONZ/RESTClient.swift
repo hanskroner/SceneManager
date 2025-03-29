@@ -119,7 +119,7 @@ actor RESTClient {
         let (data, response) = try await URLSession.shared.data(for: request)
         try check(data: data, from: response)
         
-        return try decoder.decode([Int: RESTLight].self, from: data)
+        return try decoder.decode([Int: RESTLight].self, from: data).filter { $0.value.type != "Configuration tool" }
     }
     
     func getLightState(lightID: Int) async throws -> RESTLightState {
