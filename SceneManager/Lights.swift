@@ -284,7 +284,8 @@ struct AddLightView: View {
             }
             // When inside a VStack, a List's size must be set explicitly
             // FIXME: Dynamic Type will probably not work with this
-            .frame(idealHeight: lightItems.count <= 7 ? CGFloat(lightItems.count) * 44 : 308, maxHeight: 308)
+            .frame(idealHeight: lightItems.count <= 12 ? 36 + (CGFloat(lightItems.count) * 22) : 300, maxHeight: 300)
+            .scrollBounceBehavior(.basedOnSize)
             .padding([.leading, .trailing], 12)
             .task {
                 loadLightItems()
