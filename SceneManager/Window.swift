@@ -59,7 +59,7 @@ class WindowItem {
         // Group lights
         guard let sceneId else {
             let newItems = RESTModel.shared.group(withGroupId: groupId)!.lightIds.map({
-                LightItem(lightId: $0, name: RESTModel.shared.light(withLightId: $0)!.name)
+                LightItem(light: RESTModel.shared.light(withLightId: $0)!)
             })
             self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
             
@@ -71,7 +71,7 @@ class WindowItem {
         
         // Scene lights
         let newItems = RESTModel.shared.scene(withGroupId: groupId, sceneId: sceneId)!.lightIds.map({
-            LightItem(lightId: $0, name: RESTModel.shared.light(withLightId: $0)!.name)
+            LightItem(light: RESTModel.shared.light(withLightId: $0)!)
         })
         self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
         
@@ -124,7 +124,7 @@ class WindowItem {
             
             // Update UI models
             let addedItems = lightIds.map({
-                LightItem(lightId: $0, name: RESTModel.shared.light(withLightId: $0)!.name)
+                LightItem(light: RESTModel.shared.light(withLightId: $0)!)
             })
             
             let newItems = Array(Set([self.lights?.items ?? [], addedItems].joined()))
@@ -144,7 +144,7 @@ class WindowItem {
             
             // Update UI models
             let addedItems = lightIds.map({
-                LightItem(lightId: $0, name: RESTModel.shared.light(withLightId: $0)!.name)
+                LightItem(light: RESTModel.shared.light(withLightId: $0)!)
             })
             
             let newItems = Array(Set([self.lights?.items ?? [], addedItems].joined()))

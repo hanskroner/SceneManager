@@ -194,6 +194,9 @@ extension LightState {
 
 extension Light {
     convenience init (from light: RESTLight, id lightId: Int) {
-        self.init(lightId: lightId, name: light.name, state: LightState(from: light.state))
+        self.init(lightId: lightId,
+                  name: light.name,
+                  state: LightState(from: light.state),
+                  modelId: light.modelid)
     }
 }

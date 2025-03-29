@@ -1,22 +1,26 @@
 [
     {
         "light_id": 1,
-        "name": "Light 1"
+        "name": "GU10 Bulb",
+        "image_name": "E027-57383"
     },
     {
         "light_id": 2,
-        "name": "Light 2"
+        "name": "A19 Bulb",
+        "image_name": "E028-57384"
     },
     {
         "light_id": 3,
-        "name": "Light 3"
+        "name": "Bulb Without Image"
     },
     {
         "light_id": 4,
-        "name": "Light 4"
+        "name": "E14 Candle Bulb",
+        "image_name": "E015-57365"
     },
     {
         "light_id": 5,
-        "name": "Light 5"
+        "name": "E14 Luster Bulb",
+        "image_name": "E025-57381"
     }
 ]

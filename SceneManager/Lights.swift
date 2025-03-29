@@ -65,23 +65,59 @@ class LightItem: Identifiable, Codable, Hashable {
         return lhs.id == rhs.id
     }
     
+    // FIXME: Account for more bulb and product models
+    // 'lighName' is provided for situations where the bulb originally included with a
+    // fixture is replaced and its identifiers no longer match a fixture - just a bulb.
+    // The light name is used as an additional differentiator.
+    private static func getImageName(modelId: String, lightName: String = "") -> String? {
+        // Hue Fixture replacements
+        if modelId.contains("LCG")
+            && lightName.localizedCaseInsensitiveContains("fugato") {
+            return "E00-C-57356"    // Hue Fugato Spots
+        }
+        
+        // Hue Fixtures
+        if modelId.contains("929002966") { return "E002-57346" }    // Hue Surimu Panel
+        if modelId.contains("506313") { return "E00-C-57356" }      // Hue Fugato Spots
+        
+        // Hue Products and Bulbs
+        if modelId.contains("LCG") { return "E027-57383" }  // GU10 bulbs
+        if modelId.contains("LCL") { return "E06-A-57450" } // Hue Lightstrip plus
+        if modelId.contains("LCT") { return "E015-57365" }  // E14 candle bulbs
+        if modelId.contains("LCU") { return "E025-57381" }  // E14 luster bulbs
+        if modelId.contains("LCA") { return "E028-57384" }  // A19 bulbs
+        if modelId.contains("LOM") { return "E04-D-57421" } // Hue Smart Plug
+        
+        return nil
+    }
+    
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
     
     let id: UUID
     
-    var lightId: Int
-    var name: String
+    let lightId: Int
+    let name: String
+    
+    let imageName: String?
     
     enum CodingKeys: CodingKey {
-        case light_id, name
+        case light_id, name, image_name
     }
     
-    init(id: UUID = UUID(), lightId: Int, name: String) {
+    init(id: UUID = UUID(), lightId: Int, name: String, imageName: String? = nil) {
         self.id = id
         self.lightId = lightId
         self.name = name
+        self.imageName = imageName
+    }
+    
+    convenience init(light: Light) {
+        self.init(lightId: light.lightId,
+                  name: light.name,
+                  imageName: Self.getImageName(modelId: light.modelId,
+                                               lightName: light.name))
     }
     
     required init(from decoder: Decoder) throws {
@@ -90,6 +126,7 @@ class LightItem: Identifiable, Codable, Hashable {
         id = UUID()
         lightId = try container.decode(Int.self, forKey: .light_id)
         name = try container.decode(String.self, forKey: .name)
+        imageName = try container.decodeIfPresent(String.self, forKey: .image_name)
     }
     
     func encode(to encoder: Encoder) throws {
@@ -97,6 +134,7 @@ class LightItem: Identifiable, Codable, Hashable {
         
         try container.encode(lightId, forKey: .light_id)
         try container.encode(name, forKey: .name)
+        try container.encodeIfPresent(imageName, forKey: .image_name)
     }
 }
 
@@ -135,9 +173,21 @@ struct LightView: View {
                 .padding(.bottom, -4)
             
             List(lights.items, id: \.self, selection: $lights.selectedLightItemIds) { item in
-                Text(item.name)
-                    .id(item.id)
-                    .listRowSeparator(.hidden)
+                HStack {
+                    if let imageName = item.imageName {
+                        Image(imageName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 24, maxHeight: 24)
+                    } else {
+                        Spacer()
+                            .frame(width: 32, height: 24)
+                    }
+                    
+                    Text(item.name)
+                }
+                .id(item.id)
+                .listRowSeparator(.hidden)
             }
             .onChange(of: lights.selectedLightItemIds) { previousValue, newValue in
                 selectionDidChange(to: lights.selectedLightItems)
@@ -153,6 +203,8 @@ struct LightView: View {
         }
     }
 }
+
+// MARK: - Light Bottom Bar View
 
 struct LightBottomBarView: View {
     @Environment(Sidebar.self) private var sidebar
@@ -258,7 +310,7 @@ struct AddLightView: View {
             lights = window.lights(inGroupId: selectedItem.groupId, butNotIntSceneId: selectedItem.sceneId!)
         }
         
-        let lightItems = lights.map { LightItem(lightId: $0.lightId, name: $0.name) }
+        let lightItems = lights.map { LightItem(light: $0) }
         self.lightItems = lightItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
     }
     
@@ -278,13 +330,25 @@ struct AddLightView: View {
             .padding(18)
             
             List(lightItems, id: \.self, selection: $addLightItems) { item in
-                Text(item.name)
-                    .id(item.id)
-                    .listRowSeparator(.hidden)
+                HStack {
+                    if let imageName = item.imageName {
+                        Image(imageName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 24, maxHeight: 24)
+                    } else {
+                        Spacer()
+                            .frame(width: 32, height: 24)
+                    }
+                    
+                    Text(item.name)
+                }
+                .id(item.id)
+                .listRowSeparator(.hidden)
             }
             // When inside a VStack, a List's size must be set explicitly
             // FIXME: Dynamic Type will probably not work with this
-            .frame(idealHeight: lightItems.count <= 12 ? 36 + (CGFloat(lightItems.count) * 22) : 300, maxHeight: 300)
+            .frame(idealHeight: lightItems.count <= 12 ? 36 + (CGFloat(lightItems.count) * 30) : 300, maxHeight: 300)
             .scrollBounceBehavior(.basedOnSize)
             .padding([.leading, .trailing], 12)
             .task {
