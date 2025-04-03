@@ -35,7 +35,7 @@
 		3A2BDFAB2CCE778A00B582AA /* RESTScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2BDFAA2CCE778A00B582AA /* RESTScene.swift */; };
 		3A41935E2D9EC8B8007E76F1 /* SceneConverterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A41935C2D9EC8B8007E76F1 /* SceneConverterApp.swift */; };
 		3A41935F2D9EC8B8007E76F1 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A41935A2D9EC8B8007E76F1 /* ContentView.swift */; };
-		3A4193602D9EC8B8007E76F1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A4193592D9EC8B8007E76F1 /* Assets.xcassets */; };
+		3A4193682D9EF98B007E76F1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A4193642D9EF98B007E76F1 /* Assets.xcassets */; };
 		3A462A7E2D8FE84200760E44 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 3A462A7D2D8FE84200760E44 /* InfoPlist.strings */; };
 		3A462A832D8FF09B00760E44 /* ColorTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3A462A822D8FF09B00760E44 /* ColorTests.xctestplan */; };
 		3A5EAFB12CC1808C00B58A3C /* LightStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5EAFB02CC1808C00B58A3C /* LightStateView.swift */; };
@@ -130,10 +130,11 @@
 		3A2BDFA82CCE731E00B582AA /* RESTGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RESTGroup.swift; sourceTree = "<group>"; };
 		3A2BDFAA2CCE778A00B582AA /* RESTScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RESTScene.swift; sourceTree = "<group>"; };
 		3A41934D2D9EC897007E76F1 /* SceneConverter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SceneConverter.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		3A4193592D9EC8B8007E76F1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3A41935A2D9EC8B8007E76F1 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		3A41935B2D9EC8B8007E76F1 /* SceneConverter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SceneConverter.entitlements; sourceTree = "<group>"; };
 		3A41935C2D9EC8B8007E76F1 /* SceneConverterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneConverterApp.swift; sourceTree = "<group>"; };
+		3A4193642D9EF98B007E76F1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		3A4193652D9EF98B007E76F1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		3A4193662D9EF98B007E76F1 /* SceneConverter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SceneConverter.entitlements; sourceTree = "<group>"; };
 		3A462A7D2D8FE84200760E44 /* InfoPlist.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = InfoPlist.strings; sourceTree = "<group>"; };
 		3A462A7F2D8FE85C00760E44 /* screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screenshot.png; sourceTree = "<group>"; };
 		3A462A822D8FF09B00760E44 /* ColorTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = ColorTests.xctestplan; sourceTree = "<group>"; };
@@ -256,12 +257,21 @@
 		3A41935D2D9EC8B8007E76F1 /* SceneConverter */ = {
 			isa = PBXGroup;
 			children = (
-				3A4193592D9EC8B8007E76F1 /* Assets.xcassets */,
+				3A4193672D9EF98B007E76F1 /* Resources */,
 				3A41935A2D9EC8B8007E76F1 /* ContentView.swift */,
-				3A41935B2D9EC8B8007E76F1 /* SceneConverter.entitlements */,
 				3A41935C2D9EC8B8007E76F1 /* SceneConverterApp.swift */,
 			);
 			path = SceneConverter;
+			sourceTree = "<group>";
+		};
+		3A4193672D9EF98B007E76F1 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				3A4193642D9EF98B007E76F1 /* Assets.xcassets */,
+				3A4193652D9EF98B007E76F1 /* Info.plist */,
+				3A4193662D9EF98B007E76F1 /* SceneConverter.entitlements */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		3A635B6B2CDF831100018B40 /* Tests */ = {
@@ -526,7 +536,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3A4193602D9EC8B8007E76F1 /* Assets.xcassets in Resources */,
+				3A4193682D9EF98B007E76F1 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -767,7 +777,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = SceneConverter/SceneConverter.entitlements;
+				CODE_SIGN_ENTITLEMENTS = SceneConverter/Resources/SceneConverter.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -776,6 +786,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SceneConverter/Resources/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -796,7 +807,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = SceneConverter/SceneConverter.entitlements;
+				CODE_SIGN_ENTITLEMENTS = SceneConverter/Resources/SceneConverter.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -805,6 +816,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SceneConverter/Resources/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
