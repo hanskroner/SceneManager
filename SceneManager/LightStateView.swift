@@ -20,17 +20,37 @@ struct LightStateView: View {
     @Environment(Lights.self) private var lights
     @Environment(WindowItem.self) private var window
     
+    @State private var selectedTab: Tab = .sceneState
+    
+    private enum Tab: Hashable {
+        case sceneState
+        case dynamicScene
+    }
+    
     var body: some View {
         @Bindable var window = window
         VStack(alignment: .leading) {
-            Text("State")
-                .font(.title2)
-                .padding(.horizontal)
-                .padding([.bottom], -4)
             
             ZStack {
-                SimpleJSONTextView(text: $window.stateEditorText, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
-                    .clipped()
+                TabView(selection: $selectedTab) {
+                    SimpleJSONTextView(text: $window.stateEditorText, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
+                        .clipped()
+                        .disabled(sidebar.selectedSidebarItem == nil
+                                  || sidebar.selectedSidebarItem?.kind != .scene)
+                        .tabItem {
+                            Text("Scene State")
+                        }
+                        .tag(Tab.sceneState)
+                    
+                    SimpleJSONTextView(text: $window.stateEditorText, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
+                        .clipped()
+                        .disabled(sidebar.selectedSidebarItem == nil
+                                  || sidebar.selectedSidebarItem?.kind != .scene)
+                        .tabItem {
+                            Text("Dynamic Scene")
+                        }
+                        .tag(Tab.dynamicScene)
+                }
                 
                 // !!!: Transparent view to recieve 'PresetItem' drag'n'drops
                 //      For some unknown reason, the underlying NSTextView refuses to
@@ -66,8 +86,11 @@ struct LightStateView: View {
                         await window.modify(jsonLightState: window.stateEditorText, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.selectedLightItems.map{ $0.lightId })
                     }
                 }
-                .disabled(lights.selectedLightItems.isEmpty
-                          || window.stateEditorText.isEmpty)
+                .disabled(sidebar.selectedSidebarItem == nil
+                          || sidebar.selectedSidebarItem?.kind != .scene
+                          || lights.selectedLightItems.isEmpty
+                          || window.stateEditorText.isEmpty
+                          || selectedTab == .dynamicScene)
                 .fixedSize(horizontal: true, vertical: true)
             }
         }
@@ -85,8 +108,6 @@ struct LightStateView: View {
                                                    sceneId: window.sceneId)
             }
         }
-        .disabled(sidebar.selectedSidebarItem == nil
-                  || sidebar.selectedSidebarItem?.kind != .scene)
     }
 }
 

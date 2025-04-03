@@ -79,6 +79,9 @@
     "Delete Preset" : {
 
     },
+    "Dynamic Scene" : {
+
+    },
     "Give the current State a name to store it as a Preset" : {
 
     },
@@ -115,7 +118,7 @@
     "Scene Presets" : {
 
     },
-    "State" : {
+    "Scene State" : {
 
     },
     "Store as Preset" : {
