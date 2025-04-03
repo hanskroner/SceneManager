@@ -197,6 +197,7 @@ extension Light {
         self.init(lightId: lightId,
                   name: light.name,
                   state: LightState(from: light.state),
+                  manufacturer: light.manufacturername,
                   modelId: light.modelid)
     }
 }

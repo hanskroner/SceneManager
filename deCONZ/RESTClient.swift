@@ -364,6 +364,25 @@ actor RESTClient {
         }
     }
     
+    func modifyHueScene(groupId: Int, sceneId: Int, lightIds: [Int], lightState: RESTLightState?) async throws {
+        // An identical endpoint to to the one exposed by 'modifyScene' (different path).
+        // For supported Philips Hue lights, this endpoint allows finer control over the attributes that
+        // can be set in a scene. In addition to the attributes supported by 'modifyScene', 'modifyHueScene'
+        // supports 'effect', 'effect_duration', and 'effect_speed'. All attributes are optional, allowing,
+        // for example, the creation of scenes that only modify light's brightness - without affecting their
+        // current color or state.
+        for (lightId) in lightIds {
+            // !!!: Trailing slash in path causes HTTP 431 response
+            let path = "/api/\(self.apiKey)/hue-scenes/groups/\(groupId)/scenes/\(sceneId)/lights/\(lightId)/state"
+            var request = request(forPath: path, using: .put)
+            encoder.outputFormatting = []
+            request.httpBody = try encoder.encode(lightState)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try check(data: data, from: response)
+        }
+    }
+    
 //    func storeScene(groupID: Int, sceneID: Int) async throws {
 //        let path = "/api/\(self.keyAPI)/groups/\(groupID)/scenes/\(sceneID)/store"
 //        let request = request(forPath: path, using: .put)

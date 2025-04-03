@@ -140,20 +140,22 @@ public final class Light: APIItem, Codable {
     public let lightId: Int
     public var state: LightState
     
+    public let manufacturer: String
     public let modelId: String
     
-    init(lightId: Int, name: String, state: LightState = LightState(), modelId: String) {
+    init(lightId: Int, name: String, state: LightState = LightState(), manufacturer: String, modelId: String) {
         self.id = UUID(namespace: uuidNamespace, input: "\(lightId)")!
         self.name = name
         
         self.lightId = lightId
         self.state = state
         
+        self.manufacturer = manufacturer
         self.modelId = modelId
     }
     
     enum CodingKeys: CodingKey {
-        case light_id, name, state, model_id
+        case light_id, name, state, manufacturer, model_id
     }
     
     public init(from decoder: Decoder) throws {
@@ -163,6 +165,7 @@ public final class Light: APIItem, Codable {
         lightId = try container.decode(Int.self, forKey: .light_id)
         state = try container.decode(LightState.self, forKey: .state)
         
+        manufacturer = try container.decode(String.self, forKey: .manufacturer)
         modelId = try container.decode(String.self, forKey: .model_id)
         
         id = UUID(namespace: uuidNamespace, input: "\(lightId)")!
@@ -175,6 +178,7 @@ public final class Light: APIItem, Codable {
         try container.encode(name, forKey: .name)
         try container.encode(state, forKey: .state)
         
+        try container.encode(manufacturer, forKey: .manufacturer)
         try container.encode(modelId, forKey: .model_id)
     }
 }

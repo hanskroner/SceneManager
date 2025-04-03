@@ -1,6 +1,6 @@
 # Scene Manager - Manage deCONZ Scenes
 
-![Screenshot](https://raw.githubusercontent.com/hanskroner/SceneManager/main/SceneManager/screenshot.png)
+![Screenshot](https://raw.githubusercontent.com/hanskroner/SceneManager/master/SceneManager/Resources/screenshot.png)
 
 ## About
 
@@ -26,8 +26,13 @@ where needed.
 Besides easing the administrative burden of managing Scenes, a secondary goal for this project was to
 familiarize myself with SwiftUI and Swift Concurrency. Scene Manager requires at least macOS 13.0 to run.
 
-Scene Manager also requires a recent version of the deCONZ REST API - one that allows for the Lights of a
-Scene to be a subset of the Lights in its Group.
+Scene Manager also requires a recent version of the deCONZ REST API with a few additions that remain to
+be merged by the maintainers. Scene Manager requires deCONZ functionality that allows:
+ 
+* The Lights of a Scene to be a subset of the Lights in the Scene's Group
+* Querying all of the Scenes known to the API
+* Controlling supported Hue devices over the manufacturer-specific `0xfc03` cluster
+* Modifying and recalling scenes for supported Hue devices over the manufacturer-specific `0xfc03` cluster
 
 ## Features
 

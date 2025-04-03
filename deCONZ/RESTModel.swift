@@ -50,6 +50,17 @@ public final class RESTModel {
         return self._lights[id]
     }
     
+    public func areHueLights(lightIds: [Int]) -> Bool {
+        return areHueLights(lights: lightIds.compactMap({ light(withLightId: $0) }))
+    }
+    
+    public func areHueLights(lights: [Light]) -> Bool {
+        let hueLights = lights.filter({ $0.manufacturer.localizedCaseInsensitiveCompare("Philips") == .orderedSame
+            || $0.manufacturer.localizedCaseInsensitiveCompare("Signify Netherlands B.V.") == .orderedSame })
+        
+        return lights.count == hueLights.count
+    }
+    
     // MARK: Light State
     
     // FIXME: Consider different return from 'String'
@@ -227,22 +238,33 @@ public final class RESTModel {
     
     public func modifyLightStateInScene(groupId: Int, sceneId: Int, lightIds: [Int], jsonLightState: String) async throws {
         let lightState = try _decoder.decode(LightState.self, from: Data(jsonLightState.utf8))
-        try await self._client.modifyScene(groupId: groupId,
-                                           sceneId: sceneId,
-                                           lightIds: lightIds,
-                                           lightState: RESTLightState(alert: lightState.alert,
-                                                                      bri: lightState.bri,
-                                                                      colormode: nil,
-                                                                      ct: lightState.ct,
-                                                                      effect: lightState.effect,
-                                                                      hue: nil,
-                                                                      on: lightState.on,
-                                                                      reachable: nil,
-                                                                      sat: nil,
-                                                                      xy: lightState.xy,
-                                                                      transitiontime: lightState.transitiontime,
-                                                                      effect_duration: lightState.effect_duration,
-                                                                      effect_speed: lightState.effect_speed))
+        let restLightState = RESTLightState(alert: lightState.alert,
+                                            bri: lightState.bri,
+                                            colormode: nil,
+                                            ct: lightState.ct,
+                                            effect: lightState.effect,
+                                            hue: nil,
+                                            on: lightState.on,
+                                            reachable: nil,
+                                            sat: nil,
+                                            xy: lightState.xy,
+                                            transitiontime: lightState.transitiontime,
+                                            effect_duration: lightState.effect_duration,
+                                            effect_speed: lightState.effect_speed)
+        
+        // Make use of the Hue-specific scene capabilities.
+        if areHueLights(lightIds: lightIds) {
+            // deCONZ's representation of a scene is very narrow, and a small subset of
+            // what a Zigbee/Hue scene can be. Among other things, it is incapable of
+            // representing scenes that do not contain all of the attributes deCONZ deems mandatory.
+            // The Hue manufacturer-specific way of modifying scenes allows for this, but deCONZ Scenes
+            // cannot represent it. A version of deCONZ that allows this flexibility in Scenes is required
+            // but these changes are not part of deCONZ mainline as of 2.29.2 and thus require a custom build.
+            logger.info("Modifying scene with Hue manufacturer-specific functionality")
+            try await self._client.modifyHueScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, lightState: restLightState)
+        } else {
+            try await self._client.modifyScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, lightState: restLightState)
+        }
     }
     
     public func deleteScene(groupId: Int, sceneId: Int) async {
