@@ -50,7 +50,15 @@ extension Preset {
         self.name = scene.metadata.name
         
         self.state = try? PresetState(from: scene)
-        self.dynamics = try? PresetDynamics(from: scene)
+        
+        // If 'state' was parsed succesfully, don't duplicate
+        // its values in 'dynamics'
+        if self.state == nil {
+            self.dynamics = try? PresetDynamics(from: scene)
+        } else {
+            self.dynamics = nil
+        }
+        
     }
 }
 

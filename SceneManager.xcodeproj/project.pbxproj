@@ -38,6 +38,7 @@
 		3A4193682D9EF98B007E76F1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A4193642D9EF98B007E76F1 /* Assets.xcassets */; };
 		3A41936B2D9F0179007E76F1 /* CLIPModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A41936A2D9F0179007E76F1 /* CLIPModels.swift */; };
 		3A41936D2D9F0F60007E76F1 /* PresetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A41936C2D9F0F60007E76F1 /* PresetModels.swift */; };
+		3A41936E2DA0083F007E76F1 /* JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2BDF6D2CCCF99200B582AA /* JSON.swift */; };
 		3A462A7E2D8FE84200760E44 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 3A462A7D2D8FE84200760E44 /* InfoPlist.strings */; };
 		3A462A832D8FF09B00760E44 /* ColorTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3A462A822D8FF09B00760E44 /* ColorTests.xctestplan */; };
 		3A5EAFB12CC1808C00B58A3C /* LightStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5EAFB02CC1808C00B58A3C /* LightStateView.swift */; };
@@ -613,6 +614,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3A41935E2D9EC8B8007E76F1 /* SceneConverterApp.swift in Sources */,
+				3A41936E2DA0083F007E76F1 /* JSON.swift in Sources */,
 				3A41936B2D9F0179007E76F1 /* CLIPModels.swift in Sources */,
 				3A41935F2D9EC8B8007E76F1 /* ContentView.swift in Sources */,
 				3A41936D2D9F0F60007E76F1 /* PresetModels.swift in Sources */,

@@ -22,12 +22,34 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+private struct PresetFileData: Codable {
+    let file: String
+    let preset: Preset
+}
+
 @main
 struct SceneConverterApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     private let _decoder = JSONDecoder()
     private let _encoder = JSONEncoder()
+    
+    @State private var writeQueue: [String: [PresetFileData]] = [:]
+    @State private var isExporting: Bool = false
+    
+    func showSavePanel() -> URL? {
+        let savePanel = NSOpenPanel()
+        savePanel.allowedContentTypes = [.directory]
+        savePanel.canChooseFiles = false
+        savePanel.canChooseDirectories = true
+        savePanel.canCreateDirectories = true
+        savePanel.isExtensionHidden = false
+        savePanel.allowsOtherFileTypes = false
+        savePanel.prompt = "Export"
+        
+        let response = savePanel.runModal()
+        return response == .OK ? savePanel.url : nil
+    }
     
     private func models(fromURL url: URL) throws -> [CLIPScene] {
         struct CLIPWrapper: Decodable {
@@ -41,31 +63,28 @@ struct SceneConverterApp: App {
     }
     
     private func process(urls: [URL]) {
+        // Clear the write queue
+        writeQueue.removeAll()
+        
         for url in urls {
+            var fileData: [PresetFileData] = []
+            let dir = url.lastPathComponent.components(separatedBy: ".").first ?? url.lastPathComponent
+            
             // FIXME: Error handling
             let models = try! self.models(fromURL: url)
             for model in models {
                 // FIXME: Error handling
                 let preset = try! Preset(from: model)
-                logger.info("\(preset.name, privacy: .public)")
-                
-                if let state = preset.state {
-                    if let _ = state.on { logger.info("  on: \(state.on!, privacy: .public)") }
-                    if let _ = state.bri { logger.info("  bri: \(state.bri!, privacy: .public)") }
-                    if let _ = state.xy { logger.info("  xy: \(state.xy!, privacy: .public)") }
-                    if let _ = state.ct { logger.info("  ct: \(state.ct!, privacy: .public)") }
-                    logger.info("  transitiontime: \(state.transitiontime, privacy: .public)")
-                }
-                
-                if let dynamics = preset.dynamics {
-                    if let _ = dynamics.bri { logger.info("  bri: \(dynamics.bri!, privacy: .public)") }
-                    if let _ = dynamics.xy { logger.info("  xy: \(dynamics.xy!, privacy: .public)") }
-                    if let _ = dynamics.ct { logger.info("  ct: \(dynamics.ct!, privacy: .public)") }
-                    logger.info("  effect_speed: \(dynamics.effect_speed, privacy: .public)")
-                    logger.info("  auto_dynamic: \(dynamics.auto_dynamic, privacy: .public)")
-                }
+                let file = preset.name.lowercased().replacingOccurrences(of: " ", with: "-") + ".json"
+
+                fileData.append(PresetFileData(file: file, preset: preset))
             }
+            
+            writeQueue[dir] = fileData
         }
+        
+        // Show the "save" dialog
+        self.isExporting = true
     }
     
     var body: some Scene {
@@ -94,6 +113,32 @@ struct SceneConverterApp: App {
                     
                     return true
                 }
+                .onChange(of: isExporting) { oldValue, newValue in
+                    // Pretty-print JSON output
+                    _encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+                    
+                    guard newValue, newValue == true else { return }
+                    // Even though this is exporting files, a File Importer is used to select
+                    // the directory where the exported files will be saved. Would be nice to
+                    // be able to customize the dialog to make the "Open" button reflect this.
+                    guard let saveURL = showSavePanel() else { return }
+                    
+                    for (directory, fileData) in writeQueue {
+                        // Create the directory that will hold the scene .json files
+                        // FIXME: Error handling
+                        try! FileManager.default.createDirectory(at: saveURL.appendingPathComponent(directory), withIntermediateDirectories: false)
+                        
+                        // Export the scene .json files to the new directory
+                        for data in fileData {
+                            // FIXME: Error handling
+                            let fileContents = try! _encoder.encode(data.preset)
+                            try! fileContents.write(to: saveURL.appendingPathComponent(directory).appendingPathComponent(data.file))
+                        }
+                    }
+                }
+                // .fileImporter cannot be customized in the same way NSOpenPanel
+                //.fileImporter(isPresented: $isExporting, allowedContentTypes: [.directory]) { result in
+                //}
                 .padding(16)
         }
         .windowResizability(.contentSize)
