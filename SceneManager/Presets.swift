@@ -200,17 +200,38 @@ extension UTType {
 struct PresetsView: View {
     @Environment(Presets.self) private var presets
     
+    @State private var presetsSearchText: String = ""
+    
     var body: some View {
         @Bindable var presets = presets
         
+        var filteredPresets: [PresetItem] {
+            var displayPresets = presets.items
+            
+            // Filter
+            guard !presetsSearchText.isEmpty else { return displayPresets }
+            displayPresets = displayPresets.filter { preset in
+                preset.name.localizedCaseInsensitiveContains(presetsSearchText)
+            }
+            
+            return displayPresets
+        }
+        
         ScrollViewReader { scrollReader in
             List {
-                Section("Scene Presets") {
-                    ForEach($presets.items, id: \.id) { $item in
-                        PresetItemView(presetItem: $item)
+                Section {
+                    ForEach(filteredPresets, id: \.id) { item in
+                        PresetItemView(presetItem: item)
                     }
+                } header: {
+                    // Offset the list section
+                    // This allows the list to scroll under the search bar
+                    // added by the overlay, without being under it initially.
+                    Text("Scene Presets")
+                        .padding(.top, 38)
                 }
             }
+            .environment(\.defaultMinListHeaderHeight, 1)
             .onChange(of: presets.scrollToPresetItemId) { previousItem, newItem in
                 if let item = newItem {
                     withAnimation {
@@ -218,6 +239,13 @@ struct PresetsView: View {
                     }
                 }
             }
+        }
+        .overlay {
+            SearchField(text: $presetsSearchText, prompt: "Filter Presets")
+                .image(.filter)
+                .padding(.vertical, 10)
+                .padding(.horizontal, 16)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
     }
 }
@@ -227,7 +255,7 @@ struct PresetsView: View {
 struct PresetItemView: View {
     @Environment(Presets.self) private var presets
     
-    @Binding var presetItem: PresetItem
+    @State var presetItem: PresetItem
     
     @State private var isPresentingConfirmation: Bool = false
     
