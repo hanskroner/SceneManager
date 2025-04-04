@@ -36,6 +36,8 @@
 		3A41935E2D9EC8B8007E76F1 /* SceneConverterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A41935C2D9EC8B8007E76F1 /* SceneConverterApp.swift */; };
 		3A41935F2D9EC8B8007E76F1 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A41935A2D9EC8B8007E76F1 /* ContentView.swift */; };
 		3A4193682D9EF98B007E76F1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A4193642D9EF98B007E76F1 /* Assets.xcassets */; };
+		3A41936B2D9F0179007E76F1 /* CLIPModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A41936A2D9F0179007E76F1 /* CLIPModels.swift */; };
+		3A41936D2D9F0F60007E76F1 /* PresetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A41936C2D9F0F60007E76F1 /* PresetModels.swift */; };
 		3A462A7E2D8FE84200760E44 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 3A462A7D2D8FE84200760E44 /* InfoPlist.strings */; };
 		3A462A832D8FF09B00760E44 /* ColorTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3A462A822D8FF09B00760E44 /* ColorTests.xctestplan */; };
 		3A5EAFB12CC1808C00B58A3C /* LightStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5EAFB02CC1808C00B58A3C /* LightStateView.swift */; };
@@ -135,6 +137,8 @@
 		3A4193642D9EF98B007E76F1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3A4193652D9EF98B007E76F1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3A4193662D9EF98B007E76F1 /* SceneConverter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SceneConverter.entitlements; sourceTree = "<group>"; };
+		3A41936A2D9F0179007E76F1 /* CLIPModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIPModels.swift; sourceTree = "<group>"; };
+		3A41936C2D9F0F60007E76F1 /* PresetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetModels.swift; sourceTree = "<group>"; };
 		3A462A7D2D8FE84200760E44 /* InfoPlist.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = InfoPlist.strings; sourceTree = "<group>"; };
 		3A462A7F2D8FE85C00760E44 /* screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screenshot.png; sourceTree = "<group>"; };
 		3A462A822D8FF09B00760E44 /* ColorTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = ColorTests.xctestplan; sourceTree = "<group>"; };
@@ -260,6 +264,8 @@
 				3A4193672D9EF98B007E76F1 /* Resources */,
 				3A41935A2D9EC8B8007E76F1 /* ContentView.swift */,
 				3A41935C2D9EC8B8007E76F1 /* SceneConverterApp.swift */,
+				3A41936A2D9F0179007E76F1 /* CLIPModels.swift */,
+				3A41936C2D9F0F60007E76F1 /* PresetModels.swift */,
 			);
 			path = SceneConverter;
 			sourceTree = "<group>";
@@ -607,7 +613,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				3A41935E2D9EC8B8007E76F1 /* SceneConverterApp.swift in Sources */,
+				3A41936B2D9F0179007E76F1 /* CLIPModels.swift in Sources */,
 				3A41935F2D9EC8B8007E76F1 /* ContentView.swift in Sources */,
+				3A41936D2D9F0F60007E76F1 /* PresetModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
