@@ -10,9 +10,40 @@ import UniformTypeIdentifiers
 import OSLog
 import deCONZ
 
+private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "presets")
+
 // MARK: - Presets Model
 
-private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "presets")
+enum DynamicState: String, Codable {
+    case ignore
+    case apply_sequence
+    case apply_randomized
+}
+
+struct Preset: Codable {
+    let name: String
+    let state: PresetState?
+    let dynamics: PresetDynamics?
+}
+
+struct PresetState: Codable {
+    let on: Bool?
+    let bri: Int?
+    let xy: [Double]?
+    let ct: Int?
+    
+    let transitiontime: Int
+}
+
+struct PresetDynamics: Codable {
+    let bri: Int?
+    let xy: [[Double]]?
+    let ct: Int?
+    
+    let effect_speed: Double
+    let auto_dynamic: Bool
+    let scene_state: DynamicState
+}
 
 @Observable
 class Presets {
