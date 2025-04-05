@@ -1,6 +1,6 @@
 {
     "name" : "Cold Medium",
-    "image" : "lightbulb.2",
+    "image" : "scene-dimmed",
     "state" : {
         "bri" : 140,
         "ct" : 333,

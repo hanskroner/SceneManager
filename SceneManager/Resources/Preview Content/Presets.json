@@ -1,7 +1,6 @@
 [
     {
         "name" : "Purple",
-        "image" : "lightbulb.2",
         "state" : {
             "bri" : 1,
             "on" : true,
@@ -11,7 +10,6 @@
     },
     {
         "name" : "Blue",
-        "image" : "lightbulb.2",
         "state" : {
             "bri" : 1,
             "on" : true,
@@ -21,7 +19,6 @@
     },
     {
         "name" : "Green",
-        "image" : "lightbulb.2",
         "state" : {
             "bri" : 1,
             "on" : true,
@@ -31,7 +28,6 @@
     },
     {
         "name" : "Yellow",
-        "image" : "lightbulb.2",
         "state" : {
             "bri" : 1,
             "on" : true,
@@ -41,7 +37,6 @@
     },
     {
         "name" : "Red",
-        "image" : "lightbulb.2",
         "state" : {
             "bri" : 1,
             "on" : true,

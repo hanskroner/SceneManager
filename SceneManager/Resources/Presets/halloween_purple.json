@@ -1,6 +1,5 @@
 {
     "name" : "Halloween Purple",
-    "image" : "lightbulb.2",
     "state" : {
         "bri" : 229,
         "on" : true,

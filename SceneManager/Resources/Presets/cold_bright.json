@@ -1,6 +1,6 @@
 {
     "name" : "Cold Bright",
-    "image" : "lightbulb.2",
+    "image" : "scene-bright",
     "state" : {
         "bri" : 229,
         "ct" : 333,

@@ -229,7 +229,7 @@ class PresetItem: Identifiable, Codable, Transferable {
     let id: UUID = UUID()
     
     var name: String
-    var systemImage: String
+    var image: String?
     var state: JSON
     
     var url: URL? = nil
@@ -249,9 +249,9 @@ class PresetItem: Identifiable, Codable, Transferable {
         return .white
     }
     
-    init(name: String, systemImage: String, state: JSON) {
+    init(name: String, image: String? = nil, state: JSON) {
         self.name = name
-        self.systemImage = systemImage
+        self.image = image
         self.state = state
     }
     
@@ -263,7 +263,7 @@ class PresetItem: Identifiable, Codable, Transferable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         name = try container.decode(String.self, forKey: .name)
-        systemImage = try container.decode(String.self, forKey: .image)
+        image = try container.decodeIfPresent(String.self, forKey: .image)
         state = try container.decode(JSON.self, forKey: .state)
     }
     
@@ -271,13 +271,13 @@ class PresetItem: Identifiable, Codable, Transferable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
         try container.encode(name, forKey: .name)
-        try container.encode(systemImage, forKey: .image)
+        try container.encodeIfPresent(image, forKey: .image)
         try container.encode(state, forKey: .state)
     }
     
     static var transferRepresentation: some TransferRepresentation {
-            CodableRepresentation(contentType: .presetItem)
-        }
+        CodableRepresentation(contentType: .presetItem)
+    }
 }
 
 extension UTType {
@@ -366,11 +366,24 @@ struct PresetItemView: View {
     
     @FocusState private var isFocused: Bool
     
+    func presetImage(forPresetItem item: PresetItem) -> String {
+        if let image = item.image { return image }
+        
+        return "scene-state"
+    }
+    
     var body: some View {
         VStack {
-            Label("", systemImage: presetItem.systemImage)
-                .foregroundColor(isDark(presetItem.color) ? .white : Color(NSColor.windowBackgroundColor))
-                .font(.system(size: 24))
+            Label {
+                Text("")
+            } icon: {
+                Image(presetImage(forPresetItem: presetItem))
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 32, height: 32)
+                    .foregroundColor(isDark(presetItem.color) ? .white : Color(NSColor.windowBackgroundColor))
+            }
+            
             if (presetItem.isRenaming) {
                 TextField("", text: $presetItem.name)
                     .id(presetItem.id)
@@ -531,7 +544,7 @@ struct AddPresetView: View {
                         // Create a new PresetItem and its file representation
                         let encoded = try! _encoder.encode(lightState)
                         let decoded = try! _decoder.decode(JSON.self, from: encoded)
-                        let newPresetItem = PresetItem(name: newPresetName, systemImage: "lightbulb.2", state: decoded)
+                        let newPresetItem = PresetItem(name: newPresetName, state: decoded)
                         
                         customGroup.presets.append(newPresetItem)
                         

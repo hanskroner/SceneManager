@@ -1,6 +1,6 @@
 {
     "name" : "Relax",
-    "image" : "lightbulb.2",
+    "image" : "scene-relax",
     "state" : {
         "bri" : 140,
         "ct" : 447,
