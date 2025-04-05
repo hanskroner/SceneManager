@@ -16,7 +16,7 @@ private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: 
 
 @Observable
 class Presets {
-    var items: [PresetItem] = [PresetItem]()
+    var groups: [PresetItemGroup] = []
     
     var scrollToPresetItemId: UUID? = nil
     
@@ -35,7 +35,7 @@ class Presets {
                     try copyFilesFromBundleToDocumentsDirectoryConformingTo(.json)
                 }
                 
-                self.items = try loadPresetItemsFromDocumentsDirectory()
+                groups = try loadPresetItemsFromDocumentsDirectory()
             }
         } catch DecodingError.typeMismatch(_, let context) {
             logger.error("\(context.debugDescription, privacy: .public)")
@@ -67,10 +67,22 @@ class Presets {
     private func filesInDocumentsDirectoryConformingTo(_ fileType: UTType) throws -> [URL] {
         var fileURLs = [URL]()
         guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return fileURLs }
-        let dirContents = try FileManager.default.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
         
+        // Add files for the Documents directory
+        let dirContents = try FileManager.default.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
         for (fileExtension) in fileType.tags[.filenameExtension] ?? [] {
             fileURLs.append(contentsOf: dirContents.filter{ $0.absoluteString.contains(fileExtension) })
+        }
+        
+        // Add files for each sub directory in the Documents directory
+        // This is quicker and simpler than performing deep enumeration using
+        // a method like 'enumeratorAtURL'.
+        let dirs = try dirContents.filter { try $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory ?? false }
+        for (dirURL) in dirs {
+            let dirContents = try FileManager.default.contentsOfDirectory(at: dirURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
+            for (fileExtension) in fileType.tags[.filenameExtension] ?? [] {
+                fileURLs.append(contentsOf: dirContents.filter{ $0.absoluteString.contains(fileExtension) })
+            }
         }
         
         return fileURLs
@@ -84,27 +96,59 @@ class Presets {
         // Create file name from Preset name
         let fileName = presetItem.name.lowercased().replacing(" ", with: "_").appending(".json")
         
-        guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-            throw PresetFileError.noURLError("Could not get URL for '\(presetItem.name)'")
+        let url = presetItem.url?.deletingLastPathComponent().appendingPathComponent(fileName)
+        
+        // If the URL is nil, this PresetItem doesn't have a file representation.
+        // Its URL would be the base 'Documents' directory with 'fileName' appended to it.
+        if url == nil {
+            guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+                throw PresetFileError.noURLError("Could not get URL for '\(presetItem.name)'")
+            }
+            
+            return documentsURL.appendingPathComponent(fileName)
         }
         
-        let url = documentsURL.appendingPathComponent(fileName)
+        guard let url else {
+            throw PresetFileError.noURLError("Could not get URL for '\(presetItem.name)'")
+        }
         
         return url
     }
     
-    func loadPresetItemsFromDocumentsDirectory() throws -> [PresetItem] {
-        var presets = [PresetItem]()
+    func loadPresetItemsFromDocumentsDirectory() throws -> [PresetItemGroup] {
+        // Use a temporary Dictionary to store the Presets
+        // Appending a PresetItem into the array that belongs to subdirectory
+        // becomes a bit less of a hassle with Dictionaries
+        var presetDirs: [String: [PresetItem]] = [:]
+        
+        guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return [] }
         
         let presetFiles = try filesInDocumentsDirectoryConformingTo(.json)
         for (presetFile) in presetFiles {
+            // Check if this preset file is in a subdirectory
+            let subDir: String
+            if (presetFile.deletingLastPathComponent().lastPathComponent != documentsURL.lastPathComponent) {
+                subDir = presetFile.deletingLastPathComponent().lastPathComponent
+            } else {
+                subDir = "custom"
+            }
+            
+            // Decode the preset file's contents and add them to Preset Dictionary
             let json = try String(contentsOf: presetFile, encoding: .utf8)
             let presetItem = try decoder.decode(PresetItem.self, from: json.data(using: .utf8)!)
-            presetItem.filename = presetFile.lastPathComponent
-            presets.append(presetItem)
+            presetItem.url = presetFile
+            presetDirs[subDir, default: []].append(presetItem)
         }
         
-        return presets.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+        // Re-pack the dictionary into a sorted Array of PresetItemGroup
+        // The presets in each group are also sorted.
+        var presetGroups: [PresetItemGroup] = []
+        for (group, presets) in presetDirs.sorted(by: { $0.key.localizedStandardCompare($1.key) == .orderedAscending }) {
+            presetGroups.append(PresetItemGroup(name: group,
+                                                presets: presets.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })))
+        }
+        
+        return presetGroups
     }
     
     func savePresetItemToDocumentsDirectory(_ presetItem: PresetItem) throws {
@@ -114,26 +158,71 @@ class Presets {
     }
     
     func renamePresetItemInDocumentsDirectory(_ presetItem: PresetItem) throws {
-      guard let filename = presetItem.filename else { return }
+      guard let file = presetItem.url else { return }
         
         let newFileURL = try urlForPresetItem(presetItem)
-        var previousFileURL = newFileURL.deletingLastPathComponent().appending(component: filename)
+        var previousFileURL = file
         
         var resourceValues = URLResourceValues()
         resourceValues.name = newFileURL.lastPathComponent
-        presetItem.filename = newFileURL.lastPathComponent
+        presetItem.url = newFileURL
         
         try previousFileURL.setResourceValues(resourceValues)
         try savePresetItemToDocumentsDirectory(presetItem)
     }
     
     func deletePresetItemInDocumentsDirectory(_ presetItem: PresetItem) throws {
-        let url = try urlForPresetItem(presetItem)
+        guard let url = presetItem.url else {
+            throw PresetFileError.noURLError("Could not get URL for '\(presetItem.name)'")
+        }
+        
         try FileManager.default.removeItem(at: url)
+        
+        // FIXME: Remove the directory if empty
+        guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+        let subdirURL = url.deletingLastPathComponent()
+        guard documentsURL != subdirURL else { return }
+        
+        // Add files for the Documents directory
+        let dirContents = try FileManager.default.contentsOfDirectory(at: subdirURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
+        if dirContents.isEmpty {
+            try FileManager.default.removeItem(at: subdirURL)
+        }
     }
 }
 
 // MARK: - PresetItem Model
+
+@Observable
+class PresetItemGroup: Identifiable, Codable {
+    let id: UUID = UUID()
+    
+    let name: String
+    var presets: [PresetItem]
+    
+    init(name: String, presets: [PresetItem] = []) {
+        self.name = name
+        self.presets = presets
+    }
+    
+    enum CodingKeys: CodingKey {
+        case name, presets
+    }
+    
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        name = try container.decode(String.self, forKey: .name)
+        presets = try container.decode([PresetItem].self, forKey: .presets)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(name, forKey: .name)
+        try container.encode(presets, forKey: .presets)
+    }
+}
 
 @Observable
 class PresetItem: Identifiable, Codable, Transferable {
@@ -143,7 +232,7 @@ class PresetItem: Identifiable, Codable, Transferable {
     var systemImage: String
     var state: JSON
     
-    var filename: String? = nil
+    var url: URL? = nil
     
     var isRenaming: Bool = false
     
@@ -202,33 +291,49 @@ struct PresetsView: View {
     
     @State private var presetsSearchText: String = ""
     
+    private func sectionTitle(forPresetItemGroup group: PresetItemGroup) -> String {
+        return group.name.replacing("_", with: " ").capitalized
+    }
+    
     var body: some View {
         @Bindable var presets = presets
         
-        var filteredPresets: [PresetItem] {
-            var displayPresets = presets.items
+        var filteredPresetGroups: [PresetItemGroup] {
+            guard !presetsSearchText.isEmpty else { return presets.groups }
+            
+            var displayPresetGroups: [PresetItemGroup] = []
             
             // Filter
-            guard !presetsSearchText.isEmpty else { return displayPresets }
-            displayPresets = displayPresets.filter { preset in
-                preset.name.localizedCaseInsensitiveContains(presetsSearchText)
+            for group in presets.groups {
+                let filteredPresets = group.presets.filter {
+                    $0.name.localizedCaseInsensitiveContains(presetsSearchText)
+                }
+                guard !filteredPresets.isEmpty else { continue }
+                displayPresetGroups.append(PresetItemGroup(name: group.name,
+                                                           presets: filteredPresets))
             }
-            
-            return displayPresets
+    
+            return displayPresetGroups
         }
         
         ScrollViewReader { scrollReader in
             List {
-                Section {
-                    ForEach(filteredPresets, id: \.id) { item in
-                        PresetItemView(presetItem: item)
+                ForEach(Array(filteredPresetGroups.enumerated()), id: \.offset) { index, group in
+                    Section {
+                        ForEach(group.presets, id: \.id) { item in
+                            PresetItemView(presetItem: item)
+                        }
+                    } header: {
+                        // Offset the list section
+                        // This allows the list to scroll under the search bar
+                        // added by the overlay, without being under it initially.
+                        if index == 0 {
+                            Text(sectionTitle(forPresetItemGroup: group))
+                            .padding(.top, 38)
+                        } else {
+                            Text(sectionTitle(forPresetItemGroup: group))
+                        }
                     }
-                } header: {
-                    // Offset the list section
-                    // This allows the list to scroll under the search bar
-                    // added by the overlay, without being under it initially.
-                    Text("Scene Presets")
-                        .padding(.top, 38)
                 }
             }
             .environment(\.defaultMinListHeaderHeight, 1)
@@ -290,7 +395,14 @@ struct PresetItemView: View {
                         }
                         
                         withAnimation {
-                            presets.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+                            // Sort the parent group's presets
+                            for group in presets.groups {
+                                if group.presets.contains(where: { $0.id == presetItem.id }) {
+                                    group.presets.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+                                    
+                                    break
+                                }
+                            }
                         }
                     }
                     .onAppear {
@@ -333,11 +445,24 @@ struct PresetItemView: View {
         do {
             try presets.deletePresetItemInDocumentsDirectory(presetItem)
         } catch {
+            // FIXME: Error handling
             logger.error("\(error, privacy: .public)")
         }
         
         withAnimation {
-            presets.items.removeAll(where: { $0.id == presetItem.id })
+            // Remove the preset from the parent group's presets
+            for group in presets.groups {
+                if group.presets.contains(where: { $0.id == presetItem.id }) {
+                    group.presets.removeAll(where: { $0.id == presetItem.id })
+                    
+                    // If the group has no presets, remove it as well
+                    if group.presets.isEmpty {
+                        presets.groups.removeAll(where: { $0.id == group.id })
+                    }
+                    
+                    break
+                }
+            }
         }
     }
     
@@ -377,35 +502,49 @@ struct AddPresetView: View {
                 Button("Store Preset") {
                     guard let lightState = try? _decoder.decode(LightState.self, from: window.stateEditorText.data(using: .utf8)!) else { return }
                     
-                    // If a Preset with the same name already exits, overwrite its state
-                    if let index = presets.items.firstIndex(where: { $0.name == newPresetName }) {
+                    // The 'custom' group represents the root of the app's 'Documents'
+                    // directory and shouldn't ever be missing. All custom presets are
+                    // stored here.
+                    let customGroup = presets.groups.first(where: { $0.name == "custom" })!
+                    
+                    // If a Preset with the same name already exits in the 'custom' group,
+                    // overwrite its state instead of creating a new file.
+                    if let index = customGroup.presets.firstIndex(where: { $0.name == newPresetName }) {
                         withAnimation {
                             let encoded = try! _encoder.encode(lightState)
                             let decoded = try! _decoder.decode(JSON.self, from: encoded)
                             
-                            presets.items[index].state = decoded
+                            customGroup.presets[index].state = decoded
                             showingPopover = false
                         }
                         
                         do {
-                            try presets.savePresetItemToDocumentsDirectory(presets.items[index])
+                            try presets.savePresetItemToDocumentsDirectory(customGroup.presets[index])
                         } catch {
                             // FIXME: Error handling
                             logger.error("\(error, privacy: .public)")
                             return
                         }
                         
-                        presets.scrollToPresetItemId = presets.items[index].id
+                        presets.scrollToPresetItemId = customGroup.presets[index].id
                     } else {
+                        // Create a new PresetItem and its file representation
                         let encoded = try! _encoder.encode(lightState)
                         let decoded = try! _decoder.decode(JSON.self, from: encoded)
                         let newPresetItem = PresetItem(name: newPresetName, systemImage: "lightbulb.2", state: decoded)
                         
-                        var presetItems = presets.items
-                        presetItems.append(newPresetItem)
+                        customGroup.presets.append(newPresetItem)
                         
                         withAnimation {
-                            presets.items = presetItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+                            // Sort the parent group's presets
+                            for group in presets.groups {
+                                if group.presets.contains(where: { $0.id == newPresetItem.id }) {
+                                    group.presets.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+                                    
+                                    break
+                                }
+                            }
+                            
                             showingPopover = false
                         }
                         

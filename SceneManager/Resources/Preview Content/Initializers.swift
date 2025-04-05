@@ -20,7 +20,7 @@ extension Presets {
         let decoder = JSONDecoder()
         
         do {
-            self.items = try decoder.decode([PresetItem].self, from: json)
+            self.groups = [PresetItemGroup(name: "Preview", presets: try decoder.decode([PresetItem].self, from: json))]
         } catch {
             logger.error("\(error, privacy: .public)")
         }

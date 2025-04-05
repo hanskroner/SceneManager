@@ -75,7 +75,7 @@ struct SceneConverterApp: App {
             for model in models {
                 // FIXME: Error handling
                 let preset = try! Preset(from: model)
-                let file = preset.name.lowercased().replacingOccurrences(of: " ", with: "-") + ".json"
+                let file = preset.name.lowercased().replacingOccurrences(of: " ", with: "_") + ".json"
 
                 fileData.append(PresetFileData(file: file, preset: preset))
             }
