@@ -25,7 +25,7 @@ struct LightStateView: View {
     @Environment(Lights.self) private var lights
     @Environment(WindowItem.self) private var window
     
-    func applyDynamicSceneToScene() async {
+    func applyDynamicSceneToScene() {
         do {
             let dynamics = try JSONDecoder().decode(PresetDynamics.self, from: window.dynamicsEditorText.data(using: .utf8)!)
             
@@ -38,6 +38,7 @@ struct LightStateView: View {
                 // Apply the colors/ct in the dynamic scene to the lights
                 // in the scene in order
                 for (index, light) in lights.items.enumerated() {
+                    // FIXME: Refactor to RESTModel
                     let state = PresetState(on: true,
                                             bri: dynamics.bri,
                                             xy: dynamics.xy != nil ? [dynamics.xy![index % dynamics.xy!.count][0], dynamics.xy![index % dynamics.xy!.count][1]] : nil,
@@ -50,7 +51,7 @@ struct LightStateView: View {
                     let jsonData = try encoder.encode(state)
                     let jsonString = String(data: jsonData, encoding: .utf8)!
                     
-                    await window.modify(jsonLightState: jsonString, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: [light.lightId])
+                    window.modify(jsonLightState: jsonString, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: [light.lightId])
                 }
                 
             case .apply_randomized:
@@ -60,6 +61,7 @@ struct LightStateView: View {
                     var random: Int?
                     if let xy = dynamics.xy { random = Int(arc4random_uniform(UInt32(xy.count))) }
                     
+                    // FIXME: Refactor to RESTModel
                     let state = PresetState(on: true,
                                             bri: dynamics.bri,
                                             xy: random != nil ? [dynamics.xy![random!][0], dynamics.xy![random!][1]] : nil,
@@ -72,7 +74,7 @@ struct LightStateView: View {
                     let jsonData = try encoder.encode(state)
                     let jsonString = String(data: jsonData, encoding: .utf8)!
                     
-                    await window.modify(jsonLightState: jsonString, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: [light.lightId])
+                    window.modify(jsonLightState: jsonString, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: [light.lightId])
                 }
                 
             }
@@ -137,21 +139,19 @@ struct LightStateView: View {
             HStack {
                 Spacer()
                 Button("Apply to Scene") {
-                    Task {
-                        switch window.selectedEditorTab {
-                        case .sceneState:
-                            // Modify all the lights in the scene to the attributes in the State Editor
-                            await window.modify(jsonLightState: window.stateEditorText, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
-                            
-                        case .dynamicScene:
-                            // Modify all the lights in the scene to attributes in the Dynamics Editor
-                            // The order in which attributes are applied depends on some of the attributes themselves
-                            await applyDynamicSceneToScene()
-                            
-                            // FIXME: Apply the Dynamic Scene
-                            //        This should eventually be an API call that stores the Dynamic Scene's
-                            //        state - including whether or not it should play when being recalled.
-                        }
+                    switch window.selectedEditorTab {
+                    case .sceneState:
+                        // Modify all the lights in the scene to the attributes in the State Editor
+                        window.modify(jsonLightState: window.stateEditorText, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
+                        
+                    case .dynamicScene:
+                        // Modify all the lights in the scene to attributes in the Dynamics Editor
+                        // The order in which attributes are applied depends on some of the attributes themselves
+                        applyDynamicSceneToScene()
+                        
+                        // FIXME: Apply the Dynamic Scene
+                        //        This should eventually be an API call that stores the Dynamic Scene's
+                        //        state - including whether or not it should play when being recalled.
                     }
                 }
                 .disabled(sidebar.selectedSidebarItem == nil
@@ -161,9 +161,7 @@ struct LightStateView: View {
                 .fixedSize(horizontal: true, vertical: true)
                 
                 Button("Apply to Selected") {
-                    Task {
-                        await window.modify(jsonLightState: window.stateEditorText, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.selectedLightItems.map{ $0.lightId })
-                    }
+                        window.modify(jsonLightState: window.stateEditorText, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.selectedLightItems.map{ $0.lightId })
                 }
                 .disabled(sidebar.selectedSidebarItem == nil
                           || sidebar.selectedSidebarItem?.kind != .scene

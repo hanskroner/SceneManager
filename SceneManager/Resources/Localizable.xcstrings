@@ -106,6 +106,9 @@
     "Preset Name" : {
 
     },
+    "Recall Scene" : {
+
+    },
     "Remove Lights" : {
 
     },
@@ -125,6 +128,9 @@
 
     },
     "Toggle Inspector" : {
+
+    },
+    "Turn Group Off" : {
 
     }
   },

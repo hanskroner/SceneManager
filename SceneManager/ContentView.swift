@@ -16,6 +16,18 @@ struct ContentView: View {
     
     @State private var showingPopover = false
     
+    func recallSelectedScene() {
+        guard let groupId = window.groupId, let sceneId = window.sceneId else { return }
+        
+        window.recall(groupId: groupId, sceneId: sceneId)
+    }
+    
+    func turnSelectedGroupOff() {
+        guard let groupId = window.groupId else { return }
+        
+        window.turnOff(groupId: groupId)
+    }
+    
     var body: some View {
         NavigationSplitView {
             SidebarView()
@@ -32,6 +44,18 @@ struct ContentView: View {
             .navigationTitle(window.navigationTitle ?? "Scene Manager")
             .navigationSubtitle(window.navigationSubtitle ?? "")
             .toolbar {
+                Button(action: { recallSelectedScene() }) {
+                    Label("Recall Scene", systemImage: "play")
+                }
+                .disabled(sidebar.selectedSidebarItem == nil
+                          || sidebar.selectedSidebarItem?.kind != .scene)
+                
+                Button(action: { turnSelectedGroupOff() }) {
+                    Label("Turn Group Off", systemImage: "stop")
+                    
+                }
+                .disabled(sidebar.selectedSidebarItem == nil)
+                
                 Button(action: { showingPopover = true }) {
                     Label("Create Scene Preset", systemImage: "rectangle.stack")
                 }

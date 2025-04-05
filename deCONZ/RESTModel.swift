@@ -150,6 +150,30 @@ public final class RESTModel {
         }
     }
     
+    public func modifyGroupState(groupId: Int, lightState: LightState) async {
+        do {
+            let restLightState = RESTLightState(alert: lightState.alert,
+                                                bri: lightState.bri,
+                                                colormode: nil,
+                                                ct: lightState.ct,
+                                                effect: lightState.effect,
+                                                hue: nil,
+                                                on: lightState.on,
+                                                reachable: nil,
+                                                sat: nil,
+                                                xy: lightState.xy,
+                                                transitiontime: lightState.transitiontime,
+                                                effect_duration: lightState.effect_duration,
+                                                effect_speed: lightState.effect_speed)
+            
+            try await self._client.setGroupState(groupId: groupId, lightState: restLightState)
+            
+            // FIXME: Uodate the model's cache
+        } catch {
+            logger.error("\(error, privacy: .public)")
+        }
+    }
+    
     public func deleteGroup(groupId: Int) async {
         do {
             try await self._client.deleteGroup(groupId: groupId)
@@ -273,6 +297,14 @@ public final class RESTModel {
             
             // Update the model's cache
             self._scenes[groupId]?.removeValue(forKey: sceneId)
+        } catch {
+            logger.error("\(error, privacy: .public)")
+        }
+    }
+    
+    public func recallScene(groupId: Int, sceneId: Int) async {
+        do {
+            try await self._client.recallScene(groupId: groupId, sceneId: sceneId)
         } catch {
             logger.error("\(error, privacy: .public)")
         }

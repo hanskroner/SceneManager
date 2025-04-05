@@ -187,15 +187,34 @@ class WindowItem {
         }
     }
     
+    // MARK: - Group Methods
+    
+    func turnOff(groupId: Int) {
+        Task {
+            let state = LightState()
+            state.on = false
+            
+            await RESTModel.shared.modifyGroupState(groupId: groupId, lightState: state)
+        }
+    }
+    
     // MARK: - Scene Methods
     
-    func modify(jsonLightState: String, forGroupId groupId: Int, sceneId: Int, lightIds: [Int]) async {
-        do {
-            return try await RESTModel.shared.modifyLightStateInScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonLightState: jsonLightState)
-        } catch {
-            // FIXME: Error handling
-            logger.error("\(error, privacy: .public)")
-            return
+    func modify(jsonLightState: String, forGroupId groupId: Int, sceneId: Int, lightIds: [Int]) {
+        Task {
+            do {
+                return try await RESTModel.shared.modifyLightStateInScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonLightState: jsonLightState)
+            } catch {
+                // FIXME: Error handling
+                logger.error("\(error, privacy: .public)")
+                return
+            }
+        }
+    }
+    
+    func recall(groupId: Int, sceneId: Int) {
+        Task {
+            await RESTModel.shared.recallScene(groupId: groupId, sceneId: sceneId)
         }
     }
 }

@@ -21,6 +21,12 @@ enum PresetError: LocalizedError {
     }
 }
 
+enum DynamicState: String, Codable {
+    case ignore
+    case apply_sequence
+    case apply_randomized
+}
+
 struct Preset: Codable {
     let name: String
     let state: PresetState?
@@ -43,6 +49,7 @@ struct PresetDynamics: Codable {
     
     let effect_speed: Double
     let auto_dynamic: Bool
+    let scene_state: DynamicState
 }
 
 extension Preset {
@@ -111,6 +118,7 @@ extension PresetDynamics {
     init(from scene: CLIPScene) throws {
         self.effect_speed = scene.speed
         self.auto_dynamic = scene.auto_dynamic
+        self.scene_state = .apply_sequence
         
         // The CLIPv2 API expects and provides independent 'brightness' values for
         // every 'color' or 'ct' entry in the scene. All entries in scenes available

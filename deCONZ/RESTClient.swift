@@ -179,6 +179,16 @@ actor RESTClient {
         let (data, response) = try await URLSession.shared.data(for: request)
         try check(data: data, from: response)
     }
+    
+    func setGroupState(groupId: Int, lightState: RESTLightState) async throws {
+        let path = "/api/\(self.apiKey)/groups/\(groupId)/action"
+        var request = request(forPath: path, using: .put)
+        encoder.outputFormatting = []
+        request.httpBody = try encoder.encode(lightState)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
+    }
 
     func deleteGroup(groupId: Int) async throws {
         let path = "/api/\(self.apiKey)/groups/\(groupId)/"
@@ -381,6 +391,14 @@ actor RESTClient {
             let (data, response) = try await URLSession.shared.data(for: request)
             try check(data: data, from: response)
         }
+    }
+    
+    func recallScene(groupId: Int, sceneId: Int) async throws {
+        let path = "/api/\(self.apiKey)/groups/\(groupId)/scenes/\(sceneId)/recall"
+        let request = request(forPath: path, using: .put)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
     }
     
 //    func storeScene(groupID: Int, sceneID: Int) async throws {
