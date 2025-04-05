@@ -13,6 +13,11 @@ private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: 
 
 // MARK: - Views
 
+enum Tab: Hashable {
+    case sceneState
+    case dynamicScene
+}
+
 struct LightStateView: View {
     var light: LightItem?
     
@@ -20,19 +25,12 @@ struct LightStateView: View {
     @Environment(Lights.self) private var lights
     @Environment(WindowItem.self) private var window
     
-    @State private var selectedTab: Tab = .sceneState
-    
-    private enum Tab: Hashable {
-        case sceneState
-        case dynamicScene
-    }
-    
     var body: some View {
         @Bindable var window = window
         VStack(alignment: .leading) {
             
             ZStack {
-                TabView(selection: $selectedTab) {
+                TabView(selection: $window.selectedEditorTab) {
                     SimpleJSONTextView(text: $window.stateEditorText, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
                         .clipped()
                         .disabled(sidebar.selectedSidebarItem == nil
@@ -42,7 +40,7 @@ struct LightStateView: View {
                         }
                         .tag(Tab.sceneState)
                     
-                    SimpleJSONTextView(text: $window.stateEditorText, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
+                    SimpleJSONTextView(text: $window.dynamicsEditorText, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
                         .clipped()
                         .disabled(sidebar.selectedSidebarItem == nil
                                   || sidebar.selectedSidebarItem?.kind != .scene)
@@ -65,11 +63,11 @@ struct LightStateView: View {
                         logger.info("Dropped \(first.name)")
                         
                         if let stateText = first.state?.prettyPrint() {
-                            // FIXME: Apply only to 'state' editor
                             window.stateEditorText = stateText
+                            window.selectedEditorTab = .sceneState
                         } else if let dynamicsText = first.dynamics?.prettyPrint() {
-                            // FIXME: Apply only to 'dynamics' editor
-                            window.stateEditorText = dynamicsText
+                            window.dynamicsEditorText = dynamicsText
+                            window.selectedEditorTab = .dynamicScene
                         } else {
                             // FIXME: Error handling
                             logger.error("\(first.name) has no 'state' or 'dynamics'")
@@ -100,7 +98,7 @@ struct LightStateView: View {
                           || sidebar.selectedSidebarItem?.kind != .scene
                           || lights.selectedLightItems.isEmpty
                           || window.stateEditorText.isEmpty
-                          || selectedTab == .dynamicScene)
+                          || window.selectedEditorTab == .dynamicScene)
                 .fixedSize(horizontal: true, vertical: true)
             }
         }

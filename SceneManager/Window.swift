@@ -23,7 +23,10 @@ class WindowItem {
     
     var groupId: Int? = nil
     var sceneId: Int? = nil
+    
+    var selectedEditorTab: Tab = .sceneState
     var stateEditorText: String = ""
+    var dynamicsEditorText: String = ""
     
     var modelRefreshedSubscription: AnyCancellable? = nil
         

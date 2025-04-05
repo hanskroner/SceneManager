@@ -352,7 +352,6 @@ struct PresetsView: View {
         ScrollViewReader { scrollReader in
             List {
                 ForEach(filteredPresetGroups, id: \.id) { group in
-//                ForEach(Array(filteredPresetGroups.enumerated()), id: \.offset) { index, group in
                     Section {
                         ForEach(group.presets, id: \.id) { item in
                             PresetItemView(presetItem: item)
@@ -361,13 +360,11 @@ struct PresetsView: View {
                         // Offset the list section
                         // This allows the list to scroll under the search bar
                         // added by the overlay, without being under it initially.
-//                        if index == 0 {
-                            Text(sectionTitle(forPresetItemGroup: group))
-                            .padding(.top, 38)
-//                        } else {
-//                            Text(sectionTitle(forPresetItemGroup: group))
-//                        }
-                    }
+                        // All sections need to be offset or they'll "float" to the
+                        // top when scrolling, overlapping the search bar.
+                        Text(sectionTitle(forPresetItemGroup: group))
+                        .padding(.top, 38)
+                }
                 }
             }
             .environment(\.defaultMinListHeaderHeight, 1)
@@ -402,6 +399,8 @@ struct PresetItemView: View {
     
     func presetImage(forPresetItem item: PresetItem) -> String {
         if let image = item.image { return image }
+        
+        if item.dynamics != nil { return "scene-dynamics" }
         
         return "scene-state"
     }
