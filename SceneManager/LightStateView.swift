@@ -63,7 +63,17 @@ struct LightStateView: View {
                     .drop(if: (sidebar.selectedSidebarItem?.kind == .scene), for: PresetItem.self, action: { items, location in
                         guard let first = items.first else { return false }
                         logger.info("Dropped \(first.name)")
-                        window.stateEditorText = first.state.prettyPrint()
+                        
+                        if let stateText = first.state?.prettyPrint() {
+                            // FIXME: Apply only to 'state' editor
+                            window.stateEditorText = stateText
+                        } else if let dynamicsText = first.dynamics?.prettyPrint() {
+                            // FIXME: Apply only to 'dynamics' editor
+                            window.stateEditorText = dynamicsText
+                        } else {
+                            // FIXME: Error handling
+                            logger.error("\(first.name) has no 'state' or 'dynamics'")
+                        }
                         
                         return true
                     })

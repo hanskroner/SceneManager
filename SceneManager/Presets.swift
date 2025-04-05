@@ -230,33 +230,62 @@ class PresetItem: Identifiable, Codable, Transferable {
     
     var name: String
     var image: String?
-    var state: JSON
+    
+    var state: JSON?
+    var dynamics: JSON?
     
     var url: URL? = nil
     
     var isRenaming: Bool = false
     
     var color: Color {
-        if self.state["ct"] != nil {
-            return Color(SceneManager.color(fromMired: self.state["ct"]!.intValue!)!)
+        // Preset has 'state'
+        if let state = self.state {
+            // !!!: Prefer 'xy' if preset
+            // Scenes from the Hue mobile app include both values for 'xy'
+            // and 'ct' to support extended color and dimmable-only products.
+            if let xy = state["xy"] {
+                return Color(SceneManager.color(fromXY: CGPoint(x: xy[0]!.doubleValue!, y: xy[1]!.doubleValue!), brightness: 0.5))
+            }
+            
+            if let ct = state["ct"] {
+                return Color(SceneManager.color(fromMired: ct.intValue!)!)
+            }
         }
         
-        if self.state["xy"] != nil {
-            let xy = self.state["xy"]!
-            return Color(SceneManager.color(fromXY: CGPoint(x: xy[0]!.doubleValue!, y: xy[1]!.doubleValue!), brightness: 0.5))
+        // Preset has 'dynamics'
+        if let dynamics = self.dynamics {
+            // !!!: Prefer 'xy' if preset
+            // Scenes from the Hue mobile app include both values for 'xy'
+            // and 'ct' to support extended color and dimmable-only products.
+            
+            // FIXME: Improve 'dynamics' colors
+            //        The Hue mobile app shows small circles for each color
+            //        which shouldn't be too hard to emulate. Just need to
+            //        figure out what to do about the background color. For
+            //        now, just use the first color in the color array.
+            if let xy = dynamics["xy"] {
+                return Color(SceneManager.color(fromXY: CGPoint(x: xy[0]![0]!.doubleValue!, y: xy[0]![1]!.doubleValue!), brightness: 0.8))
+            }
+
+            if let ct = dynamics["ct"] {
+                return Color(SceneManager.color(fromMired: ct.intValue!)!)
+            }
         }
             
         return .white
     }
     
-    init(name: String, image: String? = nil, state: JSON) {
+    init(name: String, image: String? = nil, state: JSON? = nil, dynamics: JSON? = nil) {
         self.name = name
         self.image = image
+        
         self.state = state
+        self.dynamics = dynamics
     }
     
     enum CodingKeys: CodingKey {
-        case name, image, state
+        case name, image, state, dynamics
     }
     
     required init(from decoder: Decoder) throws {
@@ -264,7 +293,9 @@ class PresetItem: Identifiable, Codable, Transferable {
         
         name = try container.decode(String.self, forKey: .name)
         image = try container.decodeIfPresent(String.self, forKey: .image)
-        state = try container.decode(JSON.self, forKey: .state)
+        
+        state = try container.decodeIfPresent(JSON.self, forKey: .state)
+        dynamics = try container.decodeIfPresent(JSON.self, forKey: .dynamics)
     }
     
     func encode(to encoder: Encoder) throws {
@@ -272,7 +303,9 @@ class PresetItem: Identifiable, Codable, Transferable {
         
         try container.encode(name, forKey: .name)
         try container.encodeIfPresent(image, forKey: .image)
-        try container.encode(state, forKey: .state)
+        
+        try container.encodeIfPresent(state, forKey: .state)
+        try container.encodeIfPresent(dynamics, forKey: .dynamics)
     }
     
     static var transferRepresentation: some TransferRepresentation {
@@ -318,7 +351,8 @@ struct PresetsView: View {
         
         ScrollViewReader { scrollReader in
             List {
-                ForEach(Array(filteredPresetGroups.enumerated()), id: \.offset) { index, group in
+                ForEach(filteredPresetGroups, id: \.id) { group in
+//                ForEach(Array(filteredPresetGroups.enumerated()), id: \.offset) { index, group in
                     Section {
                         ForEach(group.presets, id: \.id) { item in
                             PresetItemView(presetItem: item)
@@ -327,12 +361,12 @@ struct PresetsView: View {
                         // Offset the list section
                         // This allows the list to scroll under the search bar
                         // added by the overlay, without being under it initially.
-                        if index == 0 {
+//                        if index == 0 {
                             Text(sectionTitle(forPresetItemGroup: group))
                             .padding(.top, 38)
-                        } else {
-                            Text(sectionTitle(forPresetItemGroup: group))
-                        }
+//                        } else {
+//                            Text(sectionTitle(forPresetItemGroup: group))
+//                        }
                     }
                 }
             }
