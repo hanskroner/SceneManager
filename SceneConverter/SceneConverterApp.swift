@@ -135,6 +135,8 @@ struct SceneConverterApp: App {
                             try! fileContents.write(to: saveURL.appendingPathComponent(directory).appendingPathComponent(data.file))
                         }
                     }
+                    
+                    self.isExporting = false
                 }
                 // .fileImporter cannot be customized in the same way NSOpenPanel
                 //.fileImporter(isPresented: $isExporting, allowedContentTypes: [.directory]) { result in

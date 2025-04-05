@@ -76,9 +76,9 @@ extension PresetState {
         // Zigbee command sent out to the lights contains a single brightness value.
         // Currently, it is sufficient to pick the first available brightness value.
         if let colorBrightness = scene.palette.color.first?.dimming.brightness {
-            self.bri = Int(colorBrightness)
+            self.bri = Int(ceil(colorBrightness * 2.55))
         } else if let ctBrightness = scene.palette.color_temperature.first?.dimming.brightness {
-            self.bri = Int(ctBrightness)
+            self.bri = Int(ceil(ctBrightness * 2.55))
         } else {
             throw PresetError.notAPresetState
         }
@@ -118,9 +118,9 @@ extension PresetDynamics {
         // Zigbee command sent out to the lights contains a single brightness value.
         // Currently, it is sufficient to pick the first available brightness value.
         if let colorBrightness = scene.palette.color.first?.dimming.brightness {
-            self.bri = Int(colorBrightness)
+            self.bri = Int(ceil(colorBrightness * 2.55))
         } else if let ctBrightness = scene.palette.color_temperature.first?.dimming.brightness {
-            self.bri = Int(ctBrightness)
+            self.bri = Int(ceil(ctBrightness * 2.55))
         } else {
             throw PresetError.notAPresetDynamics
         }
