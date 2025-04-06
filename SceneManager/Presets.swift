@@ -509,6 +509,15 @@ struct PresetItemView: View {
         .cornerRadius(8)
         .draggable(presetItem)
         .contextMenu {
+            
+            if let url = presetItem.url {
+                Button(action: {
+                    NSWorkspace.shared.activateFileViewerSelecting([url])
+                }, label: {
+                    Text("Show in Finder")
+                })
+            }
+            
             Button(action: {
                 presetItem.isRenaming = true
             }, label: {
