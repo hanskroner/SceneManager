@@ -43,6 +43,7 @@ class WindowItem {
                     groupItem.items.append(sceneItem)
                 }
                 
+                groupItem.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
                 newItems.append(groupItem)
             }
             
