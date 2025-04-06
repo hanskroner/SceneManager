@@ -406,6 +406,20 @@ struct PresetsView: View {
 
 // MARK: - PresetItem View
 
+extension Color {
+    func adjust(hue: CGFloat = 0, saturation: CGFloat = 0, brightness: CGFloat = 0, opacity: CGFloat = 1) -> Color {
+        let color = NSColor(self)
+        var currentHue: CGFloat = 0
+        var currentSaturation: CGFloat = 0
+        var currentBrigthness: CGFloat = 0
+        var currentOpacity: CGFloat = 0
+
+        color.getHue(&currentHue, saturation: &currentSaturation, brightness: &currentBrigthness, alpha: &currentOpacity)
+        
+        return Color(hue: currentHue + hue, saturation: currentSaturation + saturation, brightness: currentBrigthness + brightness, opacity: currentOpacity + opacity)
+    }
+}
+
 struct PresetItemView: View {
     @Environment(Presets.self) private var presets
     
@@ -505,7 +519,9 @@ struct PresetItemView: View {
             .offset(x: 28, y: 0)
         }
         .frame(maxWidth: .infinity)
-        .background(presetItem.color)
+        .background {
+            LinearGradient(gradient: Gradient(colors: [presetItem.color.adjust(brightness: -0.2), presetItem.color,  presetItem.color.adjust(brightness: 0.2)]), startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
         .cornerRadius(8)
         .draggable(presetItem)
         .contextMenu {
