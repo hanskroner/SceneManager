@@ -489,11 +489,11 @@ struct PresetItemView: View {
                 ForEach(Array(presetItem.dynamicsColors.enumerated()), id: \.offset) { index, color in
                     HStack(spacing: 0) {
                         Color.clear
-                            .frame(width: CGFloat(index) * 26, height: 44)
+                            .frame(width: CGFloat(index) * (presetItem.dynamicsColors.count > 5 ? 14 : 26), height: 44)
                         
                         Circle()
                             .fill(color)
-                            .shadow(color: .black, radius: 5, x: 0, y: 0)
+                            .shadow(color: .black, radius: 4, x: 0, y: 0)
                             .frame(width: 32, height: 32)
                     }
                     .zIndex(Double(presetItem.dynamicsColors.count - index))
