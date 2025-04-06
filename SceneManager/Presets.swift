@@ -289,12 +289,6 @@ class PresetItem: Identifiable, Codable, Transferable {
             // !!!: Prefer 'xy' if preset
             // Scenes from the Hue mobile app include both values for 'xy'
             // and 'ct' to support extended color and dimmable-only products.
-            
-            // FIXME: Improve 'dynamics' colors
-            //        The Hue mobile app shows small circles for each color
-            //        which shouldn't be too hard to emulate. Just need to
-            //        figure out what to do about the background color. For
-            //        now, just use the first color in the color array.
             if let xy = dynamics["xy"] {
                 return Color(SceneManager.color(fromXY: CGPoint(x: xy[0]![0]!.doubleValue!, y: xy[0]![1]!.doubleValue!), brightness: 0.8))
             }
@@ -305,6 +299,21 @@ class PresetItem: Identifiable, Codable, Transferable {
         }
             
         return .white
+    }
+    
+    var dynamicsColors: [Color] {
+        var dynamicsColors: [Color] = []
+        if let dynamicsData = self.dynamics?.prettyPrint().data(using: .utf8),
+            let dynamics = try? JSONDecoder().decode(PresetDynamics.self, from: dynamicsData),
+           let colors = dynamics.xy {
+            for color in colors {
+                dynamicsColors.append(Color(SceneManager.color(fromXY: CGPoint(x: color[0], y: color[1]), brightness: 0.8)))
+            }
+        } else {
+            return [self.color]
+        }
+        
+        return dynamicsColors
     }
     
     init(name: String, image: String? = nil, state: JSON? = nil, dynamics: JSON? = nil) {
@@ -437,24 +446,13 @@ struct PresetItemView: View {
     }
     
     var body: some View {
-        VStack {
-            Label {
-                Text("")
-            } icon: {
-                Image(presetImage(forPresetItem: presetItem))
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 32, height: 32)
-                    .foregroundColor(isDark(presetItem.color) ? .white : Color(NSColor.windowBackgroundColor))
-            }
-            
+        VStack(alignment: .leading) {
             if (presetItem.isRenaming) {
                 TextField("", text: $presetItem.name)
                     .id(presetItem.id)
-                    .multilineTextAlignment(.center)
                     .font(.headline)
                     .padding([.leading, .trailing], 12)
-                    .padding(.top, 4)
+                    .padding(.top, 32)
                     .focused($isFocused)
                     .onChange(of: isFocused) {
                         // Only act when focus is lost by the TextField the rename is happening in
@@ -490,10 +488,44 @@ struct PresetItemView: View {
                     .id(presetItem.id)
                     .foregroundColor(isDark(presetItem.color) ? .white : Color(NSColor.windowBackgroundColor))
                     .font(.headline)
-                    .padding(.top, 4)
+                    .padding(.leading, 12)
+                    .padding(.top, 32)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
+            
+            ZStack(alignment: .leading) {
+                ForEach(Array(presetItem.dynamicsColors.enumerated()), id: \.offset) { index, color in
+                    HStack(spacing: 0) {
+                        Color.clear
+                            .frame(width: CGFloat(index) * 26, height: 44)
+                        
+                        Circle()
+                            .fill(color)
+                            .shadow(color: .black, radius: 5, x: 0, y: 0)
+                            .frame(width: 32, height: 32)
+                    }
+                    .zIndex(Double(presetItem.dynamicsColors.count - index))
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
         }
-        .padding(.vertical)
+        .background {
+            Label {
+                Text("")
+            } icon: {
+                Image(presetImage(forPresetItem: presetItem))
+                    .resizable()
+                    .opacity(0.6)
+                    .foregroundColor(isDark(presetItem.color) ? .white : Color(NSColor.windowBackgroundColor))
+                    .scaledToFit()
+                    .frame(width: 96, height: 96)
+                
+            }
+            .frame(width: 96, height: 96)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+            .offset(x: 28, y: 0)
+        }
         .frame(maxWidth: .infinity)
         .background(presetItem.color)
         .cornerRadius(8)
