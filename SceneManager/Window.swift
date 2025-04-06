@@ -191,19 +191,32 @@ class WindowItem {
     
     func turnOff(groupId: Int) {
         Task {
-            let state = LightState()
-            state.on = false
+            await RESTModel.shared.modifyGroupState(groupId: groupId, lightState: LightState(on: false))
             
-            await RESTModel.shared.modifyGroupState(groupId: groupId, lightState: state)
+            // FIXME: Update UI models
+            //        Turning a group off would update its state
         }
     }
     
     // MARK: - Scene Methods
     
-    func modify(jsonLightState: String, forGroupId groupId: Int, sceneId: Int, lightIds: [Int]) {
+    func applyStaticState(_ stateJSON: String, toGroupId groupId: Int, sceneId: Int, lightIds: [Int]) {
         Task {
             do {
-                return try await RESTModel.shared.modifyLightStateInScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonLightState: jsonLightState)
+                return try await RESTModel.shared.modifyLightStateInScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonLightState: stateJSON)
+            } catch {
+                // FIXME: Error handling
+                logger.error("\(error, privacy: .public)")
+                return
+            }
+        }
+    }
+    
+    func applyDynamicState(_ dynamicJSON: String, toGroupId groupId: Int, sceneId: Int, lightIds: [Int]) {
+        Task {
+            do {
+                return try await RESTModel.shared.applyDynamicStatesToScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonDynamicState: dynamicJSON)
+                
             } catch {
                 // FIXME: Error handling
                 logger.error("\(error, privacy: .public)")
@@ -216,5 +229,8 @@ class WindowItem {
         Task {
             await RESTModel.shared.recallScene(groupId: groupId, sceneId: sceneId)
         }
+        
+        // FIXME: Update UI models
+        //        Recalling a scene would update its group's state
     }
 }

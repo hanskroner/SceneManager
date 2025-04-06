@@ -45,6 +45,34 @@ struct RESTLightState: Codable {
     let transitiontime: Int?
     let effect_duration: Int?
     let effect_speed: Double?
+    
+    init(alert: String? = nil,
+         bri: Int? = nil,
+         colormode: String? = nil,
+         ct: Int? = nil,
+         effect: String? = nil,
+         hue: Int? = nil,
+         on: Bool? = nil,
+         reachable: Bool? = nil,
+         sat: Int? = nil,
+         xy: [Double]? = nil,
+         transitiontime: Int? = nil,
+         effect_duration: Int? = nil,
+         effect_speed: Double? = nil) {
+        self.alert = alert
+        self.bri = bri
+        self.colormode = colormode
+        self.ct = ct
+        self.effect = effect
+        self.hue = hue
+        self.on = on
+        self.reachable = reachable
+        self.sat = sat
+        self.xy = xy
+        self.transitiontime = transitiontime
+        self.effect_duration = effect_duration
+        self.effect_speed = effect_speed
+    }
 }
 
 // MARK: Light Configuration

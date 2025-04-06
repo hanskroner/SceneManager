@@ -25,65 +25,6 @@ struct LightStateView: View {
     @Environment(Lights.self) private var lights
     @Environment(WindowItem.self) private var window
     
-    func applyDynamicSceneToScene() {
-        do {
-            let dynamics = try JSONDecoder().decode(PresetDynamics.self, from: window.dynamicsEditorText.data(using: .utf8)!)
-            
-            switch dynamics.scene_state {
-            case .ignore:
-                // Don't update the scene attributes
-                break
-                
-            case .apply_sequence:
-                // Apply the colors/ct in the dynamic scene to the lights
-                // in the scene in order
-                for (index, light) in lights.items.enumerated() {
-                    // FIXME: Refactor to RESTModel
-                    let state = PresetState(on: true,
-                                            bri: dynamics.bri,
-                                            xy: dynamics.xy != nil ? [dynamics.xy![index % dynamics.xy!.count][0], dynamics.xy![index % dynamics.xy!.count][1]] : nil,
-                                            ct: dynamics.ct,
-                                            transitiontime: 4)
-                    
-                    // Encode PresetState as JSON and get it back as a String
-                    let encoder = JSONEncoder()
-                    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-                    let jsonData = try encoder.encode(state)
-                    let jsonString = String(data: jsonData, encoding: .utf8)!
-                    
-                    window.modify(jsonLightState: jsonString, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: [light.lightId])
-                }
-                
-            case .apply_randomized:
-                for light in lights.items {
-                    // Generate a random number between '0' and 'dynamics.xy.count - 1'
-                    // to use as the index for the color to apply to a light.
-                    var random: Int?
-                    if let xy = dynamics.xy { random = Int(arc4random_uniform(UInt32(xy.count))) }
-                    
-                    // FIXME: Refactor to RESTModel
-                    let state = PresetState(on: true,
-                                            bri: dynamics.bri,
-                                            xy: random != nil ? [dynamics.xy![random!][0], dynamics.xy![random!][1]] : nil,
-                                            ct: dynamics.ct,
-                                            transitiontime: 4)
-                    
-                    // Encode PresetState as JSON and get it back as a String
-                    let encoder = JSONEncoder()
-                    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-                    let jsonData = try encoder.encode(state)
-                    let jsonString = String(data: jsonData, encoding: .utf8)!
-                    
-                    window.modify(jsonLightState: jsonString, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: [light.lightId])
-                }
-                
-            }
-        } catch {
-            // FIXME: Error handling
-            logger.error("\(error, privacy: .public)")
-        }
-    }
-    
     var body: some View {
         @Bindable var window = window
         VStack(alignment: .leading) {
@@ -142,16 +83,12 @@ struct LightStateView: View {
                     switch window.selectedEditorTab {
                     case .sceneState:
                         // Modify all the lights in the scene to the attributes in the State Editor
-                        window.modify(jsonLightState: window.stateEditorText, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
+                        window.applyStaticState(window.stateEditorText, toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
                         
                     case .dynamicScene:
                         // Modify all the lights in the scene to attributes in the Dynamics Editor
                         // The order in which attributes are applied depends on some of the attributes themselves
-                        applyDynamicSceneToScene()
-                        
-                        // FIXME: Apply the Dynamic Scene
-                        //        This should eventually be an API call that stores the Dynamic Scene's
-                        //        state - including whether or not it should play when being recalled.
+                        window.applyDynamicState(window.dynamicsEditorText, toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
                     }
                 }
                 .disabled(sidebar.selectedSidebarItem == nil
@@ -161,7 +98,7 @@ struct LightStateView: View {
                 .fixedSize(horizontal: true, vertical: true)
                 
                 Button("Apply to Selected") {
-                        window.modify(jsonLightState: window.stateEditorText, forGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.selectedLightItems.map{ $0.lightId })
+                        window.applyStaticState(window.stateEditorText, toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.selectedLightItems.map{ $0.lightId })
                 }
                 .disabled(sidebar.selectedSidebarItem == nil
                           || sidebar.selectedSidebarItem?.kind != .scene

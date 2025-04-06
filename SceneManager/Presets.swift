@@ -14,37 +14,6 @@ private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: 
 
 // MARK: - Presets Model
 
-enum DynamicState: String, Codable {
-    case ignore
-    case apply_sequence
-    case apply_randomized
-}
-
-struct Preset: Codable {
-    let name: String
-    let state: PresetState?
-    let dynamics: PresetDynamics?
-}
-
-struct PresetState: Codable {
-    let on: Bool?
-    let bri: Int?
-    let xy: [Double]?
-    let ct: Int?
-    
-    let transitiontime: Int
-}
-
-struct PresetDynamics: Codable {
-    let bri: Int?
-    let xy: [[Double]]?
-    let ct: Int?
-    
-    let effect_speed: Double
-    let auto_dynamic: Bool
-    let scene_state: DynamicState
-}
-
 @Observable
 class Presets {
     var groups: [PresetItemGroup] = []
@@ -310,9 +279,11 @@ class PresetItem: Identifiable, Codable, Transferable {
     
     var dynamicsColors: [Color] {
         var dynamicsColors: [Color] = []
-        if let dynamicsData = self.dynamics?.prettyPrint().data(using: .utf8),
-            let dynamics = try? JSONDecoder().decode(PresetDynamics.self, from: dynamicsData),
-           let colors = dynamics.xy {
+        
+        // Knowledge of 'DynamicState' is available only in RESTModel
+        // Instead of dragging it here as a dependency, the JSON object is parsed manually.
+        if let dynamics = self.dynamics,
+           let colors: [[Double]] = dynamics["xy"]?.arrayValue?.compactMap({ $0.arrayValue?.compactMap { $0.doubleValue } }) {
             for color in colors {
                 dynamicsColors.append(Color(SceneManager.color(fromXY: CGPoint(x: color[0], y: color[1]), brightness: 0.8)))
             }

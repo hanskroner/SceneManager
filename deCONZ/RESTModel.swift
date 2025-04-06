@@ -29,6 +29,8 @@ public final class RESTModel {
     public static let shared = RESTModel(client: RESTClient.init(apiKey: apiKey, apiURL: apiURL))
     
     private init(client: RESTClient) {
+        _encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        
         _client = client
         
         Task {
@@ -264,13 +266,9 @@ public final class RESTModel {
         let lightState = try _decoder.decode(LightState.self, from: Data(jsonLightState.utf8))
         let restLightState = RESTLightState(alert: lightState.alert,
                                             bri: lightState.bri,
-                                            colormode: nil,
                                             ct: lightState.ct,
                                             effect: lightState.effect,
-                                            hue: nil,
                                             on: lightState.on,
-                                            reachable: nil,
-                                            sat: nil,
                                             xy: lightState.xy,
                                             transitiontime: lightState.transitiontime,
                                             effect_duration: lightState.effect_duration,
@@ -289,6 +287,57 @@ public final class RESTModel {
         } else {
             try await self._client.modifyScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, lightState: restLightState)
         }
+    }
+    
+    public func applyDynamicStatesToScene(groupId: Int, sceneId: Int, lightIds: [Int], jsonDynamicState: String) async throws {
+        let dynamics = try _decoder.decode(DynamicState.self, from: jsonDynamicState.data(using: .utf8)!)
+        
+        switch dynamics.scene_apply {
+        case .ignore:
+            // Don't update the scene attributes
+            break
+            
+        case .sequence:
+            // Apply the colors/ct in the dynamic scene to the lights
+            // in the scene in order
+            for (index, lightId) in lightIds.enumerated() {
+                let state = LightState(bri: dynamics.bri,
+                                       ct: dynamics.ct,
+                                       on: true,
+                                       xy: dynamics.xy != nil ? [dynamics.xy![index % dynamics.xy!.count][0], dynamics.xy![index % dynamics.xy!.count][1]] : nil,
+                                       transitiontime: 4)
+                
+                // Encode PresetState as JSON and get it back as a String
+                let jsonData = try _encoder.encode(state)
+                let jsonString = String(data: jsonData, encoding: .utf8)!
+                
+                try await modifyLightStateInScene(groupId: groupId, sceneId: sceneId, lightIds: [lightId], jsonLightState: jsonString)
+            }
+            
+        case .random:
+            for lightId in lightIds {
+                // Generate a random number between '0' and 'dynamics.xy.count - 1'
+                // to use as the index for the color to apply to a light.
+                var random: Int?
+                if let xy = dynamics.xy { random = Int(arc4random_uniform(UInt32(xy.count))) }
+                
+                let state = LightState(bri: dynamics.bri,
+                                       ct: dynamics.ct,
+                                       on: true,
+                                       xy: random != nil ? [dynamics.xy![random!][0], dynamics.xy![random!][1]] : nil,
+                                       transitiontime: 4)
+                
+                // Encode PresetState as JSON and get it back as a String
+                let jsonData = try _encoder.encode(state)
+                let jsonString = String(data: jsonData, encoding: .utf8)!
+                
+                try await modifyLightStateInScene(groupId: groupId, sceneId: sceneId, lightIds: [lightId], jsonLightState: jsonString)
+            }
+        }
+        
+        // FIXME: Apply the Dynamic Scene
+        //        This should eventually be an API call that stores the Dynamic Scene's
+        //        state - including whether or not it should play when being recalled.
     }
     
     public func deleteScene(groupId: Int, sceneId: Int) async {

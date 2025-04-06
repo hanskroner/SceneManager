@@ -68,16 +68,25 @@ public final class LightState: Codable {
     public var effect_duration: Int?
     public var effect_speed: Double?
     
-    public init() {
-        self.alert = nil
-        self.bri = nil
-        self.ct = nil
-        self.effect = nil
-        self.on = nil
-        self.xy = nil
-        self.transitiontime = nil
-        self.effect_duration = nil
-        self.effect_speed = nil
+    
+    public init(alert: String? = nil,
+         bri: Int? = nil,
+         ct: Int? = nil,
+         effect: String? = nil,
+         on: Bool? = nil,
+         xy: [Double]? = nil,
+         transitiontime: Int? = nil,
+         effect_duration: Int? = nil,
+         effect_speed: Double? = nil) {
+        self.alert = alert
+        self.bri = bri
+        self.ct = ct
+        self.effect = effect
+        self.on = on
+        self.xy = xy
+        self.transitiontime = transitiontime
+        self.effect_duration = effect_duration
+        self.effect_speed = effect_speed
     }
     
     enum CodingKeys: CodingKey {
@@ -275,4 +284,22 @@ public final class Scene: APIItem, Codable {
         try container.encode(lightIds, forKey: .light_ids)
         try container.encode(lightStates, forKey: .light_states)
     }
+}
+
+// MARK: - Parsing Models
+
+enum DynamicStateApplication: String, Codable {
+    case ignore
+    case sequence
+    case random
+}
+
+struct DynamicState: Codable {
+    let bri: Int?
+    let xy: [[Double]]?
+    let ct: Int?
+    
+    let effect_speed: Double
+    let auto_dynamic: Bool
+    let scene_apply: DynamicStateApplication
 }
