@@ -1,0 +1,21 @@
+{
+  "image": "scene-christmas",
+  "dynamics" : {
+    "auto_dynamic" : true,
+    "bri" : 229,
+    "ct" : 447,
+    "effect_speed" : 0.6031746031746031,
+    "scene_apply" : "sequence",
+    "xy" : [
+      [
+        0.3015,
+        0.5666
+      ],
+      [
+        0.6750,
+        0.3220
+      ]
+    ]
+  },
+  "name" : "Christmas"
+}

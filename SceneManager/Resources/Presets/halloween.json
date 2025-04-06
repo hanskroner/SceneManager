@@ -1,0 +1,21 @@
+{
+  "image": "scene-halloween",
+  "dynamics" : {
+    "auto_dynamic" : true,
+    "bri" : 229,
+    "ct" : 447,
+    "effect_speed" : 0.6031746031746031,
+    "scene_apply" : "sequence",
+    "xy" : [
+      [
+        0.5921,
+        0.3830
+      ],
+      [
+        0.2485,
+        0.0917
+      ]
+    ]
+  },
+  "name" : "Halloween"
+}

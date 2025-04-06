@@ -1,9 +1,0 @@
-{
-    "name" : "Halloween Purple",
-    "state" : {
-        "bri" : 229,
-        "on" : true,
-        "transitiontime" : 4,
-        "xy" : [0.2485, 0.0917]
-    }
-}

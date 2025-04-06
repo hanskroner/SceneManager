@@ -1,9 +1,0 @@
-{
-    "name" : "Christmas Red",
-    "state" : {
-        "bri" : 229,
-        "on" : true,
-        "transitiontime" : 4,
-        "xy" : [0.6750, 0.3220]
-    }
-}

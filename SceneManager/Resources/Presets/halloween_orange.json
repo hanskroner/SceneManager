@@ -1,9 +1,0 @@
-{
-    "name" : "Halloween Orange",
-    "state" : {
-        "bri" : 229,
-        "on" : true,
-        "transitiontime" : 4,
-        "xy" : [0.5921, 0.3830]
-    }
-}
