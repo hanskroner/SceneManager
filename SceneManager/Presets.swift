@@ -266,7 +266,7 @@ class PresetItem: Identifiable, Codable, Transferable {
             // Scenes from the Hue mobile app include both values for 'xy'
             // and 'ct' to support extended color and dimmable-only products.
             if let xy = dynamics["xy"] {
-                return Color(SceneManager.color(fromXY: CGPoint(x: xy[0]![0]!.doubleValue!, y: xy[0]![1]!.doubleValue!), brightness: 0.8))
+                return Color(SceneManager.color(fromXY: CGPoint(x: xy[0]![0]!.doubleValue!, y: xy[0]![1]!.doubleValue!), brightness: 0.5))
             }
 
             if let ct = dynamics["ct"] {
@@ -285,7 +285,7 @@ class PresetItem: Identifiable, Codable, Transferable {
         if let dynamics = self.dynamics,
            let colors: [[Double]] = dynamics["xy"]?.arrayValue?.compactMap({ $0.arrayValue?.compactMap { $0.doubleValue } }) {
             for color in colors {
-                dynamicsColors.append(Color(SceneManager.color(fromXY: CGPoint(x: color[0], y: color[1]), brightness: 0.8)))
+                dynamicsColors.append(Color(SceneManager.color(fromXY: CGPoint(x: color[0], y: color[1]), brightness: 0.5)))
             }
         } else {
             return [self.color]
