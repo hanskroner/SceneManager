@@ -172,11 +172,18 @@ class Presets {
         }
         
         // Re-pack the dictionary into a sorted Array of PresetItemGroup
-        // The presets in each group are also sorted.
+        // The presets in each group are also sorted. The 'custom' group
+        // is included last, and as the first group.
         var presetGroups: [PresetItemGroup] = []
-        for (group, presets) in presetDirs.sorted(by: { $0.key.localizedStandardCompare($1.key) == .orderedAscending }) {
+        let withoutCustom = presetDirs.filter { $0.key != "custom" }
+        for (group, presets) in withoutCustom.sorted(by: { $0.key.localizedStandardCompare($1.key) == .orderedAscending }) {
             presetGroups.append(PresetItemGroup(name: group,
                                                 presets: presets.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })))
+        }
+        
+        if let customGroup = presetDirs["custom"] {
+            presetGroups.insert(PresetItemGroup(name: "custom",
+                                                            presets: customGroup.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })), at: 0)
         }
         
         return presetGroups
