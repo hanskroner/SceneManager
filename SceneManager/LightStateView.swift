@@ -117,6 +117,7 @@ struct LightStateView: View {
             }
             
             Task {
+                // Update the State Editor when light selection changes
                 window.stateEditorText = await window.jsonLightState(forLightId: newValue.lightId,
                                                    groupId: window.groupId,
                                                    sceneId: window.sceneId)

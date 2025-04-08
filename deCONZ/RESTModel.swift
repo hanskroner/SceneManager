@@ -78,12 +78,39 @@ public final class RESTModel {
         }
         
         // State defined in a scene
-        // FIXME: Catch
-        let state = try! await self._client.getSceneState(lightId: lightId, groupID: groupId, sceneID: sceneId)
-        let encoded = try! _encoder.encode(state)
-        let decoded = try! _decoder.decode(JSON.self, from: encoded)
+        do {
+            let attributes = try await self._client.getSceneAttributes(groupID: groupId, sceneID: sceneId)
+            guard let state = attributes?.lights.filter({ $0.key == lightId }).first?.1 else { return "" }
+            let encoded = try _encoder.encode(state)
+            let decoded = try _decoder.decode(JSON.self, from: encoded)
+            
+            return decoded.prettyPrint()
+        } catch {
+            // FIXME: Error handling
+            logger.error("\(error, privacy: .public)")
+        }
         
-        return decoded.prettyPrint()
+        return ""
+    }
+    
+    // FIXME: Consider different return from 'String'
+    public func dynamicState(withGroupId groupId: Int? = nil, sceneId: Int? = nil) async -> String {
+        guard let groupId, let sceneId else { return "" }
+        
+        do {
+            let attributes = try await self._client.getSceneAttributes(groupID: groupId, sceneID: sceneId)
+            guard let state = attributes?.dynamics else { return "" }
+            
+            let encoded = try _encoder.encode(state)
+            let decoded = try _decoder.decode(JSON.self, from: encoded)
+            
+            return decoded.prettyPrint()
+        } catch {
+            // FIXME: Error handling
+            logger.error("\(error, privacy: .public)")
+        }
+        
+        return ""
     }
     
     // MARK: Groups
@@ -97,6 +124,7 @@ public final class RESTModel {
             self._scenes[groupId] = [Int: Scene]()
             return groupId
         } catch {
+            // FIXME: Error handling
             logger.error("\(error, privacy: .public)")
             return nil
         }
@@ -109,6 +137,7 @@ public final class RESTModel {
             // Update the model's cache
             self._groups[groupId]?.name = name
         } catch {
+            // FIXME: Error handling
             logger.error("\(error, privacy: .public)")
         }
     }
@@ -172,6 +201,7 @@ public final class RESTModel {
             
             // FIXME: Uodate the model's cache
         } catch {
+            // FIXME: Error handling
             logger.error("\(error, privacy: .public)")
         }
     }
@@ -183,6 +213,7 @@ public final class RESTModel {
             // Uodate the model's cache
             self._groups.removeValue(forKey: groupId)
         } catch {
+            // FIXME: Error handling
             logger.error("\(error, privacy: .public)")
         }
     }
@@ -205,6 +236,7 @@ public final class RESTModel {
             self._scenes[groupId]?[sceneId] = Scene(sceneId: sceneId, groupId: groupId, name: name)
             return sceneId
         } catch {
+            // FIXME: Error handling
             logger.error("\(error, privacy: .public)")
             return nil
         }
@@ -217,6 +249,7 @@ public final class RESTModel {
             // Update the model's cache
             self._scenes[groupId]?[sceneId]?.name = name
         } catch {
+            // FIXME: Error handling
             logger.error("\(error, privacy: .public)")
         }
     }
@@ -292,7 +325,9 @@ public final class RESTModel {
     public func applyDynamicStatesToScene(groupId: Int, sceneId: Int, lightIds: [Int], jsonDynamicState: String) async throws {
         let dynamics = try _decoder.decode(DynamicState.self, from: jsonDynamicState.data(using: .utf8)!)
         
-        switch dynamics.scene_apply {
+        // !!!: deCONZ Scenes don't have 'scene_apply'
+        //      Treat the missing attribute as 'sequence'
+        switch dynamics.scene_apply ?? .sequence {
         case .ignore:
             // Don't update the scene attributes
             break
@@ -352,6 +387,7 @@ public final class RESTModel {
             // Update the model's cache
             self._scenes[groupId]?.removeValue(forKey: sceneId)
         } catch {
+            // FIXME: Error handling
             logger.error("\(error, privacy: .public)")
         }
     }
@@ -360,6 +396,7 @@ public final class RESTModel {
         do {
             try await self._client.recallScene(groupId: groupId, sceneId: sceneId)
         } catch {
+            // FIXME: Error handling
             logger.error("\(error, privacy: .public)")
         }
     }
@@ -396,7 +433,7 @@ public final class RESTModel {
                     stateDictionary[stateEntry.0] = LightState(from: stateEntry.1)
                 })
                 
-                sceneDictionary[sceneEntry.0] = Scene(from: sceneEntry.1, sceneId: sceneEntry.0, groupId: groupEntry.0, lightIds: sceneLightIds, lightStates: sceneLightStates)
+                sceneDictionary[sceneEntry.0] = Scene(from: sceneEntry.1, sceneId: sceneEntry.0, groupId: groupEntry.0, lightIds: sceneLightIds, lightStates: sceneLightStates, dynamicState: DynamicState(from: sceneEntry.1.dynamics))
             })
         })
         

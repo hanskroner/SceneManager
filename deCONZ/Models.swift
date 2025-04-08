@@ -248,8 +248,9 @@ public final class Scene: APIItem, Codable {
     public let sceneId: Int
     public var lightIds: [Int]
     public var lightStates: [Int: LightState]
+    public var dynamicState: DynamicState?
     
-    public init(sceneId: Int, groupId: Int, name: String, lightIds: [Int] = [], lightStates: [Int: LightState] = [:]) {
+    public init(sceneId: Int, groupId: Int, name: String, lightIds: [Int] = [], lightStates: [Int: LightState] = [:], dynamicState: DynamicState? = nil) {
         self.id = UUID(namespace: uuidNamespace, input: "\(groupId)-\(sceneId)")!
         self.name = name
         
@@ -257,10 +258,11 @@ public final class Scene: APIItem, Codable {
         self.groupId = groupId
         self.lightIds = lightIds
         self.lightStates = lightStates
+        self.dynamicState = dynamicState
     }
     
     enum CodingKeys: CodingKey {
-        case scene_id, group_id, name, light_ids, scene_ids, light_states
+        case scene_id, group_id, name, light_ids, scene_ids, light_states, dynamic_state
     }
     
     public init(from decoder: Decoder) throws {
@@ -271,6 +273,7 @@ public final class Scene: APIItem, Codable {
         groupId = try container.decodeIfPresent(Int.self, forKey: .scene_id) ?? 0
         lightIds = try container.decodeIfPresent([Int].self, forKey: .light_ids) ?? []
         lightStates = try container.decodeIfPresent([Int: LightState].self, forKey: .light_states) ?? [:]
+        dynamicState = try container.decodeIfPresent(DynamicState.self, forKey: .dynamic_state)
         
         self.id = UUID(namespace: uuidNamespace, input: "\(groupId)-\(sceneId)")!
     }
@@ -283,23 +286,33 @@ public final class Scene: APIItem, Codable {
         try container.encode(name, forKey: .name)
         try container.encode(lightIds, forKey: .light_ids)
         try container.encode(lightStates, forKey: .light_states)
+        try container.encodeIfPresent(dynamicState, forKey: .dynamic_state)
     }
 }
 
-// MARK: - Parsing Models
+// MARK: - Dynamic Scene Model
 
-enum DynamicStateApplication: String, Codable {
+public enum DynamicStateApplication: String, Codable {
     case ignore
     case sequence
     case random
 }
 
-struct DynamicState: Codable {
-    let bri: Int?
-    let xy: [[Double]]?
-    let ct: Int?
+public final class DynamicState: Codable {
+    public var bri: Int?
+    public var xy: [[Double]]?
+    public var ct: Int?
     
-    let effect_speed: Double
-    let auto_dynamic: Bool
-    let scene_apply: DynamicStateApplication
+    public var effect_speed: Double
+    public var auto_dynamic: Bool
+    public var scene_apply: DynamicStateApplication?
+    
+    public init(bri: Int? = nil, xy: [[Double]]? = nil, ct: Int? = nil, effect_speed: Double, auto_dynamic: Bool, scene_apply: DynamicStateApplication? = nil) {
+        self.bri = bri
+        self.xy = xy
+        self.ct = ct
+        self.effect_speed = effect_speed
+        self.auto_dynamic = auto_dynamic
+        self.scene_apply = scene_apply
+    }
 }

@@ -198,40 +198,6 @@ actor RESTClient {
         try check(data: data, from: response)
     }
     
-//    public func getAllGroups() async throws -> ([Int: Group], [Int: [Int: Scene]]) {
-//        let path = "/api/\(self.apiKey)/groups/"
-//        let request = request(forPath: path, using: .get)
-//        
-//        let (data, response) = try await URLSession.shared.data(for: request)
-//        try check(data: data, from: response)
-//        
-//        // The response from the REST API bundles Scene information into the Group information. It avoids
-//        // the need to make two separate requests to obtain the information, but ever so slightly ruins
-//        // the consistency of the data structures used to hold the information, where Groups now hold
-//        // the names of their Scenes, but not the names of their Lights.
-//        //
-//        // The code below separates Group and Scene information into their own containers, which are then
-//        // returned by the function as a tuple. The Group information retains only the IDs of its Scenes,
-//        // which is the same information it holds on its Lights. The Scene information is put in its own
-//        // object, indexed by the Group they belong to.
-//        
-//        let apiResponse = try decoder.decode([Int: RESTGroup].self, from: data)
-//        
-//        let groupsTuple = apiResponse.map { ($0.0, Group(from: $0.1, id: $0.0)) }
-//        let groups = Dictionary(uniqueKeysWithValues: groupsTuple)
-//
-//        let scenesTuple = apiResponse.map { (groupId, group) in
-//            (groupId,
-//             group.scenes.reduce(into: [Int: Scene]()) {
-//                let scene = Scene(from: $1, sceneId: Int($1.id)!, groupId: groupId)
-//                $0[scene.sceneId] = scene
-//            })
-//        }
-//        let scenes = Dictionary(uniqueKeysWithValues: scenesTuple)
-//        
-//        return (groups, scenes)
-//    }
-    
     // MARK: - deCONZ Scenes REST API Methods
     
     func createScene(groupId: Int, name: String) async throws -> Int {
@@ -269,7 +235,7 @@ actor RESTClient {
         })
     }
     
-    func getSceneState(lightId: Int, groupID: Int, sceneID: Int) async throws -> RESTLightState? {
+    func getSceneAttributes(groupID: Int, sceneID: Int) async throws -> RESTSceneAttributes? {
         // The deCONZ REST API is inconsistent in the way it handles xy Color Mode values.
         // When modifying a Scene that uses xy Color Mode, the values must be passed in as an array under
         // the "xy" JSON key. When getting the attributes of a Scene that uses xy Color Mode, the REST
@@ -287,8 +253,11 @@ actor RESTClient {
             let y: Double?
             let transitiontime: Int?
         }
+        
         struct SceneLightStateContainer: Decodable {
+            var dynamics: RESTDynamicState?
             var lights: [SceneLightState]
+            var name: String
         }
         
         let path = "/api/\(self.apiKey)/groups/\(groupID)/scenes/\(sceneID)/"
@@ -297,54 +266,27 @@ actor RESTClient {
         let (data, response) = try await URLSession.shared.data(for: request)
         try check(data: data, from: response)
         
-        let tempLightStates: SceneLightStateContainer = try decoder.decode(SceneLightStateContainer.self, from: data)
-        
-        for (restLightState) in tempLightStates.lights {
-            if let stringLightId = restLightState.id,
-               lightId == Int(stringLightId) {
-                return RESTLightState(alert: nil,
-                                      bri: restLightState.bri,
-                                      colormode: nil,
-                                      ct: restLightState.ct,
-                                      effect: nil,
-                                      hue: restLightState.hue,
-                                      on: restLightState.on,
-                                      reachable: nil,
-                                      sat: restLightState.sat,
-                                      xy: restLightState.x != nil && restLightState.y != nil ? [restLightState.x!, restLightState.y!] : nil,
-                                      transitiontime: restLightState.transitiontime,
-                                      effect_duration: nil,
-                                      effect_speed: nil)
+        let attrContainer: SceneLightStateContainer = try decoder.decode(SceneLightStateContainer.self, from: data)
+        let restLightDict = attrContainer.lights.reduce(into: [Int: RESTLightState]()) { partialResult, sceneLightState in
+            if let stringLightId = sceneLightState.id, let lightId = Int(stringLightId) {
+                partialResult[lightId] = RESTLightState(alert: nil,
+                                                        bri: sceneLightState.bri,
+                                                        colormode: nil,
+                                                        ct: sceneLightState.ct,
+                                                        effect: nil,
+                                                        hue: sceneLightState.hue,
+                                                        on: sceneLightState.on,
+                                                        reachable: nil,
+                                                        sat: sceneLightState.sat,
+                                                        xy: sceneLightState.x != nil && sceneLightState.y != nil ? [sceneLightState.x!, sceneLightState.y!] : nil,
+                                                        transitiontime: sceneLightState.transitiontime,
+                                                        effect_duration: nil,
+                                                        effect_speed: nil)
             }
         }
         
-        return nil
+        return RESTSceneAttributes(dynamics: attrContainer.dynamics, lights: restLightDict, name: attrContainer.name)
     }
-    
-//    func getSceneAttributes(groupID: Int, sceneID: Int) async throws -> [Int: deCONZLightState] {
-//        struct LightStateContainer: Decodable {
-//            var lights: [deCONZLightStateRESTParameter]
-//        }
-//        
-//        let path = "/api/\(self.keyAPI)/groups/\(groupID)/scenes/\(sceneID)/"
-//        let request = request(forPath: path, using: .get)
-//        
-//        let (data, response) = try await URLSession.shared.data(for: request)
-//        try check(data: data, from: response)
-//        
-//        let tempLightStates: LightStateContainer = try decoder.decode(LightStateContainer.self, from: data)
-//        
-//        var lightStates = [Int: deCONZLightState]()
-//        
-//        for (restLightState) in tempLightStates.lights {
-//            if let stringLightID = restLightState.id,
-//               let lightID = Int(stringLightID) {
-//                lightStates[lightID] = deconzLightState(from: restLightState)
-//            }
-//        }
-//        
-//        return lightStates
-//    }
     
     func setSceneAttributes(groupId: Int, sceneId: Int, name: String) async throws {
         let scene = RESTSceneObject(name: name)

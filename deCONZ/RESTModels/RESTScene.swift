@@ -23,12 +23,19 @@ struct RESTScene: Codable {
     let lights: [String]
     let name: String
     let states: [Int: RESTLightState]
+    let dynamics: RESTDynamicState?
 }
 
 extension Scene {
-    convenience init (from scene: RESTScene, sceneId: Int, groupId: Int, lightIds: [Int], lightStates: [Int: LightState]) {
-        self.init(sceneId: sceneId, groupId: groupId, name: scene.name, lightIds: lightIds, lightStates: lightStates)
+    convenience init (from scene: RESTScene, sceneId: Int, groupId: Int, lightIds: [Int], lightStates: [Int: LightState], dynamicState: DynamicState?) {
+        self.init(sceneId: sceneId, groupId: groupId, name: scene.name, lightIds: lightIds, lightStates: lightStates, dynamicState: dynamicState)
     }
+}
+
+struct RESTSceneAttributes: Codable {
+    var dynamics: RESTDynamicState?
+    var lights: [Int: RESTLightState]
+    var name: String
 }
 
 // MARK: - Dynamic Scene State
@@ -43,7 +50,9 @@ struct RESTDynamicState: Codable {
 }
 
 extension DynamicState {
-    init(from dynamicState: RESTDynamicState) {
-        self.init(bri: dynamicState.bri, xy: dynamicState.xy, ct: dynamicState.ct, effect_speed: dynamicState.effect_speed, auto_dynamic: dynamicState.auto_dynamic, scene_apply: .ignore)
+    convenience init?(from dynamicState: RESTDynamicState?) {
+        guard let dynamicState else { return nil }
+        
+        self.init(bri: dynamicState.bri, xy: dynamicState.xy, ct: dynamicState.ct, effect_speed: dynamicState.effect_speed, auto_dynamic: dynamicState.auto_dynamic, scene_apply: DynamicStateApplication.ignore)
     }
 }

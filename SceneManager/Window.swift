@@ -91,6 +91,10 @@ class WindowItem {
         return await RESTModel.shared.lightState(withLightId: lightId, groupId: groupId, sceneId: sceneId)
     }
     
+    func jsonDynamicState(forGroupId groupId: Int? = nil, sceneId: Int? = nil) async -> String {
+        return await RESTModel.shared.dynamicState(withGroupId: groupId, sceneId: sceneId)
+    }
+    
     // MARK: - Light Methods
     
     func lights(inGroupId groupId: Int) -> [Light] {

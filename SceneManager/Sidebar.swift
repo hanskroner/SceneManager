@@ -271,6 +271,12 @@ struct SidebarView: View {
         //      attributes) of the selection, since these only change when the light selecion
         //      changes
         window.updateLights(forGroupId: selectedItem?.groupId, sceneId: selectedItem?.sceneId)
+        
+        Task {
+            // Update the Dynamics Editor when sidebar selection changes
+            window.dynamicsEditorText = await window.jsonDynamicState(forGroupId: selectedItem?.groupId,
+                                                                      sceneId: selectedItem?.sceneId)
+        }
     }
     
     var body: some View {
