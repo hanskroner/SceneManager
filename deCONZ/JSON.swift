@@ -50,14 +50,14 @@ public enum JSON: Codable, CustomStringConvertible {
         case .object(let object):
             var stringValue = "{\n"
             object.keys.sorted().forEach { key in
-                stringValue.append(String(repeating: " ", count: indentation + 4) + "\"\(key)\": \(object[key]!.prettyPrint(indentation: indentation + 4)),\n")
+                stringValue.append(String(repeating: " ", count: indentation + 2) + "\"\(key)\": \(object[key]!.prettyPrint(indentation: indentation + 2)),\n")
             }
             stringValue = stringValue.dropLast(2).appending("\n" + String(repeating: " ", count: indentation) + "}")
             return stringValue
         case .array(let array):
             var stringValue = "[\n"
             array.forEach { value in
-                stringValue.append(String(repeating: " ", count: indentation + 4) + "\(value.prettyPrint(indentation: indentation + 4)),\n")
+                stringValue.append(String(repeating: " ", count: indentation + 2) + "\(value.prettyPrint(indentation: indentation + 2)),\n")
             }
             stringValue = stringValue.dropLast(2).appending("\n" + String(repeating: " ", count: indentation) + "]")
             return stringValue
