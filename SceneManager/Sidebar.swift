@@ -276,6 +276,13 @@ struct SidebarView: View {
             // Update the Dynamics Editor when sidebar selection changes
             window.dynamicsEditorText = await window.jsonDynamicState(forGroupId: selectedItem?.groupId,
                                                                       sceneId: selectedItem?.sceneId)
+            
+            // Switch to the Dynamics Editor if it wasn't already selected
+            if ((window.dynamicsEditorText != "") && (window.selectedEditorTab != .dynamicScene)) {
+                Task { @MainActor in
+                    window.selectedEditorTab = .dynamicScene
+                }
+            }
         }
     }
     

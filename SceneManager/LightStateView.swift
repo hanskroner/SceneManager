@@ -121,6 +121,13 @@ struct LightStateView: View {
                 window.stateEditorText = await window.jsonLightState(forLightId: newValue.lightId,
                                                    groupId: window.groupId,
                                                    sceneId: window.sceneId)
+                
+                // Switch to the State Editor if it wasn't already selected
+                if ((window.stateEditorText != "") && (window.selectedEditorTab != .sceneState)) {
+                    Task { @MainActor in
+                        window.selectedEditorTab = .sceneState
+                    }
+                }
             }
         }
     }
