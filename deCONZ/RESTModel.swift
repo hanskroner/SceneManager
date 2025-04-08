@@ -335,9 +335,14 @@ public final class RESTModel {
             }
         }
         
-        // FIXME: Apply the Dynamic Scene
-        //        This should eventually be an API call that stores the Dynamic Scene's
-        //        state - including whether or not it should play when being recalled.
+        // Apply the Dynamic Scene
+        let dynamicState = RESTDynamicState(bri: dynamics.bri,
+                                            xy: dynamics.xy,
+                                            ct: dynamics.ct,
+                                            effect_speed: dynamics.effect_speed,
+                                            auto_dynamic: dynamics.auto_dynamic)
+        
+        try await self._client.modifyHueDynamicScene(groupId: groupId, sceneId: sceneId, dynamicState: dynamicState)
     }
     
     public func deleteScene(groupId: Int, sceneId: Int) async {

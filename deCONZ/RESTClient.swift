@@ -393,6 +393,17 @@ actor RESTClient {
         }
     }
     
+    func modifyHueDynamicScene(groupId: Int, sceneId: Int, dynamicState: RESTDynamicState?) async throws {
+        // !!!: Trailing slash in path causes HTTP 431 response
+        let path = "/api/\(self.apiKey)/hue-scenes/groups/\(groupId)/scenes/\(sceneId)/dynamic-state"
+        var request = request(forPath: path, using: .put)
+        encoder.outputFormatting = []
+        request.httpBody = try encoder.encode(dynamicState)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try check(data: data, from: response)
+    }
+    
     func recallScene(groupId: Int, sceneId: Int) async throws {
         let path = "/api/\(self.apiKey)/groups/\(groupId)/scenes/\(sceneId)/recall"
         let request = request(forPath: path, using: .put)
