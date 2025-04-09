@@ -60,6 +60,8 @@
 		3AD18D0F2DA2C91800AC1CC8 /* christmas.json in Resources */ = {isa = PBXBuildFile; fileRef = 3AD18D0C2DA2C91800AC1CC8 /* christmas.json */; };
 		3AD18D102DA2C91800AC1CC8 /* underwater.json in Resources */ = {isa = PBXBuildFile; fileRef = 3AD18D0E2DA2C91800AC1CC8 /* underwater.json */; };
 		3AD18D112DA2C91800AC1CC8 /* halloween.json in Resources */ = {isa = PBXBuildFile; fileRef = 3AD18D0D2DA2C91800AC1CC8 /* halloween.json */; };
+		3AD18D142DA59A2A00AC1CC8 /* PresetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD18D132DA59A2400AC1CC8 /* PresetModels.swift */; };
+		3AD18D152DA59A5E00AC1CC8 /* PresetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD18D132DA59A2400AC1CC8 /* PresetModels.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -162,6 +164,7 @@
 		3AD18D0C2DA2C91800AC1CC8 /* christmas.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = christmas.json; sourceTree = "<group>"; };
 		3AD18D0D2DA2C91800AC1CC8 /* halloween.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = halloween.json; sourceTree = "<group>"; };
 		3AD18D0E2DA2C91800AC1CC8 /* underwater.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = underwater.json; sourceTree = "<group>"; };
+		3AD18D132DA59A2400AC1CC8 /* PresetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetModels.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -337,6 +340,7 @@
 				3A1EDD762AE449F2001637BD /* Lights.swift */,
 				3A5EAFB02CC1808C00B58A3C /* LightStateView.swift */,
 				3A1EDD532AE2BB81001637BD /* Presets.swift */,
+				3AD18D132DA59A2400AC1CC8 /* PresetModels.swift */,
 				3A635B5A2CD749B300018B40 /* Settings.swift */,
 				3A848E2E2D046D8600BE19C6 /* Resources */,
 				3A5EAFB42CC1839E00B58A3C /* SimpleJSONTextView.swift */,
@@ -612,6 +616,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3AD18D152DA59A5E00AC1CC8 /* PresetModels.swift in Sources */,
 				3A41935E2D9EC8B8007E76F1 /* SceneConverterApp.swift in Sources */,
 				3A41936E2DA0083F007E76F1 /* JSON.swift in Sources */,
 				3A41936B2D9F0179007E76F1 /* CLIPModels.swift in Sources */,
@@ -641,6 +646,7 @@
 				3A4193722DA041E4007E76F1 /* SearchField.swift in Sources */,
 				3A1EDD542AE2BB81001637BD /* Presets.swift in Sources */,
 				3A1EDD5A2AE2BD9D001637BD /* Sidebar.swift in Sources */,
+				3AD18D142DA59A2A00AC1CC8 /* PresetModels.swift in Sources */,
 				3A93B0432AD2F7290038600F /* SceneManagerApp.swift in Sources */,
 				3A5EAFB12CC1808C00B58A3C /* LightStateView.swift in Sources */,
 				3A6995692CE4F31F00934BD4 /* Window.swift in Sources */,

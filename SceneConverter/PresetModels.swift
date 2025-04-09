@@ -27,30 +27,7 @@ struct Preset: Codable {
     let dynamics: PresetDynamics?
 }
 
-struct PresetState: Codable {
-    let on: Bool?
-    let bri: Int?
-    let xy: [Double]?
-    let ct: Int?
-    
-    let transitiontime: Int
-}
-
-enum PresetDynamicsApplication: String, Codable {
-    case ignore
-    case sequence
-    case random
-}
-
-struct PresetDynamics: Codable {
-    let bri: Int?
-    let xy: [[Double]]?
-    let ct: Int?
-    
-    let effect_speed: Double
-    let auto_dynamic: Bool
-    let scene_apply: PresetDynamicsApplication
-}
+// MARK: Extensions
 
 extension Preset {
     init(from scene: CLIPScene) throws {
@@ -83,9 +60,9 @@ extension PresetState {
         // Zigbee command sent out to the lights contains a single brightness value.
         // Currently, it is sufficient to pick the first available brightness value.
         if let colorBrightness = scene.palette.color.first?.dimming.brightness {
-            self.bri = Int(ceil(colorBrightness * 2.55))
+            self.bri = UInt(ceil(colorBrightness * 2.55))
         } else if let ctBrightness = scene.palette.color_temperature.first?.dimming.brightness {
-            self.bri = Int(ceil(ctBrightness * 2.55))
+            self.bri = UInt(ceil(ctBrightness * 2.55))
         } else {
             throw PresetError.notAPresetState
         }
@@ -111,6 +88,21 @@ extension PresetState {
                 throw PresetError.notAPresetState
             }
         }
+        
+        if (scene.palette.effects.isEmpty && scene.palette.effects_v2.isEmpty) {
+            self.effect = nil
+            self.effect_speed = nil
+        } else {
+            if (scene.palette.effects.count == 1 && scene.palette.effects_v2.isEmpty) {
+                self.effect = scene.palette.effects.first!.effect
+                self.effect_speed = nil
+            } else if (scene.palette.effects_v2.count == 1 && scene.palette.effects.isEmpty) {
+                self.effect = scene.palette.effects_v2.first!.action.effect
+                self.effect_speed = scene.palette.effects_v2.first!.action.parameters.speed
+            } else {
+                throw PresetError.notAPresetState
+            }
+        }
     }
 }
 
@@ -126,9 +118,9 @@ extension PresetDynamics {
         // Zigbee command sent out to the lights contains a single brightness value.
         // Currently, it is sufficient to pick the first available brightness value.
         if let colorBrightness = scene.palette.color.first?.dimming.brightness {
-            self.bri = Int(ceil(colorBrightness * 2.55))
+            self.bri = UInt(ceil(colorBrightness * 2.55))
         } else if let ctBrightness = scene.palette.color_temperature.first?.dimming.brightness {
-            self.bri = Int(ceil(ctBrightness * 2.55))
+            self.bri = UInt(ceil(ctBrightness * 2.55))
         } else {
             throw PresetError.notAPresetDynamics
         }
@@ -152,6 +144,32 @@ extension PresetDynamics {
                 self.ct = ct
             } else {
                 throw PresetError.notAPresetDynamics
+            }
+        }
+        
+        if (scene.palette.effects.isEmpty && scene.palette.effects_v2.isEmpty) {
+            self.effects = nil
+        } else {
+            if (!scene.palette.effects.isEmpty && scene.palette.effects_v2.isEmpty) {
+                // !!!: There can be no more than 3 effects
+                var effects: [PresetDynamicsEffect] = []
+                for effect in scene.palette.effects {
+                    effects.append(PresetDynamicsEffect(effect: effect.effect, xy: nil, ct: nil, effect_speed: nil))
+                }
+                self.effects = effects
+            } else if (!scene.palette.effects_v2.isEmpty && scene.palette.effects.isEmpty) {
+                // !!!: There can be no more than 3 effects
+                var effects: [PresetDynamicsEffect] = []
+                for effect in scene.palette.effects_v2 {
+                    let colors = effect.action.parameters.color?.xy
+                    effects.append(PresetDynamicsEffect(effect: effect.action.effect,
+                                                        xy: colors != nil ? [colors!.x, colors!.y] : nil,
+                                                        ct: effect.action.parameters.color_temperature?.mirek,
+                                                        effect_speed: effect.action.parameters.speed))
+                }
+                self.effects = effects
+            } else {
+                throw PresetError.notAPresetState
             }
         }
     }

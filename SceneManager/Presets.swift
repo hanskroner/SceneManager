@@ -238,68 +238,20 @@ class PresetItem: Identifiable, Codable, Transferable {
     var name: String
     var image: String?
     
-    var state: JSON?
-    var dynamics: JSON?
+    var state: PresetStateDefinition
     
     var url: URL? = nil
     
     var isRenaming: Bool = false
     
     var color: Color {
-        // Preset has 'state'
-        if let state = self.state {
-            // !!!: Prefer 'xy' if preset
-            // Scenes from the Hue mobile app include both values for 'xy'
-            // and 'ct' to support extended color and dimmable-only products.
-            if let xy = state["xy"] {
-                return Color(SceneManager.color(fromXY: CGPoint(x: xy[0]!.doubleValue!, y: xy[1]!.doubleValue!), brightness: 0.5))
-            }
-            
-            if let ct = state["ct"] {
-                return Color(SceneManager.color(fromMired: ct.intValue!)!)
-            }
-        }
-        
-        // Preset has 'dynamics'
-        if let dynamics = self.dynamics {
-            // !!!: Prefer 'xy' if preset
-            // Scenes from the Hue mobile app include both values for 'xy'
-            // and 'ct' to support extended color and dimmable-only products.
-            if let xy = dynamics["xy"] {
-                return Color(SceneManager.color(fromXY: CGPoint(x: xy[0]![0]!.doubleValue!, y: xy[0]![1]!.doubleValue!), brightness: 0.5))
-            }
-
-            if let ct = dynamics["ct"] {
-                return Color(SceneManager.color(fromMired: ct.intValue!)!)
-            }
-        }
-            
-        return .white
+        return state.colorPalette.first?.color ?? .clear
     }
     
-    var dynamicsColors: [Color] {
-        var dynamicsColors: [Color] = []
-        
-        // Knowledge of 'DynamicState' is available only in RESTModel
-        // Instead of dragging it here as a dependency, the JSON object is parsed manually.
-        if let dynamics = self.dynamics,
-           let colors: [[Double]] = dynamics["xy"]?.arrayValue?.compactMap({ $0.arrayValue?.compactMap { $0.doubleValue } }) {
-            for color in colors {
-                dynamicsColors.append(Color(SceneManager.color(fromXY: CGPoint(x: color[0], y: color[1]), brightness: 0.5)))
-            }
-        } else {
-            return [self.color]
-        }
-        
-        return dynamicsColors
-    }
-    
-    init(name: String, image: String? = nil, state: JSON? = nil, dynamics: JSON? = nil) {
+    init(name: String, image: String? = nil, state: PresetStateDefinition) {
         self.name = name
         self.image = image
-        
         self.state = state
-        self.dynamics = dynamics
     }
     
     enum CodingKeys: CodingKey {
@@ -312,8 +264,16 @@ class PresetItem: Identifiable, Codable, Transferable {
         name = try container.decode(String.self, forKey: .name)
         image = try container.decodeIfPresent(String.self, forKey: .image)
         
-        state = try container.decodeIfPresent(JSON.self, forKey: .state)
-        dynamics = try container.decodeIfPresent(JSON.self, forKey: .dynamics)
+        let recall = try container.decodeIfPresent(PresetState.self, forKey: .state)
+        let dynamic = try container.decodeIfPresent(PresetDynamics.self, forKey: .dynamics)
+        
+        if let recall {
+            state = .recall(recall)
+        } else if let dynamic {
+            state = .dynamic(dynamic)
+        } else {
+            throw DecodingError.valueNotFound(PresetStateDefinition.self, DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Could not decode preset state"))
+        }
     }
     
     func encode(to encoder: Encoder) throws {
@@ -322,8 +282,12 @@ class PresetItem: Identifiable, Codable, Transferable {
         try container.encode(name, forKey: .name)
         try container.encodeIfPresent(image, forKey: .image)
         
-        try container.encodeIfPresent(state, forKey: .state)
-        try container.encodeIfPresent(dynamics, forKey: .dynamics)
+        switch state {
+        case .recall(let recall):
+            try container.encodeIfPresent(recall, forKey: .state)
+        case .dynamic(let dynamic):
+            try container.encodeIfPresent(dynamic, forKey: .dynamics)
+        }
     }
     
     static var transferRepresentation: some TransferRepresentation {
@@ -432,9 +396,10 @@ struct PresetItemView: View {
     func presetImage(forPresetItem item: PresetItem) -> String {
         if let image = item.image { return image }
         
-        if item.dynamics != nil { return "scene-dynamics" }
-        
-        return "scene-state"
+        switch item.state {
+        case .recall: return "scene-state"
+        case .dynamic: return "scene-dynamics"
+        }
     }
     
     var body: some View {
@@ -486,17 +451,17 @@ struct PresetItemView: View {
             }
             
             ZStack(alignment: .leading) {
-                ForEach(Array(presetItem.dynamicsColors.enumerated()), id: \.offset) { index, color in
+                ForEach(Array(presetItem.state.colorPalette.enumerated()), id: \.offset) { index, presetColor in
                     HStack(spacing: 0) {
                         Color.clear
-                            .frame(width: CGFloat(index) * (presetItem.dynamicsColors.count > 5 ? 14 : 26), height: 44)
+                            .frame(width: CGFloat(index) * (presetItem.state.colorPalette.count > 5 ? 14 : 26), height: 44)
                         
                         Circle()
-                            .fill(color)
+                            .fill(presetColor.color)
                             .shadow(color: .black, radius: 4, x: 0, y: 0)
                             .frame(width: 32, height: 32)
                     }
-                    .zIndex(Double(presetItem.dynamicsColors.count - index))
+                    .zIndex(Double(presetItem.state.colorPalette.count - index))
                 }
             }
             .padding(.horizontal, 12)
@@ -587,6 +552,8 @@ struct PresetItemView: View {
     }
 }
 
+// MARK: Add Preset View
+
 struct AddPresetView: View {
     @Environment(Presets.self) private var presets
     @Environment(WindowItem.self) private var window
@@ -612,7 +579,7 @@ struct AddPresetView: View {
             HStack {
                 Spacer()
                 Button("Store Preset") {
-                    guard let lightState = try? _decoder.decode(LightState.self, from: window.stateEditorText.data(using: .utf8)!) else { return }
+                    guard let presetState = try? _decoder.decode(PresetState.self, from: window.stateEditorText.data(using: .utf8)!) else { return }
                     
                     // The 'custom' group represents the root of the app's 'Documents'
                     // directory and shouldn't ever be missing. All custom presets are
@@ -623,10 +590,7 @@ struct AddPresetView: View {
                     // overwrite its state instead of creating a new file.
                     if let index = customGroup.presets.firstIndex(where: { $0.name == newPresetName }) {
                         withAnimation {
-                            let encoded = try! _encoder.encode(lightState)
-                            let decoded = try! _decoder.decode(JSON.self, from: encoded)
-                            
-                            customGroup.presets[index].state = decoded
+                            customGroup.presets[index].state = .recall(presetState)
                             showingPopover = false
                         }
                         
@@ -641,9 +605,7 @@ struct AddPresetView: View {
                         presets.scrollToPresetItemId = customGroup.presets[index].id
                     } else {
                         // Create a new PresetItem and its file representation
-                        let encoded = try! _encoder.encode(lightState)
-                        let decoded = try! _decoder.decode(JSON.self, from: encoded)
-                        let newPresetItem = PresetItem(name: newPresetName, state: decoded)
+                        let newPresetItem = PresetItem(name: newPresetName, state: .recall(presetState))
                         
                         customGroup.presets.append(newPresetItem)
                         

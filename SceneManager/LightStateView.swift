@@ -62,15 +62,13 @@ struct LightStateView: View {
                         guard let first = items.first else { return false }
                         logger.info("Dropped \(first.name)")
                         
-                        if let stateText = first.state?.prettyPrint() {
-                            window.stateEditorText = stateText
+                        switch first.state {
+                        case .recall(_):
+                            window.stateEditorText = first.state.json.prettyPrint()
                             window.selectedEditorTab = .sceneState
-                        } else if let dynamicsText = first.dynamics?.prettyPrint() {
-                            window.dynamicsEditorText = dynamicsText
+                        case .dynamic(_):
+                            window.dynamicsEditorText = first.state.json.prettyPrint()
                             window.selectedEditorTab = .dynamicScene
-                        } else {
-                            // FIXME: Error handling
-                            logger.error("\(first.name) has no 'state' or 'dynamics'")
                         }
                         
                         return true

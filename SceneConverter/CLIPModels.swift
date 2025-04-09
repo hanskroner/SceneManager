@@ -50,11 +50,18 @@ struct CLIPColorTemperature: Codable {
 }
 
 struct CLIPMirek: Codable {
-    let mirek: Int
+    let mirek: UInt
+}
+
+struct CLIPEffectParameters: Codable {
+    let color: CLIPColorColor?
+    let color_temperature: CLIPMirek?
+    let speed: Double?
 }
 
 struct CLIPEffect: Codable {
     let effect: String
+    let parameters: CLIPEffectParameters
 }
 
 struct CLIPEffectv2Action: Codable {
