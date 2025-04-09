@@ -205,23 +205,16 @@ class WindowItem {
     
     // MARK: - Scene Methods
     
-    func applyStaticState(_ stateJSON: String, toGroupId groupId: Int, sceneId: Int, lightIds: [Int]) {
+    func applyState(_ state: PresetStateDefinition, toGroupId groupId: Int, sceneId: Int, lightIds: [Int]) {
         Task {
             do {
-                return try await RESTModel.shared.modifyLightStateInScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonLightState: stateJSON)
-            } catch {
-                // FIXME: Error handling
-                logger.error("\(error, privacy: .public)")
-                return
-            }
-        }
-    }
-    
-    func applyDynamicState(_ dynamicJSON: String, toGroupId groupId: Int, sceneId: Int, lightIds: [Int]) {
-        Task {
-            do {
-                return try await RESTModel.shared.applyDynamicStatesToScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonDynamicState: dynamicJSON)
-                
+                switch state {
+                case .recall(_):
+                    return try await RESTModel.shared.modifyLightStateInScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonLightState: state.json.prettyPrint())
+                    
+                case .dynamic(_):
+                    return try await RESTModel.shared.applyDynamicStatesToScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonDynamicState: state.json.prettyPrint())
+                }
             } catch {
                 // FIXME: Error handling
                 logger.error("\(error, privacy: .public)")

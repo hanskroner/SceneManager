@@ -325,6 +325,27 @@ public final class RESTModel {
     public func applyDynamicStatesToScene(groupId: Int, sceneId: Int, lightIds: [Int], jsonDynamicState: String) async throws {
         let dynamics = try _decoder.decode(DynamicState.self, from: jsonDynamicState.data(using: .utf8)!)
         
+        // Map effects and colors into a single LightState array
+        var lightStates: [LightState] = []
+        
+        for effect in dynamics.effects ?? [] {
+            lightStates.append(LightState(bri: dynamics.bri,
+                                          ct: dynamics.ct,
+                                          effect: effect.effect,
+                                          on: true,
+                                          xy: effect.xy,
+                                          transitiontime: 4,
+                                          effect_speed: effect.effect_speed))
+        }
+        
+        for color in dynamics.xy ?? [] {
+            lightStates.append(LightState(bri: dynamics.bri,
+                                          ct: dynamics.ct,
+                                          on: true,
+                                          xy: color,
+                                          transitiontime: 4))
+        }
+        
         // !!!: deCONZ Scenes don't have 'scene_apply'
         //      Treat the missing attribute as 'sequence'
         switch dynamics.scene_apply ?? .sequence {
@@ -333,14 +354,12 @@ public final class RESTModel {
             break
             
         case .sequence:
+            guard !lightStates.isEmpty else { break }
+            
             // Apply the colors/ct in the dynamic scene to the lights
             // in the scene in order
             for (index, lightId) in lightIds.enumerated() {
-                let state = LightState(bri: dynamics.bri,
-                                       ct: dynamics.ct,
-                                       on: true,
-                                       xy: dynamics.xy != nil ? [dynamics.xy![index % dynamics.xy!.count][0], dynamics.xy![index % dynamics.xy!.count][1]] : nil,
-                                       transitiontime: 4)
+                let state = lightStates[index % lightStates.count]
                 
                 // Encode PresetState as JSON and get it back as a String
                 let jsonData = try _encoder.encode(state)
@@ -350,17 +369,13 @@ public final class RESTModel {
             }
             
         case .random:
+            guard !lightStates.isEmpty else { break }
+            
             for lightId in lightIds {
-                // Generate a random number between '0' and 'dynamics.xy.count - 1'
+                // Generate a random number between '0' and 'lightStates.count - 1'
                 // to use as the index for the color to apply to a light.
-                var random: Int?
-                if let xy = dynamics.xy { random = Int(arc4random_uniform(UInt32(xy.count))) }
-                
-                let state = LightState(bri: dynamics.bri,
-                                       ct: dynamics.ct,
-                                       on: true,
-                                       xy: random != nil ? [dynamics.xy![random!][0], dynamics.xy![random!][1]] : nil,
-                                       transitiontime: 4)
+                let random = Int(arc4random_uniform(UInt32(lightStates.count)))
+                let state = lightStates[random]
                 
                 // Encode PresetState as JSON and get it back as a String
                 let jsonData = try _encoder.encode(state)

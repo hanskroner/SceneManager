@@ -298,19 +298,33 @@ public enum DynamicStateApplication: String, Codable {
     case random
 }
 
+public final class DynamicStateEffect: Codable {
+    public var effect: String
+    
+    public var xy: [Double]?
+    public var ct: Int?
+    
+    public var effect_speed: Double?
+}
+
 public final class DynamicState: Codable {
     public var bri: Int?
     public var xy: [[Double]]?
     public var ct: Int?
     
+    let effects: [DynamicStateEffect]?
+    
     public var effect_speed: Double
     public var auto_dynamic: Bool
     public var scene_apply: DynamicStateApplication?
     
-    public init(bri: Int? = nil, xy: [[Double]]? = nil, ct: Int? = nil, effect_speed: Double, auto_dynamic: Bool, scene_apply: DynamicStateApplication? = nil) {
+    public init(bri: Int? = nil, xy: [[Double]]? = nil, ct: Int? = nil, effects: [DynamicStateEffect]? = nil, effect_speed: Double, auto_dynamic: Bool, scene_apply: DynamicStateApplication? = nil) {
         self.bri = bri
         self.xy = xy
         self.ct = ct
+        
+        self.effects = effects
+        
         self.effect_speed = effect_speed
         self.auto_dynamic = auto_dynamic
         self.scene_apply = scene_apply

@@ -25,6 +25,9 @@ struct LightStateView: View {
     @Environment(Lights.self) private var lights
     @Environment(WindowItem.self) private var window
     
+    private let _decoder = JSONDecoder()
+    private let _encoder = JSONEncoder()
+    
     var body: some View {
         @Bindable var window = window
         VStack(alignment: .leading) {
@@ -81,12 +84,38 @@ struct LightStateView: View {
                     switch window.selectedEditorTab {
                     case .sceneState:
                         // Modify all the lights in the scene to the attributes in the State Editor
-                        window.applyStaticState(window.stateEditorText, toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
+                        do {
+                            guard let data = window.stateEditorText.data(using: .utf8) else {
+                                // FIXME: Error handling
+                                logger.error("Could not convert string to data.")
+                                return
+                            }
+                            
+                            let recall = try _decoder.decode(PresetState.self, from: data)
+                            
+                            window.applyState(.recall(recall), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
+                        } catch {
+                            // FIXME: Error handling
+                            logger.error("\(error, privacy: .public)")
+                        }
                         
                     case .dynamicScene:
                         // Modify all the lights in the scene to attributes in the Dynamics Editor
                         // The order in which attributes are applied depends on some of the attributes themselves
-                        window.applyDynamicState(window.dynamicsEditorText, toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
+                        do {
+                            guard let data = window.dynamicsEditorText.data(using: .utf8) else {
+                                // FIXME: Error handling
+                                logger.error("Could not convert string to data.")
+                                return
+                            }
+                            
+                            let dynamic = try _decoder.decode(PresetDynamics.self, from: data)
+                            
+                            window.applyState(.dynamic(dynamic), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
+                        } catch {
+                            // FIXME: Error handling
+                            logger.error("\(error, privacy: .public)")
+                        }
                     }
                 }
                 .disabled(sidebar.selectedSidebarItem == nil
@@ -96,7 +125,20 @@ struct LightStateView: View {
                 .fixedSize(horizontal: true, vertical: true)
                 
                 Button("Apply to Selected") {
-                        window.applyStaticState(window.stateEditorText, toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.selectedLightItems.map{ $0.lightId })
+                    do {
+                        guard let data = window.stateEditorText.data(using: .utf8) else {
+                            // FIXME: Error handling
+                            logger.error("Could not convert string to data.")
+                            return
+                        }
+                        
+                        let recall = try _decoder.decode(PresetState.self, from: data)
+                        
+                        window.applyState(.recall(recall), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.selectedLightItems.map{ $0.lightId })
+                    } catch {
+                        // FIXME: Error handling
+                        logger.error("\(error, privacy: .public)")
+                    }
                 }
                 .disabled(sidebar.selectedSidebarItem == nil
                           || sidebar.selectedSidebarItem?.kind != .scene
