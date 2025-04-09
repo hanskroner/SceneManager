@@ -451,17 +451,38 @@ struct PresetItemView: View {
             }
             
             ZStack(alignment: .leading) {
-                ForEach(Array(presetItem.state.colorPalette.enumerated()), id: \.offset) { index, presetColor in
+                let effects = presetItem.state.effectPalette
+                let colors = presetItem.state.colorPalette
+                let count = effects.count + colors.count
+                let spacing = CGFloat(count > 5 ? 130 / count : 26)
+                
+                ForEach(Array(effects.enumerated()), id: \.offset) { index, presetEffect in
                     HStack(spacing: 0) {
                         Color.clear
-                            .frame(width: CGFloat(index) * (presetItem.state.colorPalette.count > 5 ? 14 : 26), height: 44)
+                            .frame(width: CGFloat(index) * spacing, height: 44)
+                        
+                        Image("effect-\(presetEffect.effect.rawValue)")
+                            .resizable()
+                            .scaledToFit()
+                            .colorMultiply(presetEffect.color?.color ?? .clear)
+                            .frame(width: 32, height: 32)
+                            .clipShape(Circle())
+                            .shadow(color: .black, radius: 4, x: 0, y: 0)
+                    }
+                    .zIndex(Double(effects.count + colors.count - index))
+                }
+                
+                ForEach(Array(colors.enumerated()), id: \.offset) { index, presetColor in
+                    HStack(spacing: 0) {
+                        Color.clear
+                            .frame(width: CGFloat(effects.isEmpty ? index : index + 1) * spacing, height: 44)
                         
                         Circle()
                             .fill(presetColor.color)
                             .shadow(color: .black, radius: 4, x: 0, y: 0)
                             .frame(width: 32, height: 32)
                     }
-                    .zIndex(Double(presetItem.state.colorPalette.count - index))
+                    .zIndex(Double(colors.count - index))
                 }
             }
             .padding(.horizontal, 12)
