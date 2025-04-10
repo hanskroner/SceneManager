@@ -37,6 +37,10 @@ struct SceneConverterApp: App {
     @State private var writeQueue: [String: [PresetFileData]] = [:]
     @State private var isExporting: Bool = false
     
+    @State private var isPresentingError: Bool = false
+    @State private var errorTitle: String = "Error"
+    @State private var errorMessage: String = ""
+    
     func showSavePanel() -> URL? {
         let savePanel = NSOpenPanel()
         savePanel.allowedContentTypes = [.directory]
@@ -79,7 +83,9 @@ struct SceneConverterApp: App {
                     fileData.append(PresetFileData(file: file, preset: preset))
                 }
             } catch {
-                // FIXME: Error handling
+                errorMessage = error.localizedDescription
+                isPresentingError = true
+                
                 logger.error("\(error, privacy: .public)")
                 return
             }
@@ -94,6 +100,9 @@ struct SceneConverterApp: App {
     var body: some Scene {
         Window("Scene Converter", id: "sceneconverter") {
             ContentView()
+                .alert(errorTitle, isPresented: $isPresentingError, actions: {}, message: {
+                    Text(errorMessage)
+                })
                 .onReceive(NotificationCenter.default.publisher(for: .receivedURLsNotification)) { notification in
                     if let urls = notification.userInfo?["URLs"] as? [URL] {
                         process(urls: urls)
@@ -134,7 +143,9 @@ struct SceneConverterApp: App {
                                 try fileContents.write(to: saveURL.appendingPathComponent(directory).appendingPathComponent(data.file))
                             }
                         } catch {
-                            // FIXME: Error handling
+                            errorMessage = error.localizedDescription
+                            isPresentingError = true
+                            
                             logger.error("\(error, privacy: .public)")
                             return
                         }
