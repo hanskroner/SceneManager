@@ -600,7 +600,31 @@ struct AddPresetView: View {
             HStack {
                 Spacer()
                 Button("Store Preset") {
-                    guard let presetState = try? _decoder.decode(PresetState.self, from: window.stateEditorText.data(using: .utf8)!) else { return }
+                    let stateDefinition: PresetStateDefinition
+                    do {
+                        switch window.selectedEditorTab {
+                        case .sceneState:
+                            guard let sceneData = window.stateEditorText.data(using: .utf8) else {
+                                // FIXME: Error handling
+                                logger.error("Could not convert string to data.")
+                                return
+                            }
+                            
+                            stateDefinition = .recall(try _decoder.decode(PresetState.self, from: sceneData))
+                        case .dynamicScene:
+                            guard let sceneData = window.dynamicsEditorText.data(using: .utf8) else {
+                                // FIXME: Error handling
+                                logger.error("Could not convert string to data.")
+                                return
+                            }
+                            
+                            stateDefinition = .dynamic(try _decoder.decode(PresetDynamics.self, from: sceneData))
+                        }
+                    } catch {
+                        // FIXME: Error handling
+                        logger.error("\(error, privacy: .public)")
+                        return
+                    }
                     
                     // The 'custom' group represents the root of the app's 'Documents'
                     // directory and shouldn't ever be missing. All custom presets are
@@ -611,7 +635,7 @@ struct AddPresetView: View {
                     // overwrite its state instead of creating a new file.
                     if let index = customGroup.presets.firstIndex(where: { $0.name == newPresetName }) {
                         withAnimation {
-                            customGroup.presets[index].state = .recall(presetState)
+                            customGroup.presets[index].state = stateDefinition
                             showingPopover = false
                         }
                         
@@ -626,7 +650,7 @@ struct AddPresetView: View {
                         presets.scrollToPresetItemId = customGroup.presets[index].id
                     } else {
                         // Create a new PresetItem and its file representation
-                        let newPresetItem = PresetItem(name: newPresetName, state: .recall(presetState))
+                        let newPresetItem = PresetItem(name: newPresetName, state: stateDefinition)
                         
                         customGroup.presets.append(newPresetItem)
                         

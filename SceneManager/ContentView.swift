@@ -64,7 +64,8 @@ struct ContentView: View {
                 }
                 .disabled((sidebar.selectedSidebarItem ==  nil
                            || sidebar.selectedSidebarItem?.kind != .scene)
-                           || lights.selectedLightItems.isEmpty)
+                           || (window.selectedEditorTab == .sceneState && window.stateEditorText.isEmpty)
+                           || (window.selectedEditorTab == .dynamicScene && window.dynamicsEditorText.isEmpty))
                 .help("Store as Preset")
             }
         }
