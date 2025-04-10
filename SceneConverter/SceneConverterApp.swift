@@ -70,14 +70,18 @@ struct SceneConverterApp: App {
             var fileData: [PresetFileData] = []
             let dir = url.lastPathComponent.components(separatedBy: ".").first ?? url.lastPathComponent
             
-            // FIXME: Error handling
-            let models = try! self.models(fromURL: url)
-            for model in models {
+            do {
+                let models = try self.models(fromURL: url)
+                for model in models {
+                    let preset = try Preset(from: model)
+                    let file = preset.name.lowercased().replacingOccurrences(of: " ", with: "_") + ".json"
+                    
+                    fileData.append(PresetFileData(file: file, preset: preset))
+                }
+            } catch {
                 // FIXME: Error handling
-                let preset = try! Preset(from: model)
-                let file = preset.name.lowercased().replacingOccurrences(of: " ", with: "_") + ".json"
-
-                fileData.append(PresetFileData(file: file, preset: preset))
+                logger.error("\(error, privacy: .public)")
+                return
             }
             
             writeQueue[dir] = fileData
@@ -92,22 +96,18 @@ struct SceneConverterApp: App {
             ContentView()
                 .onReceive(NotificationCenter.default.publisher(for: .receivedURLsNotification)) { notification in
                     if let urls = notification.userInfo?["URLs"] as? [URL] {
-                        DispatchQueue.main.async {
-                            process(urls: urls)
-                        }
+                        process(urls: urls)
                     }
                 }
                 .onDrop(of: ["public.json"], isTargeted: nil) { providers -> Bool in
-                    var urls: [URL] = []
-                    for itemProvider in providers {
-                        itemProvider.loadItem(forTypeIdentifier: "public.json", options: nil) { (item, error) in
-                            if let url = item as? URL {
+                    Task {
+                        var urls: [URL] = []
+                        for itemProvider in providers {
+                            if let url = try? await itemProvider.loadItem(forTypeIdentifier: "public.json") as? URL {
                                 urls.append(url)
                             }
                         }
-                    }
-                    
-                    DispatchQueue.main.async {
+                        
                         process(urls: urls)
                     }
                     
@@ -125,14 +125,18 @@ struct SceneConverterApp: App {
                     
                     for (directory, fileData) in writeQueue {
                         // Create the directory that will hold the scene .json files
-                        // FIXME: Error handling
-                        try! FileManager.default.createDirectory(at: saveURL.appendingPathComponent(directory), withIntermediateDirectories: false)
-                        
-                        // Export the scene .json files to the new directory
-                        for data in fileData {
+                        do {
+                            try FileManager.default.createDirectory(at: saveURL.appendingPathComponent(directory), withIntermediateDirectories: false)
+                            
+                            // Export the scene .json files to the new directory
+                            for data in fileData {
+                                let fileContents = try _encoder.encode(data.preset)
+                                try fileContents.write(to: saveURL.appendingPathComponent(directory).appendingPathComponent(data.file))
+                            }
+                        } catch {
                             // FIXME: Error handling
-                            let fileContents = try! _encoder.encode(data.preset)
-                            try! fileContents.write(to: saveURL.appendingPathComponent(directory).appendingPathComponent(data.file))
+                            logger.error("\(error, privacy: .public)")
+                            return
                         }
                     }
                     
