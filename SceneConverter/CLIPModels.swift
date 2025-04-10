@@ -9,12 +9,12 @@ import Foundation
 
 struct CLIPScene: Codable {
     let palette: CLIPPalette
-    let metadata: CLIPMetaData
+    let metadata: CLIPMetadata
     let speed: Double
     let auto_dynamic: Bool
 }
 
-struct CLIPMetaData: Codable {
+struct CLIPMetadata: Codable {
     let name: String
 }
 

@@ -8,42 +8,127 @@
 import Foundation
 
 enum PresetError: LocalizedError {
+    case notAPreset
     case notAPresetState
     case notAPresetDynamics
     
     var errorDescription: String? {
         switch self {
+        case .notAPreset:
+            return "Not a Preset"
         case .notAPresetState:
-            return "Not a PreseState"
+            return "Not a PresetState"
         case .notAPresetDynamics:
-            return "Not a PreseDynamics"
+            return "Not a PresetDynamics"
         }
     }
 }
 
 struct Preset: Codable {
     let name: String
-    let state: PresetState?
-    let dynamics: PresetDynamics?
+    let state: PresetStateDefinition
+    
+    enum CodingKeys: CodingKey {
+        case name, state, dynamics
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        name = try container.decode(String.self, forKey: .name)
+        
+        let recall = try? container.decodeIfPresent(PresetState.self, forKey: .state)
+        let dynamic = try? container.decodeIfPresent(PresetDynamics.self, forKey: .dynamics)
+        
+        if let recall = recall {
+            self.state = .recall(recall)
+        } else if let dynamic = dynamic {
+            self.state = .dynamic(dynamic)
+        } else {
+            throw PresetError.notAPreset
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(name, forKey: .name)
+        
+        switch state {
+        case .recall(let recall):
+            try container.encode(recall, forKey: .state)
+        case .dynamic(let dynamic):
+            try container.encode(dynamic, forKey: .dynamics)
+        }
+    }
+    
 }
-
-// MARK: Extensions
 
 extension Preset {
     init(from scene: CLIPScene) throws {
         self.name = scene.metadata.name
         
-        self.state = try? PresetState(from: scene)
-        
-        // If 'state' was parsed succesfully, don't duplicate
-        // its values in 'dynamics'
-        if self.state == nil {
-            self.dynamics = try? PresetDynamics(from: scene)
+        if let recallState = try? PresetState(from: scene) {
+            // 'Recall' state
+            self.state = .recall(recallState)
+        } else if let dynamicState = try? PresetDynamics(from: scene) {
+            // 'Dynamic' state
+            self.state = .dynamic(dynamicState)
         } else {
-            self.dynamics = nil
+            throw PresetError.notAPreset
         }
-        
     }
+}
+
+// MARK: - Models
+
+enum PresetStateDefinition: Codable {
+    case recall(PresetState)
+    case dynamic(PresetDynamics)
+    
+    enum CodingKeys: CodingKey {
+        case recall, dynamic
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        switch self {
+        case .recall(let recall):
+            try container.encode(recall, forKey: .recall)
+        case .dynamic(let dynamic):
+            try container.encode(dynamic, forKey: .dynamic)
+        }
+    }
+}
+
+enum PresetDynamicsApplication: String, Codable {
+    case ignore
+    case sequence
+    case random
+}
+
+struct PresetDynamicsEffect: Codable {
+    let effect: String
+    
+    let xy: [Double]?
+    let ct: UInt?
+    
+    let effect_speed: Double?
+}
+
+// MARK: - Preset State
+
+struct PresetState: Codable {
+    let on: Bool?
+    let bri: UInt?
+    let xy: [Double]?
+    let ct: UInt?
+    
+    let effect: String?
+    let effect_speed: Double?
+    
+    let transitiontime: UInt
 }
 
 extension PresetState {
@@ -106,11 +191,29 @@ extension PresetState {
     }
 }
 
+// MARK: - Preset Dynamics
+
+struct PresetDynamics: Codable {
+    let bri: UInt?
+    let xy: [[Double]]?
+    let ct: UInt?
+    let transitiontime: UInt?
+    
+    let effects: [PresetDynamicsEffect]?
+    
+    let effect_speed: Double
+    let auto_dynamic: Bool
+    let scene_apply: PresetDynamicsApplication
+}
+
 extension PresetDynamics {
     init(from scene: CLIPScene) throws {
         self.effect_speed = scene.speed
         self.auto_dynamic = scene.auto_dynamic
         self.scene_apply = .sequence
+        
+        // Not provided in the CLIPv2 output - default is 400ms
+        self.transitiontime = 4
         
         // The CLIPv2 API expects and provides independent 'brightness' values for
         // every 'color' or 'ct' entry in the scene. All entries in scenes available
@@ -174,3 +277,4 @@ extension PresetDynamics {
         }
     }
 }
+

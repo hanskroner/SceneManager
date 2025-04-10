@@ -61,7 +61,6 @@
 		3AD18D102DA2C91800AC1CC8 /* underwater.json in Resources */ = {isa = PBXBuildFile; fileRef = 3AD18D0E2DA2C91800AC1CC8 /* underwater.json */; };
 		3AD18D112DA2C91800AC1CC8 /* halloween.json in Resources */ = {isa = PBXBuildFile; fileRef = 3AD18D0D2DA2C91800AC1CC8 /* halloween.json */; };
 		3AD18D142DA59A2A00AC1CC8 /* PresetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD18D132DA59A2400AC1CC8 /* PresetModels.swift */; };
-		3AD18D152DA59A5E00AC1CC8 /* PresetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD18D132DA59A2400AC1CC8 /* PresetModels.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -616,7 +615,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3AD18D152DA59A5E00AC1CC8 /* PresetModels.swift in Sources */,
 				3A41935E2D9EC8B8007E76F1 /* SceneConverterApp.swift in Sources */,
 				3A41936E2DA0083F007E76F1 /* JSON.swift in Sources */,
 				3A41936B2D9F0179007E76F1 /* CLIPModels.swift in Sources */,
