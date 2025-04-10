@@ -154,12 +154,47 @@ struct PresetDynamics: Codable, PresetPalette {
     let bri: UInt?
     let xy: [[Double]]?
     let ct: UInt?
+    let transitiontime: UInt?
     
     let effects: [PresetDynamicsEffect]?
     
     let effect_speed: Double
     let auto_dynamic: Bool
     let scene_apply: PresetDynamicsApplication
+    
+    enum CodingKeys: CodingKey {
+        case bri, xy, ct, transitiontime, effects, effect_speed, auto_dynamic, scene_apply
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        bri = try container.decodeIfPresent(UInt.self, forKey: .bri)
+        xy = try container.decodeIfPresent([[Double]].self, forKey: .xy)
+        ct = try container.decodeIfPresent(UInt.self, forKey: .ct)
+        transitiontime = try container.decodeIfPresent(UInt.self, forKey: .transitiontime)
+        
+        effects = try container.decodeIfPresent([PresetDynamicsEffect].self, forKey: .effects)
+        
+        effect_speed = try container.decode(Double.self, forKey: .effect_speed)
+        auto_dynamic = try container.decode(Bool.self, forKey: .auto_dynamic)
+        scene_apply = try container.decodeIfPresent(PresetDynamicsApplication.self, forKey: .scene_apply) ?? .sequence
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encodeIfPresent(bri, forKey: .bri)
+        try container.encodeIfPresent(xy, forKey: .xy)
+        try container.encodeIfPresent(ct, forKey: .ct)
+        try container.encodeIfPresent(transitiontime, forKey: .transitiontime)
+        
+        try container.encodeIfPresent(effects, forKey: .effects)
+        
+        try container.encode(effect_speed, forKey: .effect_speed)
+        try container.encode(auto_dynamic, forKey: .auto_dynamic)
+        try container.encode(scene_apply, forKey: .scene_apply)
+    }
     
     // MARK: Preset Dynamics Palette
     

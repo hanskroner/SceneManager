@@ -311,6 +311,7 @@ public final class DynamicState: Codable {
     public var bri: Int?
     public var xy: [[Double]]?
     public var ct: Int?
+    public var transitiontime: Int?
     
     let effects: [DynamicStateEffect]?
     
@@ -318,10 +319,11 @@ public final class DynamicState: Codable {
     public var auto_dynamic: Bool
     public var scene_apply: DynamicStateApplication?
     
-    public init(bri: Int? = nil, xy: [[Double]]? = nil, ct: Int? = nil, effects: [DynamicStateEffect]? = nil, effect_speed: Double, auto_dynamic: Bool, scene_apply: DynamicStateApplication? = nil) {
+    public init(bri: Int? = nil, xy: [[Double]]? = nil, ct: Int? = nil, transitiontime: Int? = nil, effects: [DynamicStateEffect]? = nil, effect_speed: Double, auto_dynamic: Bool, scene_apply: DynamicStateApplication? = nil) {
         self.bri = bri
         self.xy = xy
         self.ct = ct
+        self.transitiontime = transitiontime
         
         self.effects = effects
         

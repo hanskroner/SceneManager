@@ -334,7 +334,7 @@ public final class RESTModel {
                                           effect: effect.effect,
                                           on: true,
                                           xy: effect.xy,
-                                          transitiontime: 4,
+                                          transitiontime: dynamics.transitiontime ?? 4,
                                           effect_speed: effect.effect_speed))
         }
         
@@ -343,7 +343,7 @@ public final class RESTModel {
                                           ct: dynamics.ct,
                                           on: true,
                                           xy: color,
-                                          transitiontime: 4))
+                                          transitiontime: dynamics.transitiontime ?? 4))
         }
         
         // !!!: deCONZ Scenes don't have 'scene_apply'
