@@ -146,6 +146,7 @@ enum LightItemAction {
 // MARK: - Light View
 
 struct LightView: View {
+    @Environment(Sidebar.self) private var sidebar
     @Environment(Lights.self) private var lights
     @Environment(WindowItem.self) private var window
     
@@ -160,6 +161,23 @@ struct LightView: View {
         let lights = selectedItems.map { $0.name }
             .joined(separator: ", ")
         logger.info("Selected '\(lights, privacy: .public)'")
+    }
+    
+    private var missingLightItems: [LightItem] {
+        get {
+            guard let selectedItem = sidebar.selectedSidebarItem else { return [] }
+            
+            let lights: [Light]
+            switch selectedItem.kind {
+            case .group:
+                lights = window.lights(notInGroupId: selectedItem.groupId)
+            case .scene:
+                lights = window.lights(inGroupId: selectedItem.groupId, butNotIntSceneId: selectedItem.sceneId!)
+            }
+            
+            let lightItems = lights.map { LightItem(light: $0) }
+            return lightItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+        }
     }
     
     var body: some View {
@@ -199,7 +217,7 @@ struct LightView: View {
         .frame(minWidth: 250)
         .sheet(isPresented: $isPresentingSheet) {
         } content: {
-            AddLightView()
+            AddLightView(lightItems: missingLightItems)
         }
     }
 }
@@ -296,23 +314,8 @@ struct AddLightView: View {
     
     @Environment(\.dismiss) private var dismiss
     
-    @State private var lightItems = [LightItem]()
+    var lightItems: [LightItem]
     @State private var addLightItems = Set<LightItem>()
-    
-    private func loadLightItems() {
-        guard let selectedItem = sidebar.selectedSidebarItem else { return }
-        
-        let lights: [Light]
-        switch selectedItem.kind {
-        case .group:
-            lights = window.lights(notInGroupId: selectedItem.groupId)
-        case .scene:
-            lights = window.lights(inGroupId: selectedItem.groupId, butNotIntSceneId: selectedItem.sceneId!)
-        }
-        
-        let lightItems = lights.map { LightItem(light: $0) }
-        self.lightItems = lightItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
-    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -351,9 +354,6 @@ struct AddLightView: View {
             .frame(idealHeight: lightItems.count <= 12 ? 36 + (CGFloat(lightItems.count) * 30) : 300, maxHeight: 300)
             .scrollBounceBehavior(.basedOnSize)
             .padding([.leading, .trailing], 12)
-            .task {
-                loadLightItems()
-            }
             
             HStack {
                 Spacer()
@@ -404,6 +404,6 @@ struct AddLightView: View {
 }
 
 #Preview("AddLightView") {
-    return AddLightView()
+    return AddLightView(lightItems: [])
         .frame(width: 250, height: 420, alignment: .center)
 }
