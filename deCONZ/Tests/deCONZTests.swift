@@ -67,7 +67,7 @@ struct deCONZTests {
                     stateDictionary[stateEntry.0] = LightState(from: stateEntry.1)
                 })
                 
-                sceneDictionary[sceneEntry.0] = Scene(from: sceneEntry.1, sceneId: sceneEntry.0, groupId: groupEntry.0, lightIds: sceneLightIds, lightStates: sceneLightStates)
+                sceneDictionary[sceneEntry.0] = Scene(from: sceneEntry.1, sceneId: sceneEntry.0, groupId: groupEntry.0, lightIds: sceneLightIds, lightStates: sceneLightStates, dynamicState: DynamicState(from: sceneEntry.1.dynamics))
             })
         })
         
