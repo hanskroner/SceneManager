@@ -36,6 +36,15 @@ struct SceneManagerApp: App {
                     }
                 }
         }
+        .commands {
+            CommandMenu("deCONZ") {
+                Button("Reload") {
+                    Task {
+                        try await RESTModel.shared.refreshCache()
+                    }
+                }.keyboardShortcut("r", modifiers: .command)
+            }
+        }
         
 #if os(macOS)
         Settings {
