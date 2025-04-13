@@ -252,6 +252,10 @@ actor RESTClient {
             let x: Double?
             let y: Double?
             let transitiontime: Int?
+            
+            let effect: String?
+            let effect_duration: Int?
+            let effect_speed: Double?
         }
         
         struct SceneLightStateContainer: Decodable {
@@ -269,19 +273,16 @@ actor RESTClient {
         let attrContainer: SceneLightStateContainer = try decoder.decode(SceneLightStateContainer.self, from: data)
         let restLightDict = attrContainer.lights.reduce(into: [Int: RESTLightState]()) { partialResult, sceneLightState in
             if let stringLightId = sceneLightState.id, let lightId = Int(stringLightId) {
-                partialResult[lightId] = RESTLightState(alert: nil,
-                                                        bri: sceneLightState.bri,
-                                                        colormode: nil,
+                partialResult[lightId] = RESTLightState(bri: sceneLightState.bri,
                                                         ct: sceneLightState.ct,
-                                                        effect: nil,
+                                                        effect: sceneLightState.effect,
                                                         hue: sceneLightState.hue,
                                                         on: sceneLightState.on,
-                                                        reachable: nil,
                                                         sat: sceneLightState.sat,
                                                         xy: sceneLightState.x != nil && sceneLightState.y != nil ? [sceneLightState.x!, sceneLightState.y!] : nil,
                                                         transitiontime: sceneLightState.transitiontime,
-                                                        effect_duration: nil,
-                                                        effect_speed: nil)
+                                                        effect_duration: sceneLightState.effect_duration,
+                                                        effect_speed: sceneLightState.effect_speed)
             }
         }
         
