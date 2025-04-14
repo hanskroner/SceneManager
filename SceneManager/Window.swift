@@ -237,7 +237,6 @@ class WindowItem {
             await RESTModel.shared.recallScene(groupId: groupId, sceneId: sceneId)
         }
         
-        // FIXME: Update UI models
-        //        Recalling a scene would update its group's state
+        // No need to update UI models - they don't track the state of lights
     }
 }

@@ -426,6 +426,19 @@ public final class RESTModel {
     public func recallScene(groupId: Int, sceneId: Int) async {
         do {
             try await self._client.recallScene(groupId: groupId, sceneId: sceneId)
+            
+            // Update the model's cache
+            // The state of the individual lights in the scene can be updated to match
+            // the expected state defined in the Scene.
+            guard let scene = scene(withGroupId: groupId, sceneId: sceneId) else { return }
+            
+            let sceneLightIds = scene.lightIds
+            for lightId in sceneLightIds {
+                guard let light = light(withLightId: lightId),
+                      let sceneLightState = scene.lightStates[lightId] else { continue }
+                
+                light.state = sceneLightState
+            }
         } catch {
             // FIXME: Error handling
             logger.error("\(error, privacy: .public)")
