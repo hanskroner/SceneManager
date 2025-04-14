@@ -286,9 +286,6 @@ public final class RESTModel {
     }
     
     public func removeLightsFromScene(groupId: Int, sceneId: Int, lightIds: [Int]) async throws {
-        // FIXME: Bug when removing last light
-        //        Removing a scene's last light causes deCONZ to also
-        //        delete the scene. That needs to be taken into account here.
         // Calling 'modifyScene' with a 'nil' LightState removes the lightIds from the Scene
         for lightId in lightIds {
             try await self._client.modifyScene(groupId: groupId, sceneId: sceneId, lightIds: [lightId], lightState: nil)
@@ -300,6 +297,12 @@ public final class RESTModel {
         cachedScene.lightIds = newLightsInScene
         cachedScene.lightStates = cachedScene.lightStates.filter{ !lightIds.contains($0.key) }
         self._scenes[groupId]?[sceneId] = cachedScene
+        
+        // Removing a scene's last light causes deCONZ to also delete the scene.
+        // Update the model's cache to reflect that.
+        if (newLightsInScene.isEmpty) {
+            self._scenes[groupId]?.removeValue(forKey: sceneId)
+        }
     }
     
     public func modifyLightStateInScene(groupId: Int, sceneId: Int, lightIds: [Int], jsonLightState: String) async throws {
