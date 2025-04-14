@@ -276,18 +276,26 @@ struct LightBottomBarView: View {
                 .disabled(shouldDisableAddButton())
                 
                 Button(action: {
-                    switch (sidebar.selectedSidebarItem?.kind) {
-                    case .group:
-                        window.remove(lightIds: Array(lights.selectedLightItems).map({ $0.lightId }), fromGroupId: window.groupId!)
-                    
-                    case .scene:
-                        window.remove(lightIds: Array(lights.selectedLightItems).map({ $0.lightId }), fromGroupId: window.groupId!, sceneId: window.sceneId!)
-                    default:
-                        break
+                    Task {
+                        switch (sidebar.selectedSidebarItem?.kind) {
+                        case .group:
+                            try await window.remove(lightIds: Array(lights.selectedLightItems).map({ $0.lightId }), fromGroupId: window.groupId!)
+                            
+                        case .scene:
+                            try await window.remove(lightIds: Array(lights.selectedLightItems).map({ $0.lightId }), fromGroupId: window.groupId!, sceneId: window.sceneId!)
+                        default:
+                            break
+                        }
+                        
+                        Task { @MainActor in
+                            // Remove selection
+                            lights.selectedLightItemIds.removeAll()
+                        }
+                    } catch: { error in
+                        // FIXME: Missing error alert
+                        logger.error("\(error, privacy: .public)")
+                        #warning("Missing Error Alert")
                     }
-                    
-                    // Remove selection
-                    lights.selectedLightItemIds.removeAll()
                 }) {
                     Label("", systemImage: "minus")
                         .padding(.bottom, 4)
@@ -365,18 +373,26 @@ struct AddLightView: View {
                 .keyboardShortcut(.cancelAction)
                 
                 Button("\(addLightItems.count) Add Lights") {
-                    switch (sidebar.selectedSidebarItem?.kind) {
-                    case .group:
-                        window.add(lightIds: Array(addLightItems).map({ $0.lightId }), toGroupId: window.groupId!)
+                    Task {
+                        switch (sidebar.selectedSidebarItem?.kind) {
+                        case .group:
+                            try await window.add(lightIds: Array(addLightItems).map({ $0.lightId }), toGroupId: window.groupId!)
+                            
+                        case .scene:
+                            try await window.add(lightIds: Array(addLightItems).map({ $0.lightId }), toGroupId: window.groupId!, sceneId: window.sceneId!)
+                            
+                        default:
+                            break
+                        }
                         
-                    case .scene:
-                        window.add(lightIds: Array(addLightItems).map({ $0.lightId }), toGroupId: window.groupId!, sceneId: window.sceneId!)
-                        
-                    default:
-                        break
+                        Task { @MainActor in
+                            dismiss()
+                        }
+                    } catch: { error in
+                        // FIXME: Missing error alert
+                        logger.error("\(error, privacy: .public)")
+                        #warning("Missing Error Alert")
                     }
-                    
-                    dismiss()
                 }
                 .fixedSize()
                 .keyboardShortcut(.defaultAction)

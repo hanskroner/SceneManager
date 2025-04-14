@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+import OSLog
+
+private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "content-view")
 
 struct ContentView: View {
     @Environment(Sidebar.self) private var sidebar
@@ -19,13 +22,25 @@ struct ContentView: View {
     func recallSelectedScene() {
         guard let groupId = window.groupId, let sceneId = window.sceneId else { return }
         
-        window.recall(groupId: groupId, sceneId: sceneId)
+        Task {
+            try await window.recall(groupId: groupId, sceneId: sceneId)
+        } catch: { error in
+            // FIXME: Missing error alert
+            logger.error("\(error, privacy: .public)")
+            #warning("Missing Error Alert")
+        }
     }
     
     func turnSelectedGroupOff() {
         guard let groupId = window.groupId else { return }
         
-        window.turnOff(groupId: groupId)
+        Task {
+            try await window.turnOff(groupId: groupId)
+        } catch: { error in
+            // FIXME: Missing error alert
+            logger.error("\(error, privacy: .public)")
+            #warning("Missing Error Alert")
+        }
     }
     
     var body: some View {

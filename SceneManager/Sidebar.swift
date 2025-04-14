@@ -274,7 +274,7 @@ struct SidebarView: View {
         
         Task {
             // Update the Dynamics Editor when sidebar selection changes
-            window.dynamicsEditorText = await window.jsonDynamicState(forGroupId: selectedItem?.groupId,
+            window.dynamicsEditorText = try await window.jsonDynamicState(forGroupId: selectedItem?.groupId,
                                                                       sceneId: selectedItem?.sceneId)
             
             // Switch to the Dynamics Editor if it wasn't already selected
@@ -283,6 +283,10 @@ struct SidebarView: View {
                     window.selectedEditorTab = .dynamicScene
                 }
             }
+        } catch: { error in
+            // FIXME: Missing error alert
+            logger.error("\(error, privacy: .public)")
+            #warning("Missing Error Alert")
         }
     }
     
@@ -486,7 +490,7 @@ struct SidebarItemView: View {
                     // Select between a create or rename operation
                     Task {
                         if ((item.groupId == Sidebar.NEW_GROUP_ID) && (item.sceneId == nil)) {
-                            let groupId = await RESTModel.shared.createGroup(name: item.name)
+                            let groupId = try await RESTModel.shared.createGroup(name: item.name)
                             
                             guard let groupId else {
                                 sidebar.deleteSidebarItem(item)
@@ -495,7 +499,7 @@ struct SidebarItemView: View {
                             
                             item.groupId = groupId
                         } else if ((item.groupId != Sidebar.NEW_GROUP_ID) && (item.sceneId == Sidebar.NEW_SCENE_ID)) {
-                            let sceneId = await RESTModel.shared.createScene(groupId: item.groupId, name: item.name)
+                            let sceneId = try await RESTModel.shared.createScene(groupId: item.groupId, name: item.name)
                             
                             guard let sceneId else {
                                 sidebar.deleteSidebarItem(item)
@@ -504,9 +508,9 @@ struct SidebarItemView: View {
                             
                             item.sceneId = sceneId
                         } else if ((item.groupId != Sidebar.NEW_GROUP_ID) && (item.sceneId == nil)) {
-                            await RESTModel.shared.renameGroup(groupId: item.groupId, name: item.name)
+                            try await RESTModel.shared.renameGroup(groupId: item.groupId, name: item.name)
                         } else {
-                            await RESTModel.shared.renameScene(groupId: item.groupId, sceneId: item.sceneId!, name: item.name)
+                            try await RESTModel.shared.renameScene(groupId: item.groupId, sceneId: item.sceneId!, name: item.name)
                         }
                         
                         // Update Window properties
@@ -526,6 +530,10 @@ struct SidebarItemView: View {
                             let parent = sidebar.items.filter({ $0.items.contains(item) }).first!
                             parent.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
                         }
+                    } catch: { error in
+                        // FIXME: Missing error alert
+                        logger.error("\(error, privacy: .public)")
+                        #warning("Missing Error Alert")
                     }
                 }
                 .onAppear {
@@ -565,9 +573,9 @@ struct SidebarItemView: View {
                         // Call on the REST API to perform deletion
                         Task {
                             if (item.kind == .group) {
-                                await RESTModel.shared.deleteGroup(groupId: item.groupId)
+                                try await RESTModel.shared.deleteGroup(groupId: item.groupId)
                             } else {
-                                await RESTModel.shared.deleteScene(groupId: item.groupId, sceneId: item.sceneId!)
+                                try await RESTModel.shared.deleteScene(groupId: item.groupId, sceneId: item.sceneId!)
                             }
                             
                             // Deleting happens as part of the Task, otherwise the reference to 'item' will change
@@ -578,6 +586,10 @@ struct SidebarItemView: View {
                             window.navigationSubtitle = nil
                             window.groupId = nil
                             window.sceneId = nil
+                        } catch: { error in
+                            // FIXME: Missing error alert
+                            logger.error("\(error, privacy: .public)")
+                            #warning("Missing Error Alert")
                         }
                     }
                 }

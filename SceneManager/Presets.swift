@@ -421,8 +421,9 @@ struct PresetItemView: View {
                         do {
                             try presets.renamePresetItemInDocumentsDirectory(presetItem)
                         } catch {
-                            // FIXME: Error handling
+                            // FIXME: Missing error alert
                             logger.error("\(error, privacy: .public)")
+                            #warning("Missing Error Alert")
                             return
                         }
                         
@@ -543,8 +544,9 @@ struct PresetItemView: View {
         do {
             try presets.deletePresetItemInDocumentsDirectory(presetItem)
         } catch {
-            // FIXME: Error handling
+            // FIXME: Missing error alert
             logger.error("\(error, privacy: .public)")
+            #warning("Missing Error Alert")
         }
         
         withAnimation {
@@ -621,8 +623,9 @@ struct AddPresetView: View {
                             stateDefinition = .dynamic(try _decoder.decode(PresetDynamics.self, from: sceneData))
                         }
                     } catch {
-                        // FIXME: Error handling
+                        // FIXME: Missing error alert
                         logger.error("\(error, privacy: .public)")
+                        #warning("Missing Error Alert")
                         return
                     }
                     
@@ -642,8 +645,9 @@ struct AddPresetView: View {
                         do {
                             try presets.savePresetItemToDocumentsDirectory(customGroup.presets[index])
                         } catch {
-                            // FIXME: Error handling
+                            // FIXME: Missing error alert
                             logger.error("\(error, privacy: .public)")
+                            #warning("Missing Error Alert")
                             return
                         }
                         
@@ -670,8 +674,9 @@ struct AddPresetView: View {
                         do {
                             try presets.savePresetItemToDocumentsDirectory(newPresetItem)
                         } catch {
-                            // FIXME: Error handling
+                            // FIXME: Missing error alert
                             logger.error("\(error, privacy: .public)")
+                            #warning("Missing Error Alert")
                             return
                         }
                         

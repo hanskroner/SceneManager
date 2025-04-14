@@ -6,7 +6,22 @@
 //
 
 import SwiftUI
+import OSLog
 import deCONZ
+
+private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "app")
+
+extension Task where Failure == Never, Success == Void {
+    @discardableResult init(priority: TaskPriority? = nil, operation: @escaping () async throws -> Void, `catch`: @escaping (Error) -> Void) {
+        self.init(priority: priority) {
+            do {
+                _ = try await operation()
+            } catch {
+                `catch`(error)
+            }
+        }
+    }
+}
 
 @main
 struct SceneManagerApp: App {
@@ -32,7 +47,8 @@ struct SceneManagerApp: App {
                         
                         try await RESTModel.shared.refreshCache()
                     } catch {
-                        print(error)
+                        // FIXME: Error handling
+                        logger.error("\(error, privacy: .public)")
                     }
                 }
         }

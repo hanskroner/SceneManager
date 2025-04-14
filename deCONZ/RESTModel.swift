@@ -73,80 +73,54 @@ public final class RESTModel {
     // MARK: Light State
     
     // FIXME: Consider different return from 'String'
-    public func lightState(withLightId lightId: Int, groupId: Int? = nil, sceneId: Int? = nil) async -> String {
+    public func lightState(withLightId lightId: Int, groupId: Int? = nil, sceneId: Int? = nil) async throws -> String {
         // Current state of the light
         guard let groupId, let sceneId else {
-            // FIXME: Catch
-            let state = try! await self._client.getLightState(lightID: lightId)
-            let encoded = try! _encoder.encode(state)
-            let decoded = try! _decoder.decode(JSON.self, from: encoded)
+            let state = try await self._client.getLightState(lightID: lightId)
+            let encoded = try _encoder.encode(state)
+            let decoded = try _decoder.decode(JSON.self, from: encoded)
             
             return decoded.prettyPrint()
         }
         
         // State defined in a scene
-        do {
-            let attributes = try await self._client.getSceneAttributes(groupID: groupId, sceneID: sceneId)
-            guard let state = attributes?.lights.filter({ $0.key == lightId }).first?.1 else { return "" }
-            let encoded = try _encoder.encode(state)
-            let decoded = try _decoder.decode(JSON.self, from: encoded)
-            
-            return decoded.prettyPrint()
-        } catch {
-            // FIXME: Error handling
-            logger.error("\(error, privacy: .public)")
-        }
+        let attributes = try await self._client.getSceneAttributes(groupID: groupId, sceneID: sceneId)
+        guard let state = attributes?.lights.filter({ $0.key == lightId }).first?.1 else { return "" }
+        let encoded = try _encoder.encode(state)
+        let decoded = try _decoder.decode(JSON.self, from: encoded)
         
-        return ""
+        return decoded.prettyPrint()
     }
     
     // FIXME: Consider different return from 'String'
-    public func dynamicState(withGroupId groupId: Int? = nil, sceneId: Int? = nil) async -> String {
+    public func dynamicState(withGroupId groupId: Int? = nil, sceneId: Int? = nil) async throws -> String {
         guard let groupId, let sceneId else { return "" }
         
-        do {
-            let attributes = try await self._client.getSceneAttributes(groupID: groupId, sceneID: sceneId)
-            guard let state = attributes?.dynamics else { return "" }
-            
-            let encoded = try _encoder.encode(state)
-            let decoded = try _decoder.decode(JSON.self, from: encoded)
-            
-            return decoded.prettyPrint()
-        } catch {
-            // FIXME: Error handling
-            logger.error("\(error, privacy: .public)")
-        }
+        let attributes = try await self._client.getSceneAttributes(groupID: groupId, sceneID: sceneId)
+        guard let state = attributes?.dynamics else { return "" }
         
-        return ""
+        let encoded = try _encoder.encode(state)
+        let decoded = try _decoder.decode(JSON.self, from: encoded)
+        
+        return decoded.prettyPrint()
     }
     
     // MARK: Groups
     
-    public func createGroup(name: String) async -> Int? {
-        do {
-            let groupId = try await self._client.createGroup(name: name)
-            
-            // Insert a new, empty Group into the model's cache
-            self._groups[groupId] = Group(groupId: groupId, name: name)
-            self._scenes[groupId] = [Int: Scene]()
-            return groupId
-        } catch {
-            // FIXME: Error handling
-            logger.error("\(error, privacy: .public)")
-            return nil
-        }
+    public func createGroup(name: String) async throws -> Int? {
+        let groupId = try await self._client.createGroup(name: name)
+        
+        // Insert a new, empty Group into the model's cache
+        self._groups[groupId] = Group(groupId: groupId, name: name)
+        self._scenes[groupId] = [Int: Scene]()
+        return groupId
     }
     
-    public func renameGroup(groupId: Int, name: String) async {
-        do {
-            try await self._client.setGroupAttributes(groupId: groupId, name: name)
-            
-            // Update the model's cache
-            self._groups[groupId]?.name = name
-        } catch {
-            // FIXME: Error handling
-            logger.error("\(error, privacy: .public)")
-        }
+    public func renameGroup(groupId: Int, name: String) async throws {
+        try await self._client.setGroupAttributes(groupId: groupId, name: name)
+        
+        // Update the model's cache
+        self._groups[groupId]?.name = name
     }
     
     public func addLightsToGroup(groupId: Int, lightIds: [Int]) async throws {
@@ -188,47 +162,36 @@ public final class RESTModel {
         }
     }
     
-    public func modifyGroupState(groupId: Int, lightState: LightState) async {
-        do {
-            let restLightState = RESTLightState(alert: lightState.alert,
-                                                bri: lightState.bri,
-                                                ct: lightState.ct,
-                                                effect: lightState.effect,
-                                                on: lightState.on,
-                                                xy: lightState.xy,
-                                                transitiontime: lightState.transitiontime,
-                                                effect_duration: lightState.effect_duration,
-                                                effect_speed: lightState.effect_speed)
-            
-            try await self._client.setGroupState(groupId: groupId, lightState: restLightState)
-            
-            // Update the model's cache
-            // The state of groups is currently not tracked in Group objects, though it
-            // is present in RESTGroup objects and can be passed on from there if it becomes
-            // needed in the future.
-            // The state of the individual lights in the group can be updated.
-            guard let groupLightIds = group(withGroupId: groupId)?.lightIds else { return }
-            for lightId in groupLightIds {
-                guard let light = light(withLightId: lightId) else { continue }
-                light.state = lightState
-            }
-            
-        } catch {
-            // FIXME: Error handling
-            logger.error("\(error, privacy: .public)")
+    public func modifyGroupState(groupId: Int, lightState: LightState) async throws {
+        let restLightState = RESTLightState(alert: lightState.alert,
+                                            bri: lightState.bri,
+                                            ct: lightState.ct,
+                                            effect: lightState.effect,
+                                            on: lightState.on,
+                                            xy: lightState.xy,
+                                            transitiontime: lightState.transitiontime,
+                                            effect_duration: lightState.effect_duration,
+                                            effect_speed: lightState.effect_speed)
+        
+        try await self._client.setGroupState(groupId: groupId, lightState: restLightState)
+        
+        // Update the model's cache
+        // The state of groups is currently not tracked in Group objects, though it
+        // is present in RESTGroup objects and can be passed on from there if it becomes
+        // needed in the future.
+        // The state of the individual lights in the group can be updated.
+        guard let groupLightIds = group(withGroupId: groupId)?.lightIds else { return }
+        for lightId in groupLightIds {
+            guard let light = light(withLightId: lightId) else { continue }
+            light.state = lightState
         }
     }
     
-    public func deleteGroup(groupId: Int) async {
-        do {
-            try await self._client.deleteGroup(groupId: groupId)
-            
-            // Uodate the model's cache
-            self._groups.removeValue(forKey: groupId)
-        } catch {
-            // FIXME: Error handling
-            logger.error("\(error, privacy: .public)")
-        }
+    public func deleteGroup(groupId: Int) async throws {
+        try await self._client.deleteGroup(groupId: groupId)
+        
+        // Uodate the model's cache
+        self._groups.removeValue(forKey: groupId)
     }
     
     public var groups: [Group] {
@@ -241,30 +204,19 @@ public final class RESTModel {
     
     // MARK: Scenes
     
-    public func createScene(groupId: Int, name: String) async -> Int? {
-        do {
-            let sceneId = try await self._client.createScene(groupId: groupId, name: name)
-            
-            // Insert a new, empty Scene into the model's cache
-            self._scenes[groupId]?[sceneId] = Scene(sceneId: sceneId, groupId: groupId, name: name)
-            return sceneId
-        } catch {
-            // FIXME: Error handling
-            logger.error("\(error, privacy: .public)")
-            return nil
-        }
+    public func createScene(groupId: Int, name: String) async throws -> Int? {
+        let sceneId = try await self._client.createScene(groupId: groupId, name: name)
+        
+        // Insert a new, empty Scene into the model's cache
+        self._scenes[groupId]?[sceneId] = Scene(sceneId: sceneId, groupId: groupId, name: name)
+        return sceneId
     }
     
-    public func renameScene(groupId: Int, sceneId: Int, name: String) async {
-        do {
-            try await self._client.setSceneAttributes(groupId: groupId, sceneId: sceneId, name: name)
-            
-            // Update the model's cache
-            self._scenes[groupId]?[sceneId]?.name = name
-        } catch {
-            // FIXME: Error handling
-            logger.error("\(error, privacy: .public)")
-        }
+    public func renameScene(groupId: Int, sceneId: Int, name: String) async throws {
+        try await self._client.setSceneAttributes(groupId: groupId, sceneId: sceneId, name: name)
+        
+        // Update the model's cache
+        self._scenes[groupId]?[sceneId]?.name = name
     }
     
     public func addLightsToScene(groupId: Int, sceneId: Int, lightIds: [Int]) async throws {
@@ -411,37 +363,27 @@ public final class RESTModel {
         try await self._client.modifyHueDynamicScene(groupId: groupId, sceneId: sceneId, dynamicState: dynamicState)
     }
     
-    public func deleteScene(groupId: Int, sceneId: Int) async {
-        do {
-            try await self._client.deleteScene(groupId: groupId, sceneId: sceneId)
-            
-            // Update the model's cache
-            self._scenes[groupId]?.removeValue(forKey: sceneId)
-        } catch {
-            // FIXME: Error handling
-            logger.error("\(error, privacy: .public)")
-        }
+    public func deleteScene(groupId: Int, sceneId: Int) async throws {
+        try await self._client.deleteScene(groupId: groupId, sceneId: sceneId)
+        
+        // Update the model's cache
+        self._scenes[groupId]?.removeValue(forKey: sceneId)
     }
     
-    public func recallScene(groupId: Int, sceneId: Int) async {
-        do {
-            try await self._client.recallScene(groupId: groupId, sceneId: sceneId)
+    public func recallScene(groupId: Int, sceneId: Int) async throws {
+        try await self._client.recallScene(groupId: groupId, sceneId: sceneId)
+        
+        // Update the model's cache
+        // The state of the individual lights in the scene can be updated to match
+        // the expected state defined in the Scene.
+        guard let scene = scene(withGroupId: groupId, sceneId: sceneId) else { return }
+        
+        let sceneLightIds = scene.lightIds
+        for lightId in sceneLightIds {
+            guard let light = light(withLightId: lightId),
+                  let sceneLightState = scene.lightStates[lightId] else { continue }
             
-            // Update the model's cache
-            // The state of the individual lights in the scene can be updated to match
-            // the expected state defined in the Scene.
-            guard let scene = scene(withGroupId: groupId, sceneId: sceneId) else { return }
-            
-            let sceneLightIds = scene.lightIds
-            for lightId in sceneLightIds {
-                guard let light = light(withLightId: lightId),
-                      let sceneLightState = scene.lightStates[lightId] else { continue }
-                
-                light.state = sceneLightState
-            }
-        } catch {
-            // FIXME: Error handling
-            logger.error("\(error, privacy: .public)")
+            light.state = sceneLightState
         }
     }
     

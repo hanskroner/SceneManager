@@ -84,37 +84,39 @@ struct LightStateView: View {
                     switch window.selectedEditorTab {
                     case .sceneState:
                         // Modify all the lights in the scene to the attributes in the State Editor
-                        do {
-                            guard let data = window.stateEditorText.data(using: .utf8) else {
-                                // FIXME: Error handling
-                                logger.error("Could not convert string to data.")
-                                return
-                            }
-                            
+                        guard let data = window.stateEditorText.data(using: .utf8) else {
+                            // FIXME: Error handling
+                            logger.error("Could not convert string to data.")
+                            return
+                        }
+                        
+                        Task {
                             let recall = try _decoder.decode(PresetState.self, from: data)
                             
-                            window.applyState(.recall(recall), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
-                        } catch {
-                            // FIXME: Error handling
+                            try await window.applyState(.recall(recall), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
+                        } catch: { error in
+                            // FIXME: Missing error alert
                             logger.error("\(error, privacy: .public)")
+                            #warning("Missing Error Alert")
                         }
                         
                     case .dynamicScene:
                         // Modify all the lights in the scene to attributes in the Dynamics Editor
                         // The order in which attributes are applied depends on some of the attributes themselves
-                        do {
-                            guard let data = window.dynamicsEditorText.data(using: .utf8) else {
-                                // FIXME: Error handling
-                                logger.error("Could not convert string to data.")
-                                return
-                            }
-                            
+                        guard let data = window.dynamicsEditorText.data(using: .utf8) else {
+                            // FIXME: Error handling
+                            logger.error("Could not convert string to data.")
+                            return
+                        }
+                        
+                        Task {
                             let dynamic = try _decoder.decode(PresetDynamics.self, from: data)
                             
-                            window.applyState(.dynamic(dynamic), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
-                        } catch {
-                            // FIXME: Error handling
+                            try await window.applyState(.dynamic(dynamic), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
+                        } catch: { error in
+                            // FIXME: Missing error alert
                             logger.error("\(error, privacy: .public)")
+                            #warning("Missing Error Alert")
                         }
                     }
                 }
@@ -125,19 +127,20 @@ struct LightStateView: View {
                 .fixedSize(horizontal: true, vertical: true)
                 
                 Button("Apply to Selected") {
-                    do {
-                        guard let data = window.stateEditorText.data(using: .utf8) else {
-                            // FIXME: Error handling
-                            logger.error("Could not convert string to data.")
-                            return
-                        }
-                        
+                    guard let data = window.stateEditorText.data(using: .utf8) else {
+                        // FIXME: Error handling
+                        logger.error("Could not convert string to data.")
+                        return
+                    }
+                    
+                    Task {
                         let recall = try _decoder.decode(PresetState.self, from: data)
                         
-                        window.applyState(.recall(recall), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.selectedLightItems.map{ $0.lightId })
-                    } catch {
-                        // FIXME: Error handling
+                        try await window.applyState(.recall(recall), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.selectedLightItems.map{ $0.lightId })
+                    } catch: { error in
+                        // FIXME: Missing error alert
                         logger.error("\(error, privacy: .public)")
+                        #warning("Missing Error Alert")
                     }
                 }
                 .disabled(sidebar.selectedSidebarItem == nil
@@ -158,7 +161,7 @@ struct LightStateView: View {
             
             Task {
                 // Update the State Editor when light selection changes
-                window.stateEditorText = await window.jsonLightState(forLightId: newValue.lightId,
+                window.stateEditorText = try await window.jsonLightState(forLightId: newValue.lightId,
                                                    groupId: window.groupId,
                                                    sceneId: window.sceneId)
                 
@@ -168,6 +171,10 @@ struct LightStateView: View {
                         window.selectedEditorTab = .sceneState
                     }
                 }
+            } catch: { error in
+                // FIXME: Missing error alert
+                logger.error("\(error, privacy: .public)")
+                #warning("Missing Error Alert")
             }
         }
     }

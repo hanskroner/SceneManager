@@ -97,12 +97,12 @@ class WindowItem {
     
     // MARK: - Light State Methods
     
-    func jsonLightState(forLightId lightId: Int, groupId: Int? = nil, sceneId: Int? = nil) async -> String {
-        return await RESTModel.shared.lightState(withLightId: lightId, groupId: groupId, sceneId: sceneId)
+    func jsonLightState(forLightId lightId: Int, groupId: Int? = nil, sceneId: Int? = nil) async throws -> String {
+        return try await RESTModel.shared.lightState(withLightId: lightId, groupId: groupId, sceneId: sceneId)
     }
     
-    func jsonDynamicState(forGroupId groupId: Int? = nil, sceneId: Int? = nil) async -> String {
-        return await RESTModel.shared.dynamicState(withGroupId: groupId, sceneId: sceneId)
+    func jsonDynamicState(forGroupId groupId: Int? = nil, sceneId: Int? = nil) async throws -> String {
+        return try await RESTModel.shared.dynamicState(withGroupId: groupId, sceneId: sceneId)
     }
     
     // MARK: - Light Methods
@@ -130,113 +130,70 @@ class WindowItem {
         return RESTModel.shared.lights.filter { inGroupButNotInSceneLightIds.contains($0.lightId) }
     }
     
-    func add(lightIds: [Int], toGroupId groupId: Int) {
-        Task {
-            do {
-                try await RESTModel.shared.addLightsToGroup(groupId: groupId, lightIds: lightIds)
-            } catch {
-                // FIXME: Error handling
-                logger.error("\(error, privacy: .public)")
-                return
-            }
-            
-            // Update UI models
-            let addedItems = lightIds.map({
-                LightItem(light: RESTModel.shared.light(withLightId: $0)!)
-            })
-            
-            let newItems = Array(Set([self.lights?.items ?? [], addedItems].joined()))
-            self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
-        }
+    func add(lightIds: [Int], toGroupId groupId: Int) async throws {
+        try await RESTModel.shared.addLightsToGroup(groupId: groupId, lightIds: lightIds)
+        
+        // Update UI models
+        let addedItems = lightIds.map({
+            LightItem(light: RESTModel.shared.light(withLightId: $0)!)
+        })
+        
+        let newItems = Array(Set([self.lights?.items ?? [], addedItems].joined()))
+        self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
     }
     
-    func add(lightIds: [Int], toGroupId groupId: Int, sceneId: Int) {
-        Task {
-            do {
-                try await RESTModel.shared.addLightsToScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds)
-            } catch {
-                // FIXME: Error handling
-                logger.error("\(error, privacy: .public)")
-                return
-            }
-            
-            // Update UI models
-            let addedItems = lightIds.map({
-                LightItem(light: RESTModel.shared.light(withLightId: $0)!)
-            })
-            
-            let newItems = Array(Set([self.lights?.items ?? [], addedItems].joined()))
-            self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
-        }
+    func add(lightIds: [Int], toGroupId groupId: Int, sceneId: Int) async throws {
+        try await RESTModel.shared.addLightsToScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds)
+        
+        // Update UI models
+        let addedItems = lightIds.map({
+            LightItem(light: RESTModel.shared.light(withLightId: $0)!)
+        })
+        
+        let newItems = Array(Set([self.lights?.items ?? [], addedItems].joined()))
+        self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
     }
     
-    func remove(lightIds: [Int], fromGroupId groupId: Int) {
-        Task {
-            do {
-                try await RESTModel.shared.removeLightsFromGroup(groupId: groupId, lightIds: lightIds)
-            } catch {
-                // FIXME: Error handling
-                logger.error("\(error, privacy: .public)")
-                return
-            }
-            
-            // Update UI models
-            let newItems = self.lights?.items.filter { !lightIds.contains($0.lightId) } ?? []
-            self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
-        }
+    func remove(lightIds: [Int], fromGroupId groupId: Int) async throws {
+        try await RESTModel.shared.removeLightsFromGroup(groupId: groupId, lightIds: lightIds)
+        
+        // Update UI models
+        let newItems = self.lights?.items.filter { !lightIds.contains($0.lightId) } ?? []
+        self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
     }
     
-    func remove(lightIds: [Int], fromGroupId groupId: Int, sceneId: Int) {
-        Task {
-            do {
-                try await RESTModel.shared.removeLightsFromScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds)
-            } catch {
-                // FIXME: Error handling
-                logger.error("\(error, privacy: .public)")
-                return
-            }
-            
-            // Update UI models
-            let newItems = self.lights?.items.filter { !lightIds.contains($0.lightId) } ?? []
-            self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
-        }
+    func remove(lightIds: [Int], fromGroupId groupId: Int, sceneId: Int) async throws {
+        try await RESTModel.shared.removeLightsFromScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds)
+        
+        // Update UI models
+        let newItems = self.lights?.items.filter { !lightIds.contains($0.lightId) } ?? []
+        self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
     }
     
     // MARK: - Group Methods
     
-    func turnOff(groupId: Int) {
-        Task {
-            await RESTModel.shared.modifyGroupState(groupId: groupId, lightState: LightState(on: false))
-            
-            // No need to update UI models - they don't track the state of lights
-        }
+    func turnOff(groupId: Int) async throws {
+        try await RESTModel.shared.modifyGroupState(groupId: groupId, lightState: LightState(on: false))
+        
+        // No need to update UI models - they don't track the state of lights
     }
     
     // MARK: - Scene Methods
     
-    func applyState(_ state: PresetStateDefinition, toGroupId groupId: Int, sceneId: Int, lightIds: [Int]) {
-        Task {
-            do {
-                switch state {
-                case .recall(_):
-                    return try await RESTModel.shared.modifyLightStateInScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonLightState: state.json.prettyPrint())
-                    
-                case .dynamic(_):
-                    return try await RESTModel.shared.applyDynamicStatesToScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonDynamicState: state.json.prettyPrint())
-                }
-            } catch {
-                // FIXME: Error handling
-                logger.error("\(error, privacy: .public)")
-                return
+    func applyState(_ state: PresetStateDefinition, toGroupId groupId: Int, sceneId: Int, lightIds: [Int]) async throws {
+        do {
+            switch state {
+            case .recall(_):
+                return try await RESTModel.shared.modifyLightStateInScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonLightState: state.json.prettyPrint())
+                
+            case .dynamic(_):
+                return try await RESTModel.shared.applyDynamicStatesToScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonDynamicState: state.json.prettyPrint())
             }
         }
     }
     
-    func recall(groupId: Int, sceneId: Int) {
-        Task {
-            await RESTModel.shared.recallScene(groupId: groupId, sceneId: sceneId)
-        }
-        
+    func recall(groupId: Int, sceneId: Int) async throws {
+        try await RESTModel.shared.recallScene(groupId: groupId, sceneId: sceneId)
         // No need to update UI models - they don't track the state of lights
     }
 }
