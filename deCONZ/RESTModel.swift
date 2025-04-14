@@ -192,13 +192,9 @@ public final class RESTModel {
         do {
             let restLightState = RESTLightState(alert: lightState.alert,
                                                 bri: lightState.bri,
-                                                colormode: nil,
                                                 ct: lightState.ct,
                                                 effect: lightState.effect,
-                                                hue: nil,
                                                 on: lightState.on,
-                                                reachable: nil,
-                                                sat: nil,
                                                 xy: lightState.xy,
                                                 transitiontime: lightState.transitiontime,
                                                 effect_duration: lightState.effect_duration,
@@ -206,7 +202,17 @@ public final class RESTModel {
             
             try await self._client.setGroupState(groupId: groupId, lightState: restLightState)
             
-            // FIXME: Uodate the model's cache
+            // Update the model's cache
+            // The state of groups is currently not tracked in Group objects, though it
+            // is present in RESTGroup objects and can be passed on from there if it becomes
+            // needed in the future.
+            // The state of the individual lights in the group can be updated.
+            guard let groupLightIds = group(withGroupId: groupId)?.lightIds else { return }
+            for lightId in groupLightIds {
+                guard let light = light(withLightId: lightId) else { continue }
+                light.state = lightState
+            }
+            
         } catch {
             // FIXME: Error handling
             logger.error("\(error, privacy: .public)")

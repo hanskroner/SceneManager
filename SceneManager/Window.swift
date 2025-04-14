@@ -208,8 +208,7 @@ class WindowItem {
         Task {
             await RESTModel.shared.modifyGroupState(groupId: groupId, lightState: LightState(on: false))
             
-            // FIXME: Update UI models
-            //        Turning a group off would update its state
+            // No need to update UI models - they don't track the state of lights
         }
     }
     
