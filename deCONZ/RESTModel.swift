@@ -19,13 +19,13 @@ public final class RESTModel {
     // Combine Publishers
     public let onDataRefreshed = PassthroughSubject<Date, Never>()
     
-    private let _client: RESTClient
+    private var _client: RESTClient
     
     private let _decoder = JSONDecoder()
     private let _encoder = JSONEncoder()
     
-    private static let apiKey = UserDefaults.standard.string(forKey: "deconz_key") ?? ""
-    private static let apiURL = UserDefaults.standard.string(forKey: "deconz_url") ?? ""
+    private static var apiKey = UserDefaults.standard.string(forKey: "deconz_key") ?? ""
+    private static var apiURL = UserDefaults.standard.string(forKey: "deconz_url") ?? ""
     public static let shared = RESTModel(client: RESTClient.init(apiKey: apiKey, apiURL: apiURL))
     
     private init(client: RESTClient) {
@@ -37,9 +37,16 @@ public final class RESTModel {
             do {
                 try await refreshCache()
             } catch {
+                // FIXME: Error handling
                 logger.error("\(error, privacy: .public)")
             }
         }
+    }
+    
+    public func reconnect() {
+        RESTModel.apiKey = UserDefaults.standard.string(forKey: "deconz_key") ?? ""
+        RESTModel.apiURL = UserDefaults.standard.string(forKey: "deconz_url") ?? ""
+        self._client = RESTClient.init(apiKey: RESTModel.apiKey, apiURL: RESTModel.apiURL)
     }
     
     // MARK: Lights
@@ -428,9 +435,24 @@ public final class RESTModel {
     // MARK: Refresh
     
     public func refreshCache() async throws {
-        let restLights = try await _client.getAllLights()
-        let restGroups = try await _client.getAllGroups()
-        let restScenes = try await _client.getAllScenes()
+        self._lights.removeAll()
+        self._groups.removeAll()
+        self._scenes.removeAll()
+        
+        let restLights: [Int: RESTLight]
+        let restGroups: [Int: RESTGroup]
+        let restScenes: [Int: [Int: RESTScene]]
+        
+        do {
+            restLights = try await _client.getAllLights()
+            restGroups = try await _client.getAllGroups()
+            restScenes = try await _client.getAllScenes()
+        } catch {
+            // Publish update
+            self.onDataRefreshed.send(Date())
+            
+            throw error
+        }
         
         // Build `Light` models
         self._lights = restLights.reduce(into: [Int: Light](), { lightDictionary, lightEntry in

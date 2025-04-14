@@ -32,6 +32,15 @@ class WindowItem {
         
     init() {
         modelRefreshedSubscription = RESTModel.shared.onDataRefreshed.sink { [weak self] _ in
+            // Clear this WindowItem's state
+            self?.navigationTitle = nil
+            self?.navigationSubtitle = nil
+            self?.groupId = nil
+            self?.sceneId = nil
+            self?.selectedEditorTab = .sceneState
+            self?.stateEditorText = ""
+            self?.dynamicsEditorText = ""
+            
             let groups = RESTModel.shared.groups
             
             var newItems = [SidebarItem]()
@@ -48,6 +57,7 @@ class WindowItem {
             }
             
             self?.sidebar?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+            self?.updateLights(forGroupId: self?.groupId, sceneId: self?.sceneId)
         }
     }
     
