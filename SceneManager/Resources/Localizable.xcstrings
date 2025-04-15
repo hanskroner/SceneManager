@@ -46,6 +46,9 @@
     "ABCDEF1234" : {
 
     },
+    "Action" : {
+
+    },
     "Activity" : {
 
     },
@@ -80,6 +83,9 @@
 
     },
     "Delete Preset" : {
+
+    },
+    "Description" : {
 
     },
     "Dynamic Scene" : {
@@ -121,6 +127,12 @@
     "Rename Preset" : {
 
     },
+    "Request" : {
+
+    },
+    "Response" : {
+
+    },
     "Scene Manager" : {
 
     },
@@ -134,6 +146,9 @@
 
     },
     "Store Preset" : {
+
+    },
+    "Timestamp" : {
 
     },
     "Toggle Inspector" : {

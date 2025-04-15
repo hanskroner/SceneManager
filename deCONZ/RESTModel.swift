@@ -20,6 +20,7 @@ public final class RESTModel {
     public let onDataRefreshed = PassthroughSubject<Date, Never>()
     
     private var _client: RESTClient
+    public var activity = RESTActivity()
     
     private let _decoder = JSONDecoder()
     private let _encoder = JSONEncoder()
@@ -35,6 +36,7 @@ public final class RESTModel {
         
         Task {
             do {
+                await _client.setActivity(activity)
                 try await refreshCache()
             } catch {
                 // FIXME: Error handling
@@ -46,7 +48,11 @@ public final class RESTModel {
     public func reconnect() {
         RESTModel.apiKey = UserDefaults.standard.string(forKey: "deconz_key") ?? ""
         RESTModel.apiURL = UserDefaults.standard.string(forKey: "deconz_url") ?? ""
-        self._client = RESTClient.init(apiKey: RESTModel.apiKey, apiURL: RESTModel.apiURL)
+        
+        Task {
+            self._client = RESTClient.init(apiKey: RESTModel.apiKey, apiURL: RESTModel.apiURL)
+            await _client.setActivity(activity)
+        }
     }
     
     // MARK: Lights

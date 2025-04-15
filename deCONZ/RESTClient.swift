@@ -73,7 +73,7 @@ actor RESTClient {
     let apiKey: String
     let apiURL: String
     
-    var activity: RESTActivity?
+    private var activity: RESTActivity?
     
     private let decoder = JSONDecoder()
     private let encoder = JSONEncoder()
@@ -112,6 +112,12 @@ actor RESTClient {
             guard let errorContext = errorResponse.first else { throw APIError.unknownResponse(data: data, response: response) }
             throw APIError.apiError(context: errorContext)
         }
+    }
+    
+    // MARK: - Isolated Methods
+    
+    func setActivity(_ activity: RESTActivity?) {
+        self.activity = activity
     }
     
     // MARK: - deCONZ Lights REST API Methods
@@ -399,6 +405,7 @@ actor RESTClient {
                 }
             }
             
+            self.activity?.append(activity)
             return RESTSceneAttributes(dynamics: attrContainer.dynamics, lights: restLightDict, name: attrContainer.name)
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
