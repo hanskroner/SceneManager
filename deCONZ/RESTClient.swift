@@ -73,6 +73,8 @@ actor RESTClient {
     let apiKey: String
     let apiURL: String
     
+    var activity: RESTActivity?
+    
     private let decoder = JSONDecoder()
     private let encoder = JSONEncoder()
     
@@ -84,6 +86,8 @@ actor RESTClient {
     }
     
     public init(apiKey: String, apiURL: String) {
+        encoder.outputFormatting = []
+        
         self.apiKey = apiKey
         self.apiURL = apiURL
     }
@@ -113,24 +117,49 @@ actor RESTClient {
     // MARK: - deCONZ Lights REST API Methods
     
     func getAllLights() async throws -> [Int: RESTLight] {
-        let path = "/api/\(self.apiKey)/lights/"
-        let request = request(forPath: path, using: .get)
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/lights/")
         
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try check(data: data, from: response)
-        
-        return try decoder.decode([Int: RESTLight].self, from: data).filter { $0.value.type != "Configuration tool" }
+        do {
+            let request = request(forPath: activity.path, using: .get)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            let allLights = try decoder.decode([Int: RESTLight].self, from: data).filter { $0.value.type != "Configuration tool" }
+            
+            self.activity?.append(activity)
+            return allLights
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
     }
     
     func getLightState(lightID: Int) async throws -> RESTLightState {
-        let path = "/api/\(self.apiKey)/lights/\(lightID)"
-        let request = request(forPath: path, using: .get)
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/lights/\(lightID)")
         
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try check(data: data, from: response)
-        
-        let light = try decoder.decode(RESTLight.self, from: data)
-        return light.state
+        do {
+            let request = request(forPath: activity.path, using: .get)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            let light = try decoder.decode(RESTLight.self, from: data)
+            
+            self.activity?.append(activity)
+            return light.state
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
     }
     
     // MARK: - deCONZ Groups REST API Methods
@@ -138,101 +167,181 @@ actor RESTClient {
     func createGroup(name: String) async throws -> Int {
         let group = RESTGroupObject(name: name)
         
-        let path = "/api/\(self.apiKey)/groups/"
-        var request = request(forPath: path, using: .post)
-        encoder.outputFormatting = []
-        request.httpBody = try encoder.encode(group)
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/groups/")
         
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try check(data: data, from: response)
-        
-        let successResponse: [APISuccessContext] = try decoder.decode([APISuccessContext].self, from: data)
-        guard let successContext = successResponse.first,
-              let responseId = Int(successContext.id)
-        else { throw APIError.unknownResponse(data: data, response: response) }
-        
-        return responseId
+        do {
+            var request = request(forPath: activity.path, using: .post)
+            request.httpBody = try encoder.encode(group)
+            activity.request = String(data: request.httpBody!, encoding: .utf8)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            let successResponse: [APISuccessContext] = try decoder.decode([APISuccessContext].self, from: data)
+            guard let successContext = successResponse.first,
+                  let responseId = Int(successContext.id)
+            else { throw APIError.unknownResponse(data: data, response: response) }
+            
+            self.activity?.append(activity)
+            return responseId
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
     }
     
     func getAllGroups() async throws -> [Int: RESTGroup] {
-        let path = "/api/\(self.apiKey)/groups/"
-        let request = request(forPath: path, using: .get)
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/groups/")
         
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try check(data: data, from: response)
-        
-        let groups = try decoder.decode([Int: RESTGroup].self, from: data)
-        
-        // Ignore Groups where `devicemembership` is not empty
-        // These groups are created by switches or sensors.
-        return groups.filter { $0.1.devicemembership.isEmpty }
+        do {
+            let request = request(forPath: activity.path, using: .get)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            let groups = try decoder.decode([Int: RESTGroup].self, from: data)
+            
+            // Ignore Groups where `devicemembership` is not empty
+            // These groups are created by switches or sensors.
+            self.activity?.append(activity)
+            return groups.filter { $0.1.devicemembership.isEmpty }
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
     }
 
     func setGroupAttributes(groupId: Int, name: String? = nil, lights: [Int]? = nil) async throws {
         let group = RESTGroupObject(name: name, lights: lights?.map({ String($0) }))
 
-        let path = "/api/\(self.apiKey)/groups/\(groupId)/"
-        var request = request(forPath: path, using: .put)
-        encoder.outputFormatting = []
-        request.httpBody = try encoder.encode(group)
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/groups/\(groupId)/")
 
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try check(data: data, from: response)
+        do {
+            var request = request(forPath: activity.path, using: .put)
+            request.httpBody = try encoder.encode(group)
+            activity.request = String(data: request.httpBody!, encoding: .utf8)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            self.activity?.append(activity)
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
     }
     
     func setGroupState(groupId: Int, lightState: RESTLightState) async throws {
-        let path = "/api/\(self.apiKey)/groups/\(groupId)/action"
-        var request = request(forPath: path, using: .put)
-        encoder.outputFormatting = []
-        request.httpBody = try encoder.encode(lightState)
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/groups/\(groupId)/action")
         
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try check(data: data, from: response)
+        do {
+            var request = request(forPath: activity.path, using: .put)
+            request.httpBody = try encoder.encode(lightState)
+            activity.request = String(data: request.httpBody!, encoding: .utf8)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            self.activity?.append(activity)
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
     }
 
     func deleteGroup(groupId: Int) async throws {
-        let path = "/api/\(self.apiKey)/groups/\(groupId)/"
-        let request = request(forPath: path, using: .delete)
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try check(data: data, from: response)
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/groups/\(groupId)/")
+        
+        do {
+            let request = request(forPath: activity.path, using: .delete)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            self.activity?.append(activity)
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
     }
     
     // MARK: - deCONZ Scenes REST API Methods
     
     func createScene(groupId: Int, name: String) async throws -> Int {
         let scene = RESTSceneObject(name: name)
+        
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/groups/\(groupId)/scenes")
 
-        let path = "/api/\(self.apiKey)/groups/\(groupId)/scenes"
-        var request = request(forPath: path, using: .post)
-        encoder.outputFormatting = []
-        request.httpBody = try encoder.encode(scene)
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try check(data: data, from: response)
-
-        let successResponse: [APISuccessContext] = try decoder.decode([APISuccessContext].self, from: data)
-        guard let successContext = successResponse.first,
-              let responseId = Int(successContext.id)
-        else { throw APIError.unknownResponse(data: data, response: response) }
-
-        return responseId
+        do {
+            var request = request(forPath: activity.path, using: .post)
+            request.httpBody = try encoder.encode(scene)
+            activity.request = String(data: request.httpBody!, encoding: .utf8)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            let successResponse: [APISuccessContext] = try decoder.decode([APISuccessContext].self, from: data)
+            guard let successContext = successResponse.first,
+                  let responseId = Int(successContext.id)
+            else { throw APIError.unknownResponse(data: data, response: response) }
+            
+            self.activity?.append(activity)
+            return responseId
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
     }
     
     func getAllScenes() async throws -> [Int: [Int: RESTScene]] {
-        let path = "/api/\(self.apiKey)/scenes/"
-        let request = request(forPath: path, using: .get)
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/scenes/")
         
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try check(data: data, from: response)
-        
-        let groups = try decoder.decode([Int: RESTSceneGroup].self, from: data)
-        
-        return groups.reduce(into: [Int: [Int: RESTScene]](), { groupDictionary, groupEntry in
-            groupDictionary[groupEntry.0] = groupEntry.1.scenes.reduce(into: [Int: RESTScene](), { sceneDictionary, sceneEntry in
-                sceneDictionary[sceneEntry.0] = sceneEntry.1
+        do {
+            let request = request(forPath: activity.path, using: .get)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            let groups = try decoder.decode([Int: RESTSceneGroup].self, from: data)
+            
+            self.activity?.append(activity)
+            return groups.reduce(into: [Int: [Int: RESTScene]](), { groupDictionary, groupEntry in
+                groupDictionary[groupEntry.0] = groupEntry.1.scenes.reduce(into: [Int: RESTScene](), { sceneDictionary, sceneEntry in
+                    sceneDictionary[sceneEntry.0] = sceneEntry.1
+                })
             })
-        })
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
     }
     
     func getSceneAttributes(groupID: Int, sceneID: Int) async throws -> RESTSceneAttributes? {
@@ -264,41 +373,63 @@ actor RESTClient {
             var name: String
         }
         
-        let path = "/api/\(self.apiKey)/groups/\(groupID)/scenes/\(sceneID)/"
-        let request = request(forPath: path, using: .get)
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/groups/\(groupID)/scenes/\(sceneID)/")
         
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try check(data: data, from: response)
-        
-        let attrContainer: SceneLightStateContainer = try decoder.decode(SceneLightStateContainer.self, from: data)
-        let restLightDict = attrContainer.lights.reduce(into: [Int: RESTLightState]()) { partialResult, sceneLightState in
-            if let stringLightId = sceneLightState.id, let lightId = Int(stringLightId) {
-                partialResult[lightId] = RESTLightState(bri: sceneLightState.bri,
-                                                        ct: sceneLightState.ct,
-                                                        effect: sceneLightState.effect,
-                                                        hue: sceneLightState.hue,
-                                                        on: sceneLightState.on,
-                                                        sat: sceneLightState.sat,
-                                                        xy: sceneLightState.x != nil && sceneLightState.y != nil ? [sceneLightState.x!, sceneLightState.y!] : nil,
-                                                        transitiontime: sceneLightState.transitiontime,
-                                                        effect_duration: sceneLightState.effect_duration,
-                                                        effect_speed: sceneLightState.effect_speed)
+        do {
+            let request = request(forPath: activity.path, using: .get)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            let attrContainer: SceneLightStateContainer = try decoder.decode(SceneLightStateContainer.self, from: data)
+            let restLightDict = attrContainer.lights.reduce(into: [Int: RESTLightState]()) { partialResult, sceneLightState in
+                if let stringLightId = sceneLightState.id, let lightId = Int(stringLightId) {
+                    partialResult[lightId] = RESTLightState(bri: sceneLightState.bri,
+                                                            ct: sceneLightState.ct,
+                                                            effect: sceneLightState.effect,
+                                                            hue: sceneLightState.hue,
+                                                            on: sceneLightState.on,
+                                                            sat: sceneLightState.sat,
+                                                            xy: sceneLightState.x != nil && sceneLightState.y != nil ? [sceneLightState.x!, sceneLightState.y!] : nil,
+                                                            transitiontime: sceneLightState.transitiontime,
+                                                            effect_duration: sceneLightState.effect_duration,
+                                                            effect_speed: sceneLightState.effect_speed)
+                }
             }
+            
+            return RESTSceneAttributes(dynamics: attrContainer.dynamics, lights: restLightDict, name: attrContainer.name)
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
         }
-        
-        return RESTSceneAttributes(dynamics: attrContainer.dynamics, lights: restLightDict, name: attrContainer.name)
     }
     
     func setSceneAttributes(groupId: Int, sceneId: Int, name: String) async throws {
         let scene = RESTSceneObject(name: name)
         
-        let path = "/api/\(self.apiKey)/groups/\(groupId)/scenes/\(sceneId)/"
-        var request = request(forPath: path, using: .put)
-        encoder.outputFormatting = []
-        request.httpBody = try encoder.encode(scene)
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/groups/\(groupId)/scenes/\(sceneId)/")
         
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try check(data: data, from: response)
+        do {
+            var request = request(forPath: activity.path, using: .put)
+            request.httpBody = try encoder.encode(scene)
+            activity.request = String(data: request.httpBody!, encoding: .utf8)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            self.activity?.append(activity)
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
     }
     
     func modifyScene(groupId: Int, sceneId: Int, lightIds: [Int], lightState: RESTLightState?) async throws {
@@ -307,13 +438,25 @@ actor RESTClient {
         // the "xy" JSON key. When getting the attributes of a Scene that uses xy Color Mode, the REST
         // API returns the values in separate "x" and "y" JSON keys.
         for (lightId) in lightIds {
-            let path = "/api/\(self.apiKey)/groups/\(groupId)/scenes/\(sceneId)/lights/\(lightId)/state/"
-            var request = request(forPath: path, using: .put)
-            encoder.outputFormatting = []
-            request.httpBody = try encoder.encode(lightState)
+            var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/groups/\(groupId)/scenes/\(sceneId)/lights/\(lightId)/state/")
             
-            let (data, response) = try await URLSession.shared.data(for: request)
-            try check(data: data, from: response)
+            do {
+                var request = request(forPath: activity.path, using: .put)
+                request.httpBody = try encoder.encode(lightState)
+                activity.request = String(data: request.httpBody!, encoding: .utf8)
+                
+                let (data, response) = try await URLSession.shared.data(for: request)
+                activity.response = String(data: data, encoding: .utf8)
+                
+                try check(data: data, from: response)
+                
+                self.activity?.append(activity)
+            } catch {
+                activity.outcome = .failure(description: error.localizedDescription)
+                self.activity?.append(activity)
+                
+                throw error
+            }
         }
     }
     
@@ -326,48 +469,88 @@ actor RESTClient {
         // current color or state.
         for (lightId) in lightIds {
             // !!!: Trailing slash in path causes HTTP 431 response
-            let path = "/api/\(self.apiKey)/hue-scenes/groups/\(groupId)/scenes/\(sceneId)/lights/\(lightId)/state"
-            var request = request(forPath: path, using: .put)
-            encoder.outputFormatting = []
-            request.httpBody = try encoder.encode(lightState)
+            var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/hue-scenes/groups/\(groupId)/scenes/\(sceneId)/lights/\(lightId)/state")
             
-            let (data, response) = try await URLSession.shared.data(for: request)
-            try check(data: data, from: response)
+            do {
+                var request = request(forPath: activity.path, using: .put)
+                request.httpBody = try encoder.encode(lightState)
+                activity.request = String(data: request.httpBody!, encoding: .utf8)
+                
+                let (data, response) = try await URLSession.shared.data(for: request)
+                activity.response = String(data: data, encoding: .utf8)
+                
+                try check(data: data, from: response)
+                
+                self.activity?.append(activity)
+            } catch {
+                activity.outcome = .failure(description: error.localizedDescription)
+                self.activity?.append(activity)
+                
+                throw error
+            }
         }
     }
     
     func modifyHueDynamicScene(groupId: Int, sceneId: Int, dynamicState: RESTDynamicState?) async throws {
         // !!!: Trailing slash in path causes HTTP 431 response
-        let path = "/api/\(self.apiKey)/hue-scenes/groups/\(groupId)/scenes/\(sceneId)/dynamic-state"
-        var request = request(forPath: path, using: .put)
-        encoder.outputFormatting = []
-        request.httpBody = try encoder.encode(dynamicState)
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/hue-scenes/groups/\(groupId)/scenes/\(sceneId)/dynamic-state")
         
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try check(data: data, from: response)
+        do {
+            var request = request(forPath: activity.path, using: .put)
+            request.httpBody = try encoder.encode(dynamicState)
+            activity.request = String(data: request.httpBody!, encoding: .utf8)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            self.activity?.append(activity)
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
     }
     
     func recallScene(groupId: Int, sceneId: Int) async throws {
-        let path = "/api/\(self.apiKey)/groups/\(groupId)/scenes/\(sceneId)/recall"
-        let request = request(forPath: path, using: .put)
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/groups/\(groupId)/scenes/\(sceneId)/recall")
         
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try check(data: data, from: response)
+        do {
+            let request = request(forPath: activity.path, using: .put)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            self.activity?.append(activity)
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
     }
     
-//    func storeScene(groupID: Int, sceneID: Int) async throws {
-//        let path = "/api/\(self.keyAPI)/groups/\(groupID)/scenes/\(sceneID)/store"
-//        let request = request(forPath: path, using: .put)
-//        
-//        let (data, response) = try await URLSession.shared.data(for: request)
-//        try check(data: data, from: response)
-//    }
-    
     func deleteScene(groupId: Int, sceneId: Int) async throws {
-        let path = "/api/\(self.apiKey)/groups/\(groupId)/scenes/\(sceneId)/"
-        let request = request(forPath: path, using: .delete)
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/groups/\(groupId)/scenes/\(sceneId)/")
         
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try check(data: data, from: response)
+        do {
+            let request = request(forPath: activity.path, using: .delete)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            self.activity?.append(activity)
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
     }
 }

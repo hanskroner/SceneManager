@@ -29,6 +29,7 @@
 		3A2BDFA62CCE125100B582AA /* RESTLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2BDFA52CCE124A00B582AA /* RESTLight.swift */; };
 		3A2BDFA92CCE731E00B582AA /* RESTGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2BDFA82CCE731E00B582AA /* RESTGroup.swift */; };
 		3A2BDFAB2CCE778A00B582AA /* RESTScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2BDFAA2CCE778A00B582AA /* RESTScene.swift */; };
+		3A36DE092DAE6D8F00F1CF45 /* RESTActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A36DE082DAE6D8900F1CF45 /* RESTActivity.swift */; };
 		3A41935E2D9EC8B8007E76F1 /* SceneConverterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A41935C2D9EC8B8007E76F1 /* SceneConverterApp.swift */; };
 		3A41935F2D9EC8B8007E76F1 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A41935A2D9EC8B8007E76F1 /* ContentView.swift */; };
 		3A4193682D9EF98B007E76F1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A4193642D9EF98B007E76F1 /* Assets.xcassets */; };
@@ -129,6 +130,7 @@
 		3A2BDFA52CCE124A00B582AA /* RESTLight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RESTLight.swift; sourceTree = "<group>"; };
 		3A2BDFA82CCE731E00B582AA /* RESTGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RESTGroup.swift; sourceTree = "<group>"; };
 		3A2BDFAA2CCE778A00B582AA /* RESTScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RESTScene.swift; sourceTree = "<group>"; };
+		3A36DE082DAE6D8900F1CF45 /* RESTActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RESTActivity.swift; sourceTree = "<group>"; };
 		3A41934D2D9EC897007E76F1 /* SceneConverter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SceneConverter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A41935A2D9EC8B8007E76F1 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		3A41935C2D9EC8B8007E76F1 /* SceneConverterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneConverterApp.swift; sourceTree = "<group>"; };
@@ -252,6 +254,7 @@
 		3A2BDFA72CCE72AF00B582AA /* RESTModels */ = {
 			isa = PBXGroup;
 			children = (
+				3A36DE082DAE6D8900F1CF45 /* RESTActivity.swift */,
 				3A739F892D913DE5003D39D3 /* RESTObjects.swift */,
 				3A2BDFA52CCE124A00B582AA /* RESTLight.swift */,
 				3A2BDFA82CCE731E00B582AA /* RESTGroup.swift */,
@@ -593,6 +596,7 @@
 				3A2BDF712CCCF99200B582AA /* deCONZ.docc in Sources */,
 				3A6995672CE0989000934BD4 /* RESTModel.swift in Sources */,
 				3A2BDFA92CCE731E00B582AA /* RESTGroup.swift in Sources */,
+				3A36DE092DAE6D8F00F1CF45 /* RESTActivity.swift in Sources */,
 				3A2BDFAB2CCE778A00B582AA /* RESTScene.swift in Sources */,
 				3A2BDF772CCD082C00B582AA /* RESTClient.swift in Sources */,
 				3A2BDFA62CCE125100B582AA /* RESTLight.swift in Sources */,
