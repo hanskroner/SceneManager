@@ -35,13 +35,7 @@ public final class RESTModel {
         _client = client
         
         Task {
-            do {
-                await _client.setActivity(activity)
-                try await refreshCache()
-            } catch {
-                // FIXME: Error handling
-                logger.error("\(error, privacy: .public)")
-            }
+            await _client.setActivity(activity)
         }
     }
     
