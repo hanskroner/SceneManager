@@ -15,6 +15,8 @@ struct ContentView: View {
     @Environment(Lights.self) private var lights
     @Environment(WindowItem.self) private var window
     
+    @Environment(\.appearsActive) private var appearsActive
+    
     @SceneStorage("inspector") private var showInspector = false
     
     @State private var showingPopover = false
@@ -56,32 +58,68 @@ struct ContentView: View {
                 .padding(.horizontal)
                 .padding(.top, 8)
             }
-            .navigationTitle(window.navigationTitle ?? "Scene Manager")
-            .navigationSubtitle(window.navigationSubtitle ?? "")
+            .navigationTitle("")
+            .navigationSubtitle("")
             .toolbar {
-                Button(action: { recallSelectedScene() }) {
-                    Label("Recall Scene", systemImage: "play")
-                }
-                .disabled(sidebar.selectedSidebarItem == nil
-                          || sidebar.selectedSidebarItem?.kind != .scene)
-                
-                Button(action: { turnSelectedGroupOff() }) {
-                    Label("Turn Group Off", systemImage: "stop")
+                ToolbarItemGroup(placement: .navigation) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        if (window.navigationSubtitle?.isEmpty ?? true) {
+                            Text(window.navigationTitle ?? "Scene Manager")
+                                .foregroundStyle(appearsActive ? .primary : Color(.disabledControlTextColor))
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .padding(0)
+                        } else {
+                            Text(window.navigationTitle ?? "Scene Manager")
+                                .foregroundStyle(appearsActive ? .primary : Color(.disabledControlTextColor))
+                                .font(.headline)
+                                .fontWeight(.bold)
+                                .padding(0)
+                            
+                            Text(window.navigationSubtitle ?? "")
+                                .foregroundStyle(appearsActive ? .secondary : Color(.disabledControlTextColor))
+                                .font(.subheadline)
+                                .fontWeight(.regular)
+                                .padding(0)
+                        }
+                    }
                     
+                    if (window.hasWarning) {
+                        Button(action: { }) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .symbolRenderingMode(.multicolor)
+                                .frame(width: 16, height: 16)
+                        }
+                    }
                 }
-                .disabled(sidebar.selectedSidebarItem == nil)
                 
-                Button(action: { showingPopover = true }) {
-                    Label("Create Scene Preset", systemImage: "rectangle.stack")
+                ToolbarItemGroup(placement: .primaryAction) {
+                    Button(action: { recallSelectedScene() }) {
+                        Label("Recall Scene", systemImage: "play")
+                    }
+                    .disabled(sidebar.selectedSidebarItem == nil
+                              || sidebar.selectedSidebarItem?.kind != .scene)
+                    
+                    Button(action: { turnSelectedGroupOff() }) {
+                        Label("Turn Group Off", systemImage: "stop")
+                        
+                    }
+                    .disabled(sidebar.selectedSidebarItem == nil)
+                    
+                    Button(action: { showingPopover = true }) {
+                        Label("Create Scene Preset", systemImage: "rectangle.stack")
+                    }
+                    .popover(isPresented: $showingPopover, arrowEdge: .bottom) {
+                        AddPresetView(showingPopover: $showingPopover)
+                    }
+                    .disabled((sidebar.selectedSidebarItem ==  nil
+                               || sidebar.selectedSidebarItem?.kind != .scene)
+                              || (window.selectedEditorTab == .sceneState && window.stateEditorText.isEmpty)
+                              || (window.selectedEditorTab == .dynamicScene && window.dynamicsEditorText.isEmpty))
+                    .help("Store as Preset")
                 }
-                .popover(isPresented: $showingPopover, arrowEdge: .bottom) {
-                    AddPresetView(showingPopover: $showingPopover)
-                }
-                .disabled((sidebar.selectedSidebarItem ==  nil
-                           || sidebar.selectedSidebarItem?.kind != .scene)
-                           || (window.selectedEditorTab == .sceneState && window.stateEditorText.isEmpty)
-                           || (window.selectedEditorTab == .dynamicScene && window.dynamicsEditorText.isEmpty))
-                .help("Store as Preset")
             }
         }
         .inspector(isPresented: $showInspector) {

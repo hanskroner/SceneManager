@@ -28,6 +28,8 @@ class WindowItem {
     var stateEditorText: String = ""
     var dynamicsEditorText: String = ""
     
+    var hasWarning: Bool = false
+    
     var modelRefreshedSubscription: AnyCancellable? = nil
         
     init() {
