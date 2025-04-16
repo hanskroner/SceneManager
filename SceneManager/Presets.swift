@@ -618,7 +618,7 @@ struct AddPresetView: View {
                 Spacer()
                 Button("Store Preset") {
                     let stateDefinition: PresetStateDefinition
-                    window.hasWarning = false
+                    window.clearWarnings()
                     do {
                         switch window.selectedEditorTab {
                         case .sceneState:
@@ -639,11 +639,9 @@ struct AddPresetView: View {
                             stateDefinition = .dynamic(try _decoder.decode(PresetDynamics.self, from: sceneData))
                         }
                     } catch {
-                        window.hasWarning = true
-                        
-                        // FIXME: Missing error alert
                         logger.error("\(error, privacy: .public)")
-                        #warning("Missing Error Alert")
+                        
+                        window.handleError(error)
                         return
                     }
                     

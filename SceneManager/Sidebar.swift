@@ -588,7 +588,7 @@ struct SidebarItemView: View {
                 .confirmationDialog("Are you sure you want to delete '\(item.name)'?", isPresented: $isPresentingConfirmation) {
                     Button("Delete " + (item.kind == .group ? "Group" : "Scene"), role: .destructive) {
                         // Call on the REST API to perform deletion
-                        window.hasWarning = false
+                        window.clearWarnings()
                         Task {
                             if (item.kind == .group) {
                                 try await RESTModel.shared.deleteGroup(groupId: item.groupId)
@@ -605,11 +605,9 @@ struct SidebarItemView: View {
                             window.groupId = nil
                             window.sceneId = nil
                         } catch: { error in
-                            window.hasWarning = true
-                            
-                            // FIXME: Missing error alert
                             logger.error("\(error, privacy: .public)")
-                            #warning("Missing Error Alert")
+                            
+                            window.handleError(error)
                         }
                     }
                 }
