@@ -152,7 +152,7 @@ class Presets {
         
         if let customGroup = presetDirs["custom"] {
             presetGroups.insert(PresetItemGroup(name: "custom",
-                                                            presets: customGroup.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })), at: 0)
+                                                presets: customGroup.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })), at: 0)
         }
         
         return presetGroups
@@ -242,7 +242,26 @@ class PresetItem: Identifiable, Codable, Transferable {
     
     var url: URL? = nil
     
-    var isRenaming: Bool = false
+    private var _isRenaming: Bool = false
+    private var _shadowName: String = ""
+    
+    // Store the PresetItem's name in a shadow variable when a rename operation
+    // starts. Should the operation fail, the previous name can be restored by
+    // calling 'restoreName'.
+    var isRenaming: Bool {
+        get {
+            return _isRenaming
+        }
+        
+        set {
+            _isRenaming = newValue
+            _shadowName = newValue ? name : _shadowName
+        }
+    }
+    
+    func restoreName() {
+        name = _shadowName
+    }
     
     var color: Color {
         return state.colorPalette.first?.color ?? .clear
@@ -419,19 +438,17 @@ struct PresetItemView: View {
                         // Do this first to force SwiftUI to recompute the view
                         presetItem.isRenaming = false
                         
-                        window.hasWarning = false
+                        window.clearWarnings()
                         do {
                             try presets.renamePresetItemInDocumentsDirectory(presetItem)
                         } catch {
-                            window.hasWarning = true
-                            
-                            // FIXME: Restore previous value
-                            //        If the rename operation fails, the model's value for the
-                            //        Preset name needs to be restored to what it was before.
-                            
-                            // FIXME: Missing error alert
                             logger.error("\(error, privacy: .public)")
-                            #warning("Missing Error Alert")
+                            
+                            // Restore the PresetItem's name to what it was
+                            // before the rename started.
+                            presetItem.restoreName()
+                            
+                            window.handleError(error)
                             return
                         }
                         
@@ -549,23 +566,19 @@ struct PresetItemView: View {
     }
     
     func deletePresetItem(_ presetItem: PresetItem) {
-        window.hasWarning = false
+        window.clearWarnings()
         do {
             try presets.deletePresetItemInDocumentsDirectory(presetItem)
         } catch {
-            window.hasWarning = true
-            
-            // FIXME: Restore previous value
-            //        If the delete operation fails, the model's entry for the
-            //        Preset needs to be restored to what it was before.
-            
-            // FIXME: Missing error alert
             logger.error("\(error, privacy: .public)")
-            #warning("Missing Error Alert")
+            
+            window.handleError(error)
+            return
         }
         
         withAnimation {
-            // Remove the preset from the parent group's presets
+            // If the filesystem operation was successful, remove the PresetItem
+            // from the parent group's presets
             for group in presets.groups {
                 if group.presets.contains(where: { $0.id == presetItem.id }) {
                     group.presets.removeAll(where: { $0.id == presetItem.id })
@@ -653,21 +666,22 @@ struct AddPresetView: View {
                     // If a Preset with the same name already exits in the 'custom' group,
                     // overwrite its state instead of creating a new file.
                     if let index = customGroup.presets.firstIndex(where: { $0.name == newPresetName }) {
-                        withAnimation {
-                            customGroup.presets[index].state = stateDefinition
-                            showingPopover = false
-                        }
-                        
-                        window.hasWarning = false
+                        window.clearWarnings()
                         do {
                             try presets.savePresetItemToDocumentsDirectory(customGroup.presets[index])
                         } catch {
-                            window.hasWarning = true
-                            
-                            // FIXME: Missing error alert
                             logger.error("\(error, privacy: .public)")
-                            #warning("Missing Error Alert")
+                            
+                            window.handleError(error)
                             return
+                        }
+                        
+                        // If the filesystem operation was successful, update the PresetItem
+                        // in the model and scroll it into view. The popover can now be dismissed.
+                        
+                        withAnimation {
+                            customGroup.presets[index].state = stateDefinition
+                            showingPopover = false
                         }
                         
                         presets.scrollToPresetItemId = customGroup.presets[index].id
@@ -675,6 +689,18 @@ struct AddPresetView: View {
                         // Create a new PresetItem and its file representation
                         let newPresetItem = PresetItem(name: newPresetName, state: stateDefinition)
                         
+                        window.clearWarnings()
+                        do {
+                            try presets.savePresetItemToDocumentsDirectory(newPresetItem)
+                        } catch {
+                            logger.error("\(error, privacy: .public)")
+                            
+                            window.handleError(error)
+                            return
+                        }
+                        
+                        // If the filesystem operation was successful, append the new PresetItem
+                        // to the model and scroll it into view. The popover can now be dismissed.
                         customGroup.presets.append(newPresetItem)
                         
                         withAnimation {
@@ -688,22 +714,6 @@ struct AddPresetView: View {
                             }
                             
                             showingPopover = false
-                        }
-                        
-                        window.hasWarning = false
-                        do {
-                            try presets.savePresetItemToDocumentsDirectory(newPresetItem)
-                        } catch {
-                            window.hasWarning = true
-                            
-                            // FIXME: Restore previous value
-                            //        If the delete operation fails, the model's entry for the
-                            //        new Preset needs to be removed.
-                            
-                            // FIXME: Missing error alert
-                            logger.error("\(error, privacy: .public)")
-                            #warning("Missing Error Alert")
-                            return
                         }
                         
                         presets.scrollToPresetItemId = newPresetItem.id
