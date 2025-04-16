@@ -63,6 +63,7 @@
 		3AD18D102DA2C91800AC1CC8 /* underwater.json in Resources */ = {isa = PBXBuildFile; fileRef = 3AD18D0E2DA2C91800AC1CC8 /* underwater.json */; };
 		3AD18D112DA2C91800AC1CC8 /* halloween.json in Resources */ = {isa = PBXBuildFile; fileRef = 3AD18D0D2DA2C91800AC1CC8 /* halloween.json */; };
 		3AD18D142DA59A2A00AC1CC8 /* PresetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD18D132DA59A2400AC1CC8 /* PresetModels.swift */; };
+		3AE527402DAF7E04005667D8 /* Warning.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE5273F2DAF7E04005667D8 /* Warning.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -168,6 +169,7 @@
 		3AD18D0D2DA2C91800AC1CC8 /* halloween.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = halloween.json; sourceTree = "<group>"; };
 		3AD18D0E2DA2C91800AC1CC8 /* underwater.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = underwater.json; sourceTree = "<group>"; };
 		3AD18D132DA59A2400AC1CC8 /* PresetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetModels.swift; sourceTree = "<group>"; };
+		3AE5273F2DAF7E04005667D8 /* Warning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Warning.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -352,6 +354,7 @@
 				3A1EDD552AE2BBCF001637BD /* Colors.swift */,
 				3A635B6B2CDF831100018B40 /* Tests */,
 				3A36DE0A2DAEA5B400F1CF45 /* Activity.swift */,
+				3AE5273F2DAF7E04005667D8 /* Warning.swift */,
 			);
 			path = SceneManager;
 			sourceTree = "<group>";
@@ -644,6 +647,7 @@
 			files = (
 				3A1EDD562AE2BBCF001637BD /* Colors.swift in Sources */,
 				3A5EAFB52CC1839E00B58A3C /* SimpleJSONTextView.swift in Sources */,
+				3AE527402DAF7E04005667D8 /* Warning.swift in Sources */,
 				3A36DE0B2DAEA5B400F1CF45 /* Activity.swift in Sources */,
 				3A1EDD772AE449F2001637BD /* Lights.swift in Sources */,
 				3A1EDD732AE3B449001637BD /* Initializers.swift in Sources */,

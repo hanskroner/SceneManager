@@ -90,14 +90,15 @@ struct LightStateView: View {
                             return
                         }
                         
+                        window.clearWarnings()
                         Task {
                             let recall = try _decoder.decode(PresetState.self, from: data)
                             
                             try await window.applyState(.recall(recall), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
                         } catch: { error in
-                            // FIXME: Missing error alert
                             logger.error("\(error, privacy: .public)")
-                            #warning("Missing Error Alert")
+                            
+                            window.handleError(error)
                         }
                         
                     case .dynamicScene:
@@ -109,14 +110,15 @@ struct LightStateView: View {
                             return
                         }
                         
+                        window.clearWarnings()
                         Task {
                             let dynamic = try _decoder.decode(PresetDynamics.self, from: data)
                             
                             try await window.applyState(.dynamic(dynamic), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
                         } catch: { error in
-                            // FIXME: Missing error alert
                             logger.error("\(error, privacy: .public)")
-                            #warning("Missing Error Alert")
+                            
+                            window.handleError(error)
                         }
                     }
                 }
@@ -133,14 +135,15 @@ struct LightStateView: View {
                         return
                     }
                     
+                    window.clearWarnings()
                     Task {
                         let recall = try _decoder.decode(PresetState.self, from: data)
                         
                         try await window.applyState(.recall(recall), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.selectedLightItems.map{ $0.lightId })
                     } catch: { error in
-                        // FIXME: Missing error alert
                         logger.error("\(error, privacy: .public)")
-                        #warning("Missing Error Alert")
+                        
+                        window.handleError(error)
                     }
                 }
                 .disabled(sidebar.selectedSidebarItem == nil
@@ -159,6 +162,7 @@ struct LightStateView: View {
                 return
             }
             
+            window.hasWarning = false
             Task {
                 // Update the State Editor when light selection changes
                 window.stateEditorText = try await window.jsonLightState(forLightId: newValue.lightId,
@@ -172,6 +176,8 @@ struct LightStateView: View {
                     }
                 }
             } catch: { error in
+                window.hasWarning = true
+                
                 // FIXME: Missing error alert
                 logger.error("\(error, privacy: .public)")
                 #warning("Missing Error Alert")

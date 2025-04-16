@@ -272,6 +272,7 @@ struct SidebarView: View {
         //      changes
         window.updateLights(forGroupId: selectedItem?.groupId, sceneId: selectedItem?.sceneId)
         
+        window.hasWarning = false
         Task {
             // Update the Dynamics Editor when sidebar selection changes
             window.dynamicsEditorText = try await window.jsonDynamicState(forGroupId: selectedItem?.groupId,
@@ -284,6 +285,8 @@ struct SidebarView: View {
                 }
             }
         } catch: { error in
+            window.hasWarning = true
+            
             // FIXME: Missing error alert
             logger.error("\(error, privacy: .public)")
             #warning("Missing Error Alert")
@@ -488,6 +491,7 @@ struct SidebarItemView: View {
                     sidebar.scrollToSidebarItemId = item.id
                     
                     // Select between a create or rename operation
+                    window.hasWarning = false
                     Task {
                         if ((item.groupId == Sidebar.NEW_GROUP_ID) && (item.sceneId == nil)) {
                             let groupId = try await RESTModel.shared.createGroup(name: item.name)
@@ -531,6 +535,8 @@ struct SidebarItemView: View {
                             parent.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
                         }
                     } catch: { error in
+                        window.hasWarning = true
+                        
                         // FIXME: Missing error alert
                         logger.error("\(error, privacy: .public)")
                         #warning("Missing Error Alert")
@@ -571,6 +577,7 @@ struct SidebarItemView: View {
                 .confirmationDialog("Are you sure you want to delete '\(item.name)'?", isPresented: $isPresentingConfirmation) {
                     Button("Delete " + (item.kind == .group ? "Group" : "Scene"), role: .destructive) {
                         // Call on the REST API to perform deletion
+                        window.hasWarning = false
                         Task {
                             if (item.kind == .group) {
                                 try await RESTModel.shared.deleteGroup(groupId: item.groupId)
@@ -587,6 +594,8 @@ struct SidebarItemView: View {
                             window.groupId = nil
                             window.sceneId = nil
                         } catch: { error in
+                            window.hasWarning = true
+                            
                             // FIXME: Missing error alert
                             logger.error("\(error, privacy: .public)")
                             #warning("Missing Error Alert")

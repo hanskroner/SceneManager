@@ -29,6 +29,9 @@ class WindowItem {
     var dynamicsEditorText: String = ""
     
     var hasWarning: Bool = false
+    var isShowingWarning: Bool = false
+    var warningTitle: String? = nil
+    var warningBody: String? = nil
     
     var modelRefreshedSubscription: AnyCancellable? = nil
         
@@ -61,6 +64,52 @@ class WindowItem {
             self?.sidebar?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
             self?.updateLights(forGroupId: self?.groupId, sceneId: self?.sceneId)
         }
+    }
+    
+    // MARK: - Warning Methods
+    
+    func showWarningPopover(title: String, body: String) {
+        self.warningTitle = title
+        self.warningBody = body
+        
+        self.hasWarning = true
+        self.isShowingWarning = true
+    }
+    
+    func clearWarnings() {
+        self.isShowingWarning = false
+        self.hasWarning = false
+        
+        self.warningTitle = nil
+        self.warningBody = nil
+    }
+    
+    func handleError(_ error: any Error) {
+        var warningTitle = "Error"
+        var warningBody = "Unknown Error"
+        
+        if let decodingError = error as? DecodingError {
+            switch decodingError {
+            case .dataCorrupted(let context):
+                warningTitle = context.debugDescription.replacingOccurrences(of: ".", with: "")
+                if let nsError = context.underlyingError as NSError? {
+                    warningBody = nsError.userInfo["NSDebugDescription"] as? String ?? "Unknown Error"
+                }
+                
+            case .keyNotFound(let codingKey, _):
+                warningTitle = "Missing required keys in JSON"
+                warningBody = "No value associated with key \"\(codingKey.stringValue)\""
+                
+            case .typeMismatch(_, let context):
+                warningTitle = "Value mismatch in JSON"
+                warningBody = context.debugDescription.replacingOccurrences(of: ".", with: "") + " for key \"\(context.codingPath.first?.stringValue ?? "")\"."
+                
+            default:
+                break
+            }
+        }
+
+        showWarningPopover(title: warningTitle, body: warningBody)
     }
     
     // MARK: - Update Methods

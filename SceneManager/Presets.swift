@@ -386,6 +386,7 @@ extension Color {
 
 struct PresetItemView: View {
     @Environment(Presets.self) private var presets
+    @Environment(WindowItem.self) private var window
     
     @State var presetItem: PresetItem
     
@@ -418,9 +419,12 @@ struct PresetItemView: View {
                         // Do this first to force SwiftUI to recompute the view
                         presetItem.isRenaming = false
                         
+                        window.hasWarning = false
                         do {
                             try presets.renamePresetItemInDocumentsDirectory(presetItem)
                         } catch {
+                            window.hasWarning = true
+                            
                             // FIXME: Missing error alert
                             logger.error("\(error, privacy: .public)")
                             #warning("Missing Error Alert")
@@ -541,9 +545,12 @@ struct PresetItemView: View {
     }
     
     func deletePresetItem(_ presetItem: PresetItem) {
+        window.hasWarning = false
         do {
             try presets.deletePresetItemInDocumentsDirectory(presetItem)
         } catch {
+            window.hasWarning = true
+            
             // FIXME: Missing error alert
             logger.error("\(error, privacy: .public)")
             #warning("Missing Error Alert")
@@ -603,6 +610,7 @@ struct AddPresetView: View {
                 Spacer()
                 Button("Store Preset") {
                     let stateDefinition: PresetStateDefinition
+                    window.hasWarning = false
                     do {
                         switch window.selectedEditorTab {
                         case .sceneState:
@@ -623,6 +631,8 @@ struct AddPresetView: View {
                             stateDefinition = .dynamic(try _decoder.decode(PresetDynamics.self, from: sceneData))
                         }
                     } catch {
+                        window.hasWarning = true
+                        
                         // FIXME: Missing error alert
                         logger.error("\(error, privacy: .public)")
                         #warning("Missing Error Alert")
@@ -642,9 +652,12 @@ struct AddPresetView: View {
                             showingPopover = false
                         }
                         
+                        window.hasWarning = false
                         do {
                             try presets.savePresetItemToDocumentsDirectory(customGroup.presets[index])
                         } catch {
+                            window.hasWarning = true
+                            
                             // FIXME: Missing error alert
                             logger.error("\(error, privacy: .public)")
                             #warning("Missing Error Alert")
@@ -671,9 +684,12 @@ struct AddPresetView: View {
                             showingPopover = false
                         }
                         
+                        window.hasWarning = false
                         do {
                             try presets.savePresetItemToDocumentsDirectory(newPresetItem)
                         } catch {
+                            window.hasWarning = true
+                            
                             // FIXME: Missing error alert
                             logger.error("\(error, privacy: .public)")
                             #warning("Missing Error Alert")

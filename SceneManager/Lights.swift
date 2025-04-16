@@ -276,6 +276,7 @@ struct LightBottomBarView: View {
                 .disabled(shouldDisableAddButton())
                 
                 Button(action: {
+                    window.hasWarning = false
                     Task {
                         switch (sidebar.selectedSidebarItem?.kind) {
                         case .group:
@@ -292,6 +293,8 @@ struct LightBottomBarView: View {
                             lights.selectedLightItemIds.removeAll()
                         }
                     } catch: { error in
+                        window.hasWarning = true
+                        
                         // FIXME: Missing error alert
                         logger.error("\(error, privacy: .public)")
                         #warning("Missing Error Alert")
@@ -373,6 +376,7 @@ struct AddLightView: View {
                 .keyboardShortcut(.cancelAction)
                 
                 Button("\(addLightItems.count) Add Lights") {
+                    window.hasWarning = false
                     Task {
                         switch (sidebar.selectedSidebarItem?.kind) {
                         case .group:
@@ -389,6 +393,8 @@ struct AddLightView: View {
                             dismiss()
                         }
                     } catch: { error in
+                        window.hasWarning = true
+                        
                         // FIXME: Missing error alert
                         logger.error("\(error, privacy: .public)")
                         #warning("Missing Error Alert")

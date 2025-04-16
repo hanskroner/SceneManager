@@ -24,9 +24,12 @@ struct ContentView: View {
     func recallSelectedScene() {
         guard let groupId = window.groupId, let sceneId = window.sceneId else { return }
         
+        window.hasWarning = false
         Task {
             try await window.recall(groupId: groupId, sceneId: sceneId)
         } catch: { error in
+            window.hasWarning = true
+            
             // FIXME: Missing error alert
             logger.error("\(error, privacy: .public)")
             #warning("Missing Error Alert")
@@ -36,9 +39,12 @@ struct ContentView: View {
     func turnSelectedGroupOff() {
         guard let groupId = window.groupId else { return }
         
+        window.hasWarning = false
         Task {
             try await window.turnOff(groupId: groupId)
         } catch: { error in
+            window.hasWarning = true
+            
             // FIXME: Missing error alert
             logger.error("\(error, privacy: .public)")
             #warning("Missing Error Alert")
@@ -46,6 +52,8 @@ struct ContentView: View {
     }
     
     var body: some View {
+        @Bindable var window = window
+        
         NavigationSplitView {
             SidebarView()
         } detail: {
@@ -85,12 +93,21 @@ struct ContentView: View {
                     }
                     
                     if (window.hasWarning) {
-                        Button(action: { }) {
+                        Button(action: { window.isShowingWarning = true }) {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .resizable()
                                 .scaledToFit()
                                 .symbolRenderingMode(.multicolor)
                                 .frame(width: 16, height: 16)
+                        }
+                        .popover(isPresented: $window.isShowingWarning, arrowEdge: .bottom) {
+                            WarningView(showingPopover: $window.isShowingWarning)
+                                .padding(4)
+                                // .presentationBackground doesn't color the popover's arrow
+                                // create a background view instead, and pad it to cover the
+                                // arrow instead.
+                                // .presentationBackground(.yellow)
+                                .background(Color.yellow.padding(-80))
                         }
                     }
                 }
