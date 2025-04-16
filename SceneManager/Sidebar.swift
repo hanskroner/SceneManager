@@ -55,6 +55,15 @@ class Sidebar {
         return nil
     }
     
+    func sidebarItem(forGroupId groupId: Int?, sceneId: Int? = nil) -> SidebarItem? {
+        for item in items {
+            if item.groupId == groupId && item.sceneId == sceneId { return item }
+            if let child = item.items.first(where: { $0.groupId == groupId && $0.sceneId == sceneId }) { return child }
+        }
+        
+        return nil
+    }
+    
     var selectedSidebarItem: SidebarItem? {
         guard let selectedId = self.selectedSidebarItemId else { return nil }
         return sidebarItem(for: selectedId)
@@ -168,6 +177,8 @@ class SidebarItem: Identifiable, Codable, DecodableWithConfiguration, Hashable {
     var isNew: Bool = false
     /// Is this 'SidebarItem' being rendered with its 'children' rendered as expanded?
     var isExpanded: Bool = false
+    /// Does this 'SidebarItem' represent an entity with dynamic actions?
+    var hasDynamics: Bool = false
     
     // Store the PresetItem's name in a shadow variable when a rename operation
     // starts. Should the operation fail, the previous name can be restored by
@@ -188,7 +199,7 @@ class SidebarItem: Identifiable, Codable, DecodableWithConfiguration, Hashable {
         name = _shadowName
     }
     
-    init(id: UUID = UUID(), name: String, items: [SidebarItem] = [], groupId: Int, sceneId: Int? = nil) {
+    init(id: UUID = UUID(), name: String, items: [SidebarItem] = [], groupId: Int, sceneId: Int? = nil, hasDynamics: Bool = false) {
         self.id = id
         
         self.name = name
@@ -196,6 +207,8 @@ class SidebarItem: Identifiable, Codable, DecodableWithConfiguration, Hashable {
         
         self.groupId = groupId
         self.sceneId = sceneId
+        
+        self.hasDynamics = hasDynamics
     }
     
     enum CodingKeys: CodingKey {
@@ -467,6 +480,7 @@ struct SidebarItemView: View {
     @Binding var item: SidebarItem
     
     @State private var isPresentingConfirmation: Bool = false
+    @State private var isPresentingDynamicsDelete: Bool = false
     @State private var isFocused: Bool = false
     
     var body: some View {
@@ -596,6 +610,17 @@ struct SidebarItemView: View {
                     }, label: {
                         Text("Delete " + (item.kind == .group ? "Group" : "Scene"))
                     })
+                    
+                    // TODO: Remove 'dynamics' from scenes that have them
+                    if (item.hasDynamics) {
+                        Divider()
+                        
+                        Button(action: {
+                            isPresentingDynamicsDelete = true
+                        }, label: {
+                            Text("Delete Dynamic Scene")
+                        })
+                    }
                 }
                 .confirmationDialog("Are you sure you want to delete '\(item.name)'?", isPresented: $isPresentingConfirmation) {
                     Button("Delete " + (item.kind == .group ? "Group" : "Scene"), role: .destructive) {
@@ -616,6 +641,21 @@ struct SidebarItemView: View {
                             window.navigationSubtitle = nil
                             window.groupId = nil
                             window.sceneId = nil
+                        } catch: { error in
+                            logger.error("\(error, privacy: .public)")
+                            
+                            window.handleError(error)
+                        }
+                    }
+                }
+                .confirmationDialog("Are you sure you want to delete the Dynamic Scene in '\(item.name)'?", isPresented: $isPresentingDynamicsDelete) {
+                    Button("Delete Dynamic Scene", role: .destructive) {
+                        // Call on the REST API to perform deletion
+                        window.clearWarnings()
+                        Task {
+                            // The call on 'window' will take care of updating the UI models, including
+                            // resetting this 'item's 'hasDynamics' flags and updating the Scene's definition
+                            try await window.deleteDynamicScene(fromGroupId: item.groupId, sceneId: item.sceneId!)
                         } catch: { error in
                             logger.error("\(error, privacy: .public)")
                             

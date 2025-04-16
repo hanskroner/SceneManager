@@ -53,7 +53,10 @@ class WindowItem {
                 let groupItem = SidebarItem(name: group.name, groupId: group.groupId)
                 for sceneId in group.sceneIds {
                     let scene = RESTModel.shared.scene(withGroupId: group.groupId, sceneId: sceneId)!
-                    let sceneItem = SidebarItem(name: scene.name, groupId: group.groupId, sceneId: sceneId)
+                    let sceneItem = SidebarItem(name: scene.name,
+                                                groupId: group.groupId,
+                                                sceneId: sceneId,
+                                                hasDynamics: scene.dynamicState != nil)
                     groupItem.items.append(sceneItem)
                 }
                 
@@ -244,9 +247,34 @@ class WindowItem {
                 return try await RESTModel.shared.modifyLightStateInScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonLightState: state.json.prettyPrint())
                 
             case .dynamic(_):
-                return try await RESTModel.shared.applyDynamicStatesToScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonDynamicState: state.json.prettyPrint())
+                try await RESTModel.shared.applyDynamicStatesToScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonDynamicState: state.json.prettyPrint())
+                
+                // Update UI models
+                // Updating a dynamic scene needs to be reflected in the Sidebar model
+                if let sidebarItem = self.sidebar?.sidebarItem(forGroupId: groupId, sceneId: sceneId) {
+                    sidebarItem.hasDynamics = true
+                }
+                
+                return
             }
         }
+    }
+    
+    func deleteDynamicScene(fromGroupId groupId: Int, sceneId: Int) async throws {
+        try await RESTModel.shared.deleteDynamicStatesFromScene(groupId: groupId, sceneId: sceneId)
+        
+        // Update UI models
+        // Updating a dynamic scene needs to be reflected in the Sidebar model
+        if let sidebarItem = self.sidebar?.sidebarItem(forGroupId: groupId, sceneId: sceneId) {
+            sidebarItem.hasDynamics = false
+        }
+        
+        // If this scene is currently selected, clear the value of the Dynamics Editor
+        if (self.groupId == groupId && self.sceneId == sceneId) {
+            self.dynamicsEditorText = ""
+            self.selectedEditorTab = .sceneState
+        }
+        
     }
     
     func recall(groupId: Int, sceneId: Int) async throws {

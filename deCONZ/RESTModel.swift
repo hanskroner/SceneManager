@@ -363,6 +363,10 @@ public final class RESTModel {
         try await self._client.modifyHueDynamicScene(groupId: groupId, sceneId: sceneId, dynamicState: dynamicState)
     }
     
+    public func deleteDynamicStatesFromScene(groupId: Int, sceneId: Int) async throws {
+        try await self._client.modifyHueDynamicScene(groupId: groupId, sceneId: sceneId, dynamicState: nil)
+    }
+    
     public func deleteScene(groupId: Int, sceneId: Int) async throws {
         try await self._client.deleteScene(groupId: groupId, sceneId: sceneId)
         

@@ -67,6 +67,9 @@
     "Are you sure you want to delete '%@'?" : {
 
     },
+    "Are you sure you want to delete the Dynamic Scene in '%@'?" : {
+
+    },
     "Cancel" : {
 
     },
@@ -80,6 +83,9 @@
 
     },
     "deCONZ URL:" : {
+
+    },
+    "Delete Dynamic Scene" : {
 
     },
     "Delete Preset" : {
