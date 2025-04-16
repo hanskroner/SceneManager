@@ -160,13 +160,33 @@ class SidebarItem: Identifiable, Codable, DecodableWithConfiguration, Hashable {
     var groupId: Int
     var sceneId: Int?
     
+    private var _isRenaming: Bool = false
+    private var _shadowName: String = ""
+    
     // State
     /// Is this 'SidebarItem' a recently-created one that hasn't been persisted by the model?
     var isNew: Bool = false
-    /// Is this 'SidebarItem' being rendered as a 'TextField' allowing its 'text' property to be updated?
-    var isRenaming: Bool = false
     /// Is this 'SidebarItem' being rendered with its 'children' rendered as expanded?
     var isExpanded: Bool = false
+    
+    // Store the PresetItem's name in a shadow variable when a rename operation
+    // starts. Should the operation fail, the previous name can be restored by
+    // calling 'restoreName'.
+    /// Is this 'SidebarItem' being rendered as a 'TextField' allowing its 'text' property to be updated?
+    var isRenaming: Bool {
+        get {
+            return _isRenaming
+        }
+        
+        set {
+            _isRenaming = newValue
+            _shadowName = newValue ? name : _shadowName
+        }
+    }
+    
+    func restoreName() {
+        name = _shadowName
+    }
     
     init(id: UUID = UUID(), name: String, items: [SidebarItem] = [], groupId: Int, sceneId: Int? = nil) {
         self.id = id
@@ -482,38 +502,46 @@ struct SidebarItemView: View {
                     sidebar.scrollToSidebarItemId = item.id
                     
                     // Select between a create or rename operation
-                    window.hasWarning = false
+                    window.clearWarnings()
                     Task {
                         if ((item.groupId == Sidebar.NEW_GROUP_ID) && (item.sceneId == nil)) {
-                            let groupId = try await RESTModel.shared.createGroup(name: item.name)
-                            
-                            // FIXME: Restore previous value
-                            //        If the create operation fails, the model's entry for the
-                            //        new Group needs to be removed.
-                            //        The below code will never run if 'createGroup' throws.
-                            guard let groupId else {
+                            do {
+                                let groupId = try await RESTModel.shared.createGroup(name: item.name)
+                                item.groupId = groupId
+                            } catch {
+                                // If creation fails, remove the SidebarItem from
+                                // the model and pass the error forward
                                 sidebar.deleteSidebarItem(item)
-                                return
+                                throw error
                             }
-                            
-                            item.groupId = groupId
                         } else if ((item.groupId != Sidebar.NEW_GROUP_ID) && (item.sceneId == Sidebar.NEW_SCENE_ID)) {
-                            let sceneId = try await RESTModel.shared.createScene(groupId: item.groupId, name: item.name)
-                            
-                            // FIXME: Restore previous value
-                            //        If the create operation fails, the model's entry for the
-                            //        new Scene needs to be removed.
-                            //        The below code will never run if 'createScene' throws.
-                            guard let sceneId else {
+                            do {
+                                let sceneId = try await RESTModel.shared.createScene(groupId: item.groupId, name: item.name)
+                                item.sceneId = sceneId
+                            } catch {
+                                // If creation fails, remove the SidebarItem from
+                                // the model and pass the error forward
                                 sidebar.deleteSidebarItem(item)
-                                return
+                                throw error
                             }
-                            
-                            item.sceneId = sceneId
                         } else if ((item.groupId != Sidebar.NEW_GROUP_ID) && (item.sceneId == nil)) {
-                            try await RESTModel.shared.renameGroup(groupId: item.groupId, name: item.name)
+                            do {
+                                try await RESTModel.shared.renameGroup(groupId: item.groupId, name: item.name)
+                            } catch {
+                                // If rename fails, restore the previous name for
+                                // the Group and pass the error forward
+                                item.restoreName()
+                                throw error
+                            }
                         } else {
-                            try await RESTModel.shared.renameScene(groupId: item.groupId, sceneId: item.sceneId!, name: item.name)
+                            do {
+                                try await RESTModel.shared.renameScene(groupId: item.groupId, sceneId: item.sceneId!, name: item.name)
+                            } catch {
+                                // If rename fails, restore the previous name for
+                                // the Group and pass the error forward
+                                item.restoreName()
+                                throw error
+                            }
                         }
                         
                         // Update Window properties
@@ -534,16 +562,9 @@ struct SidebarItemView: View {
                             parent.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
                         }
                     } catch: { error in
-                        window.hasWarning = true
-                        
-                        // FIXME: Restore previous value
-                        //        If the rename operations fail, the model's value for the
-                        //        Group or Scene name needs to be restored to what it was before.
-                        //        The failure of create operations should also be handled here.
-                        
-                        // FIXME: Missing error alert
                         logger.error("\(error, privacy: .public)")
-                        #warning("Missing Error Alert")
+                        
+                        window.handleError(error)
                     }
                 }
                 .onAppear {

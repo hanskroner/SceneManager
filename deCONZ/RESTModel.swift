@@ -107,7 +107,7 @@ public final class RESTModel {
     
     // MARK: Groups
     
-    public func createGroup(name: String) async throws -> Int? {
+    public func createGroup(name: String) async throws -> Int {
         let groupId = try await self._client.createGroup(name: name)
         
         // Insert a new, empty Group into the model's cache
@@ -204,7 +204,7 @@ public final class RESTModel {
     
     // MARK: Scenes
     
-    public func createScene(groupId: Int, name: String) async throws -> Int? {
+    public func createScene(groupId: Int, name: String) async throws -> Int {
         let sceneId = try await self._client.createScene(groupId: groupId, name: name)
         
         // Insert a new, empty Scene into the model's cache
