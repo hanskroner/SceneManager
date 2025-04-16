@@ -479,7 +479,6 @@ struct SidebarItemView: View {
                 .onChange(of: isFocused) {
                     // Only act when focus is lost by the TextField the rename is happening in
                     guard isFocused == false else { return }
-                    logger.info("Losing focus on '\(item.name, privacy: .public)'")
                     
                     // Clear the 'isRenaming' flag
                     item.isRenaming = false
@@ -568,7 +567,6 @@ struct SidebarItemView: View {
                     }
                 }
                 .onAppear {
-                    logger.info("Focusing '\(item.name, privacy: .public)'")
                     isFocused = true
                 }
                 .background(.thinMaterial)

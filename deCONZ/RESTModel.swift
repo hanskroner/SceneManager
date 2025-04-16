@@ -283,7 +283,7 @@ public final class RESTModel {
             // The Hue manufacturer-specific way of modifying scenes allows for this, but deCONZ Scenes
             // cannot represent it. A version of deCONZ that allows this flexibility in Scenes is required
             // but these changes are not part of deCONZ mainline as of 2.29.2 and thus require a custom build.
-            logger.info("Modifying scene with Hue manufacturer-specific functionality")
+            logger.info("Modifying scene '\(sceneId, privacy: .public)' with Hue manufacturer-specific functionality")
             try await self._client.modifyHueScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, lightState: restLightState)
         } else {
             try await self._client.modifyScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, lightState: restLightState)

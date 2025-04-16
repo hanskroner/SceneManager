@@ -63,7 +63,6 @@ struct LightStateView: View {
                     .allowsHitTesting(false)
                     .drop(if: (sidebar.selectedSidebarItem?.kind == .scene), for: PresetItem.self, action: { items, location in
                         guard let first = items.first else { return false }
-                        logger.info("Dropped \(first.name)")
                         
                         switch first.state {
                         case .recall(_):

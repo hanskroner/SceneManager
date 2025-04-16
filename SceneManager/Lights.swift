@@ -152,15 +152,9 @@ struct LightView: View {
     
     @State private var isPresentingSheet: Bool = false
     
+    // !!!: Empty method
+    //      Light selection is not currently useful for anything
     func selectionDidChange(to selectedItems: Set<LightItem>?) {
-        guard let selectedItems else {
-            logger.info("Selected ''")
-            return
-        }
-
-        let lights = selectedItems.map { $0.name }
-            .joined(separator: ", ")
-        logger.info("Selected '\(lights, privacy: .public)'")
     }
     
     private var missingLightItems: [LightItem] {
