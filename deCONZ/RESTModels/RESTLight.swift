@@ -21,7 +21,7 @@ struct RESTLight: Codable {
     let type: String
     let uniqueid: String
     
-    // FIXME: Add 'capabilities'
+    // TODO: Add 'capabilities'
     
     // Hue-specific
      let productid: String?

@@ -65,7 +65,7 @@ class LightItem: Identifiable, Codable, Hashable {
         return lhs.id == rhs.id
     }
     
-    // FIXME: Account for more bulb and product models
+    // TODO: Account for more bulb and product models
     // 'lighName' is provided for situations where the bulb originally included with a
     // fixture is replaced and its identifiers no longer match a fixture - just a bulb.
     // The light name is used as an additional differentiator.

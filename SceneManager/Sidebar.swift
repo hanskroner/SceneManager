@@ -319,7 +319,7 @@ struct SidebarView: View {
                     .frame(height: 1)
             }
             .onKeyPress(.return) {
-                // FIXME: Get selected sidebar item and set 'isRenaming'
+                // !!!: Get selected sidebar item and set 'isRenaming'
                 //        Could be done nicer
                 for item in sidebar.items {
                     if item.id == sidebar.selectedSidebarItemId
@@ -449,15 +449,8 @@ struct SidebarItemView: View {
     @State private var isPresentingConfirmation: Bool = false
     @State private var isFocused: Bool = false
     
-    // FIXME: Causes focus issues
-    //        Just declaring this variable inside the View - regardless of whether it is used
-    //        for anything - causes focus issues. Having it present makes the Sidebar require
-    //        two clicks to select an item when focus is outside of the Sidebar.
-    //        Moving @FocusState to EditableText has fixed the issue.
-    // @FocusState private var isFocused: Bool
-    
     var body: some View {
-        // FIXME: Click-wait-rename seems impossible with SwiftUI
+        // TODO: Click-wait-rename seems impossible with SwiftUI
         //        Force-click rename seems possible through .onLongPressGesture{} modifier
         //        but makes list items behave strangely to selection.
         if (item.isRenaming) {

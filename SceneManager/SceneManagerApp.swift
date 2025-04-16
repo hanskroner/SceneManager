@@ -34,7 +34,7 @@ struct SceneManagerApp: App {
     @Environment(\.openWindow) private var openWindow
     
     var body: some SwiftUI.Scene {
-        // FIXME: Independent instances of environment objects per-window seems complicated with SwiftUI
+        // TODO: Independent instances of environment objects per-window seems complicated with SwiftUI
         //        Use 'Window' instead of 'WindowGroup' - which won't allow the app to have multiple windows.
         Window("Scene Manager", id: "scenemanager") {
             ContentView()

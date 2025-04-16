@@ -72,7 +72,7 @@ public final class RESTModel {
     
     // MARK: Light State
     
-    // FIXME: Consider different return from 'String'
+    // TODO: Consider different return from 'String'
     public func lightState(withLightId lightId: Int, groupId: Int? = nil, sceneId: Int? = nil) async throws -> String {
         // Current state of the light
         guard let groupId, let sceneId else {
@@ -92,7 +92,7 @@ public final class RESTModel {
         return decoded.prettyPrint()
     }
     
-    // FIXME: Consider different return from 'String'
+    // TODO: Consider different return from 'String'
     public func dynamicState(withGroupId groupId: Int? = nil, sceneId: Int? = nil) async throws -> String {
         guard let groupId, let sceneId else { return "" }
         

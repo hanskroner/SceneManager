@@ -684,6 +684,7 @@ struct AddPresetView: View {
                             showingPopover = false
                         }
                         
+                        // FIXME: Only scroll if item isn't visible
                         presets.scrollToPresetItemId = customGroup.presets[index].id
                     } else {
                         // Create a new PresetItem and its file representation
