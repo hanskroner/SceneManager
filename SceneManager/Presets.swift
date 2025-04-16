@@ -425,6 +425,10 @@ struct PresetItemView: View {
                         } catch {
                             window.hasWarning = true
                             
+                            // FIXME: Restore previous value
+                            //        If the rename operation fails, the model's value for the
+                            //        Preset name needs to be restored to what it was before.
+                            
                             // FIXME: Missing error alert
                             logger.error("\(error, privacy: .public)")
                             #warning("Missing Error Alert")
@@ -550,6 +554,10 @@ struct PresetItemView: View {
             try presets.deletePresetItemInDocumentsDirectory(presetItem)
         } catch {
             window.hasWarning = true
+            
+            // FIXME: Restore previous value
+            //        If the delete operation fails, the model's entry for the
+            //        Preset needs to be restored to what it was before.
             
             // FIXME: Missing error alert
             logger.error("\(error, privacy: .public)")
@@ -689,6 +697,10 @@ struct AddPresetView: View {
                             try presets.savePresetItemToDocumentsDirectory(newPresetItem)
                         } catch {
                             window.hasWarning = true
+                            
+                            // FIXME: Restore previous value
+                            //        If the delete operation fails, the model's entry for the
+                            //        new Preset needs to be removed.
                             
                             // FIXME: Missing error alert
                             logger.error("\(error, privacy: .public)")

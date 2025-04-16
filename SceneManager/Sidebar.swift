@@ -494,6 +494,10 @@ struct SidebarItemView: View {
                         if ((item.groupId == Sidebar.NEW_GROUP_ID) && (item.sceneId == nil)) {
                             let groupId = try await RESTModel.shared.createGroup(name: item.name)
                             
+                            // FIXME: Restore previous value
+                            //        If the create operation fails, the model's entry for the
+                            //        new Group needs to be removed.
+                            //        The below code will never run if 'createGroup' throws.
                             guard let groupId else {
                                 sidebar.deleteSidebarItem(item)
                                 return
@@ -503,6 +507,10 @@ struct SidebarItemView: View {
                         } else if ((item.groupId != Sidebar.NEW_GROUP_ID) && (item.sceneId == Sidebar.NEW_SCENE_ID)) {
                             let sceneId = try await RESTModel.shared.createScene(groupId: item.groupId, name: item.name)
                             
+                            // FIXME: Restore previous value
+                            //        If the create operation fails, the model's entry for the
+                            //        new Scene needs to be removed.
+                            //        The below code will never run if 'createScene' throws.
                             guard let sceneId else {
                                 sidebar.deleteSidebarItem(item)
                                 return
@@ -534,6 +542,11 @@ struct SidebarItemView: View {
                         }
                     } catch: { error in
                         window.hasWarning = true
+                        
+                        // FIXME: Restore previous value
+                        //        If the rename operations fail, the model's value for the
+                        //        Group or Scene name needs to be restored to what it was before.
+                        //        The failure of create operations should also be handled here.
                         
                         // FIXME: Missing error alert
                         logger.error("\(error, privacy: .public)")
