@@ -272,7 +272,7 @@ struct SidebarView: View {
         //      changes
         window.updateLights(forGroupId: selectedItem?.groupId, sceneId: selectedItem?.sceneId)
         
-        window.hasWarning = false
+        window.clearWarnings()
         Task {
             // Update the Dynamics Editor when sidebar selection changes
             window.dynamicsEditorText = try await window.jsonDynamicState(forGroupId: selectedItem?.groupId,
@@ -285,11 +285,9 @@ struct SidebarView: View {
                 }
             }
         } catch: { error in
-            window.hasWarning = true
-            
-            // FIXME: Missing error alert
             logger.error("\(error, privacy: .public)")
-            #warning("Missing Error Alert")
+            
+            window.handleError(error)
         }
     }
     

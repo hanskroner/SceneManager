@@ -24,30 +24,26 @@ struct ContentView: View {
     func recallSelectedScene() {
         guard let groupId = window.groupId, let sceneId = window.sceneId else { return }
         
-        window.hasWarning = false
+        window.clearWarnings()
         Task {
             try await window.recall(groupId: groupId, sceneId: sceneId)
         } catch: { error in
-            window.hasWarning = true
-            
-            // FIXME: Missing error alert
             logger.error("\(error, privacy: .public)")
-            #warning("Missing Error Alert")
+            
+            window.handleError(error)
         }
     }
     
     func turnSelectedGroupOff() {
         guard let groupId = window.groupId else { return }
         
-        window.hasWarning = false
+        window.clearWarnings()
         Task {
             try await window.turnOff(groupId: groupId)
         } catch: { error in
-            window.hasWarning = true
-            
-            // FIXME: Missing error alert
             logger.error("\(error, privacy: .public)")
-            #warning("Missing Error Alert")
+            
+            window.handleError(error)
         }
     }
     

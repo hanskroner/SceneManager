@@ -26,9 +26,9 @@ extension APIError: CustomStringConvertible {
 }
 
 public struct APIErrorContext: Decodable {
-    let type: Int
-    let address: String
-    let description: String
+    public let type: Int
+    public let address: String
+    public let description: String
     
     enum CodingKeys: String, CodingKey {
         case error

@@ -43,14 +43,16 @@ struct SceneManagerApp: App {
                 .environment(lights)
                 .environment(presets)
                 .task {
+                    window.clearWarnings()
                     do {
                         window.sidebar = sidebar
                         window.lights = lights
                         
                         try await RESTModel.shared.refreshCache()
                     } catch {
-                        // FIXME: Error handling
                         logger.error("\(error, privacy: .public)")
+                        
+                        window.handleError(error)
                     }
                 }
         }

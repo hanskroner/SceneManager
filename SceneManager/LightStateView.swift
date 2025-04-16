@@ -162,7 +162,7 @@ struct LightStateView: View {
                 return
             }
             
-            window.hasWarning = false
+            window.clearWarnings()
             Task {
                 // Update the State Editor when light selection changes
                 window.stateEditorText = try await window.jsonLightState(forLightId: newValue.lightId,
@@ -176,11 +176,9 @@ struct LightStateView: View {
                     }
                 }
             } catch: { error in
-                window.hasWarning = true
-                
-                // FIXME: Missing error alert
                 logger.error("\(error, privacy: .public)")
-                #warning("Missing Error Alert")
+                
+                window.handleError(error)
             }
         }
     }

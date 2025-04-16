@@ -88,6 +88,7 @@ class WindowItem {
         var warningTitle = "Error"
         var warningBody = "Unknown Error"
         
+        // Errors related to JSON decoding
         if let decodingError = error as? DecodingError {
             switch decodingError {
             case .dataCorrupted(let context):
@@ -103,6 +104,18 @@ class WindowItem {
             case .typeMismatch(_, let context):
                 warningTitle = "Value mismatch in JSON"
                 warningBody = context.debugDescription.replacingOccurrences(of: ".", with: "") + " for key \"\(context.codingPath.first?.stringValue ?? "")\"."
+                
+            default:
+                break
+            }
+        }
+        
+        // Errors related to the deCONZ REST API
+        if let apiError = error as? APIError {
+            switch apiError {
+            case .apiError(let context):
+                warningTitle = "deCONZ REST API Error"
+                warningBody = context.description
                 
             default:
                 break
