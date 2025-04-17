@@ -156,24 +156,12 @@ struct LightStateView: View {
         .frame(minWidth: 250)
         .padding(.bottom, 8)
         .onChange(of: light) { oldValue, newValue in
-            guard let newValue else {
-                window.stateEditorText = ""
-                return
-            }
-            
             window.clearWarnings()
             Task {
-                // Update the State Editor when light selection changes
-                window.stateEditorText = try await window.jsonLightState(forLightId: newValue.lightId,
-                                                   groupId: window.groupId,
-                                                   sceneId: window.sceneId)
-                
-                // Switch to the State Editor if it wasn't already selected
-                if ((window.stateEditorText != "") && (window.selectedEditorTab != .sceneState)) {
-                    Task { @MainActor in
-                        window.selectedEditorTab = .sceneState
-                    }
-                }
+                let selectedLightIds = newValue == nil ? [] : [newValue!.lightId]
+                try await window.updateEditors(selectedGroupId: window.groupId,
+                                               selectedSceneId: window.sceneId,
+                                               selectedLightIds: selectedLightIds)
             } catch: { error in
                 logger.error("\(error, privacy: .public)")
                 

@@ -298,67 +298,12 @@ struct SidebarView: View {
         
         window.clearWarnings()
         Task {
-            // Group selection
-            if let groupId = window.groupId, window.sceneId == nil {
-                if let selectedLightId = window.lights?.selectedLightItems.first?.lightId {
-                    // At least one light was selected
-                    //   State Editor shows light state
-                    //   Dynamics Editor is cleared
-                    //   State Editor tab is selected
-                    window.stateEditorText = try await window.jsonLightState(forLightId: selectedLightId,
-                                                                             groupId: groupId,
-                                                                             sceneId: nil)
-                    window.dynamicsEditorText = ""
-                    
-                    if ((window.stateEditorText != "") && (window.selectedEditorTab != .sceneState)) {
-                        Task { @MainActor in
-                            window.selectedEditorTab = .sceneState
-                        }
-                        return
-                    }
-                } else {
-                    // No lights are selected
-                    //   Clear out both Editors
-                    window.stateEditorText = ""
-                    window.dynamicsEditorText = ""
-                    return
-                }
-            }
-            
-            // Scene selection
-            if let groupId = window.groupId, let sceneId = window.sceneId {
-                if let selectedLightId = window.lights?.selectedLightItems.first?.lightId {
-                    // At least one light was selected
-                    //   State Editor shows light state for scene
-                    //   Dynamics Editor shows dynamic scene
-                    //   State Editor tab is selected only if dynamics is empty
-                    let sceneState = try await window.jsonSceneState(forLightId: selectedLightId,
-                                                                     groupId: groupId,
-                                                                     sceneId: sceneId)
-                    window.stateEditorText = sceneState.0
-                    window.dynamicsEditorText = sceneState.1
-                    
-                    if ((window.dynamicsEditorText == "") && (window.selectedEditorTab != .sceneState)) {
-                        Task { @MainActor in
-                            window.selectedEditorTab = .sceneState
-                        }
-                        return
-                    }
-                } else {
-                    // No lights are selected
-                    //   State Editor is cleared
-                    //   Dynamics Editor shows dynamic scene
-                    //   Dynamics Editor tab is selected only if dynamics is not empty
-                    window.stateEditorText = ""
-                    window.dynamicsEditorText = try await window.jsonDynamicState(forGroupId: groupId, sceneId: sceneId)
-                    
-                    if ((window.dynamicsEditorText != "") && (window.selectedEditorTab != .dynamicScene)) {
-                        Task { @MainActor in
-                            window.selectedEditorTab = .dynamicScene
-                        }
-                        return
-                    }
-                }
+            // Update the content of the Editors
+            if let selectedLightItems = window.lights?.selectedLightItems {
+                let selectedLightIds = selectedLightItems.map({ $0.lightId })
+                try await window.updateEditors(selectedGroupId: selectedItem?.groupId,
+                                               selectedSceneId: selectedItem?.sceneId,
+                                               selectedLightIds: selectedLightIds)
             }
         } catch: { error in
             logger.error("\(error, privacy: .public)")

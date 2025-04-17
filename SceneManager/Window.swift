@@ -157,6 +157,71 @@ class WindowItem {
         self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
     }
     
+    func updateEditors(selectedGroupId groupId: Int?, selectedSceneId sceneId: Int?, selectedLightIds: [Int]) async throws {
+        // Group selection
+        if let groupId, sceneId == nil {
+            if let selectedLightId = selectedLightIds.first {
+                // At least one light was selected
+                //   State Editor shows light state
+                //   Dynamics Editor is cleared
+                //   State Editor tab is selected
+                self.stateEditorText = try await self.jsonLightState(forLightId: selectedLightId,
+                                                                         groupId: groupId,
+                                                                         sceneId: nil)
+                self.dynamicsEditorText = ""
+                
+                if ((self.stateEditorText != "") && (self.selectedEditorTab != .sceneState)) {
+                    Task { @MainActor in
+                        self.selectedEditorTab = .sceneState
+                    }
+                    return
+                }
+            } else {
+                // No lights are selected
+                //   Clear out both Editors
+                self.stateEditorText = ""
+                self.dynamicsEditorText = ""
+                return
+            }
+        }
+        
+        // Scene selection
+        if let groupId, let sceneId {
+            if let selectedLightId = selectedLightIds.first {
+                // At least one light was selected
+                //   State Editor shows light state for scene
+                //   Dynamics Editor shows dynamic scene
+                //   State Editor tab is selected only if dynamics is empty
+                let sceneState = try await self.jsonSceneState(forLightId: selectedLightId,
+                                                                 groupId: groupId,
+                                                                 sceneId: sceneId)
+                self.stateEditorText = sceneState.0
+                self.dynamicsEditorText = sceneState.1
+                
+                if ((self.dynamicsEditorText == "") && (self.selectedEditorTab != .sceneState)) {
+                    Task { @MainActor in
+                        self.selectedEditorTab = .sceneState
+                    }
+                    return
+                }
+            } else {
+                // No lights are selected
+                //   State Editor is cleared
+                //   Dynamics Editor shows dynamic scene
+                //   Dynamics Editor tab is selected only if dynamics is not empty
+                self.stateEditorText = ""
+                self.dynamicsEditorText = try await self.jsonDynamicState(forGroupId: groupId, sceneId: sceneId)
+                
+                if ((self.dynamicsEditorText != "") && (self.selectedEditorTab != .dynamicScene)) {
+                    Task { @MainActor in
+                        self.selectedEditorTab = .dynamicScene
+                    }
+                    return
+                }
+            }
+        }
+    }
+    
     // MARK: - Light State Methods
     
     func jsonLightState(forLightId lightId: Int, groupId: Int? = nil, sceneId: Int? = nil) async throws -> String {
