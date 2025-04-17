@@ -352,6 +352,10 @@ struct PresetsView: View {
         
         ScrollViewReader { scrollReader in
             List {
+                // Empty section to keep filter results from "floating" up
+                // and hiding under the search bar.
+                Section { }
+                
                 ForEach(filteredPresetGroups, id: \.id) { group in
                     Section {
                         ForEach(group.presets, id: \.id) { item in
@@ -363,12 +367,11 @@ struct PresetsView: View {
                         // added by the overlay, without being under it initially.
                         // All sections need to be offset or they'll "float" to the
                         // top when scrolling, overlapping the search bar.
-                        Text(sectionTitle(forPresetItemGroup: group))
-                        .padding(.top, 38)
-                }
+                            Text(sectionTitle(forPresetItemGroup: group))
+                                .padding(.top, 38)
+                    }
                 }
             }
-            .environment(\.defaultMinListHeaderHeight, 1)
             .onChange(of: presets.scrollToPresetItemId) { previousItem, newItem in
                 if let item = newItem {
                     withAnimation {
@@ -376,13 +379,13 @@ struct PresetsView: View {
                     }
                 }
             }
-        }
-        .overlay {
-            SearchField(text: $presetsSearchText, prompt: "Filter Presets")
-                .image(.filter)
-                .padding(.vertical, 10)
-                .padding(.horizontal, 16)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .overlay {
+                SearchField(text: $presetsSearchText, prompt: "Filter Presets")
+                    .image(.filter)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 16)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            }
         }
     }
 }
