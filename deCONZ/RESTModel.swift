@@ -93,9 +93,28 @@ public final class RESTModel {
     }
     
     // TODO: Consider different return from 'String'
-    public func dynamicState(withGroupId groupId: Int? = nil, sceneId: Int? = nil) async throws -> String {
-        guard let groupId, let sceneId else { return "" }
+    public func sceneState(forLightId lightId: Int, groupId: Int, sceneId: Int) async throws -> (String, String) {
+        let attributes = try await self._client.getSceneAttributes(groupID: groupId, sceneID: sceneId)
         
+        let recallString: String
+        if let recallState = attributes?.lights[lightId] {
+            recallString = try _decoder.decode(JSON.self, from: try _encoder.encode(recallState)).prettyPrint()
+        } else {
+            recallString = ""
+        }
+        
+        let dynamicString: String
+        if let dynamicState = attributes?.dynamics {
+            dynamicString = try _decoder.decode(JSON.self, from: try _encoder.encode(dynamicState)).prettyPrint()
+        } else {
+            dynamicString = ""
+        }
+        
+        return (recallString, dynamicString)
+    }
+    
+    // TODO: Consider different return from 'String'
+    public func dynamicState(withGroupId groupId: Int, sceneId: Int) async throws -> String {
         let attributes = try await self._client.getSceneAttributes(groupID: groupId, sceneID: sceneId)
         guard let state = attributes?.dynamics else { return "" }
         
