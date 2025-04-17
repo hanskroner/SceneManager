@@ -239,6 +239,8 @@ struct PresetDynamics: Codable, PresetPalette {
                 }
                 
                 dynamicsEffects.append(PresetPaletteEffect(effect: presetEffect, color: PresetPaletteColor(color: Color(ctColor), kind: .ct)))
+            } else {
+                dynamicsEffects.append(PresetPaletteEffect(effect: presetEffect, color: nil))
             }
         }
         

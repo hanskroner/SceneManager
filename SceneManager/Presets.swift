@@ -490,13 +490,24 @@ struct PresetItemView: View {
                         Color.clear
                             .frame(width: CGFloat(index) * spacing, height: 44)
                         
-                        Image("effect-\(presetEffect.effect.rawValue)")
-                            .resizable()
-                            .scaledToFit()
-                            .colorMultiply(presetEffect.color?.color ?? .clear)
-                            .frame(width: 32, height: 32)
-                            .clipShape(Circle())
-                            .shadow(color: .black, radius: 4, x: 0, y: 0)
+                        // Unfortunate way of having to conditionally apply .colorMultiply
+                        // only to effects that have a color defined.
+                        if let effectColor = presetEffect.color?.color {
+                            Image("effect-\(presetEffect.effect.rawValue)")
+                                .resizable()
+                                .scaledToFit()
+                                .colorMultiply(effectColor)
+                                .frame(width: 32, height: 32)
+                                .clipShape(Circle())
+                                .shadow(color: .black, radius: 4, x: 0, y: 0)
+                        } else {
+                            Image("effect-\(presetEffect.effect.rawValue)")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 32, height: 32)
+                                .clipShape(Circle())
+                                .shadow(color: .black, radius: 4, x: 0, y: 0)
+                        }
                     }
                     .zIndex(Double(effects.count + colors.count - index))
                 }
