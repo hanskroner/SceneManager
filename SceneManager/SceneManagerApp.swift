@@ -31,6 +31,8 @@ struct SceneManagerApp: App {
     
     @State private var window = WindowItem()
     
+    @Environment(\.openWindow) private var openWindow
+    
     var body: some SwiftUI.Scene {
         // FIXME: Independent instances of environment objects per-window seems complicated with SwiftUI
         //        Use 'Window' instead of 'WindowGroup' - which won't allow the app to have multiple windows.
@@ -60,7 +62,18 @@ struct SceneManagerApp: App {
                     }
                 }.keyboardShortcut("r", modifiers: .command)
             }
+            
+            CommandGroup(after: .singleWindowList) {
+                Button("Activity") {
+                    openWindow(id: "activity")
+                }.keyboardShortcut("0", modifiers: [.command, .option])
+            }
         }
+        
+        UtilityWindow("Activity", id: "activity") {
+            Activity()
+        }
+        .commandsRemoved()
         
 #if os(macOS)
         Settings {
