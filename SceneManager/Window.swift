@@ -71,6 +71,7 @@ class WindowItem {
     
     // MARK: - Warning Methods
     
+    @MainActor
     func showWarningPopover(title: String, body: String) {
         self.warningTitle = title
         self.warningBody = body
@@ -79,6 +80,7 @@ class WindowItem {
         self.isShowingWarning = true
     }
     
+    @MainActor
     func clearWarnings() {
         self.isShowingWarning = false
         self.hasWarning = false
@@ -87,7 +89,7 @@ class WindowItem {
         self.warningBody = nil
     }
     
-    func handleError(_ error: any Error) {
+    @MainActor func handleError(_ error: any Error) {
         var warningTitle = "Error"
         var warningBody = "Unknown Error"
         
