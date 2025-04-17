@@ -573,84 +573,96 @@ struct SidebarItemView: View {
                 }
                 .background(.thinMaterial)
         } else {
-            Text(item.name)
-                .id(item.id)
-                .contextMenu {
-                    if (item.kind == .group) {
-                        Button(action: {
-                            // New SidebarItem (Scene)
-                            withAnimation {
-                                _ = sidebar.createSidebarItem(parent: item)
-                            }
-                        }, label: {
-                            Text("New Scene")
-                        })
-                    }
+            HStack(spacing: 4) {
+                Text(item.name)
+                    .frame(maxHeight: .infinity)
+                
+                if item.hasDynamics {
+                    Image("scene-dynamics")
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                        .foregroundStyle(.white)
+                        .frame(height: 20)
+                }
+            }
+            .id(item.id)
+            .contextMenu {
+                if (item.kind == .group) {
+                    Button(action: {
+                        // New SidebarItem (Scene)
+                        withAnimation {
+                            _ = sidebar.createSidebarItem(parent: item)
+                        }
+                    }, label: {
+                        Text("New Scene")
+                    })
+                }
+                
+                Button(action: {
+                    item.isRenaming = true
+                }, label: {
+                    Text("Rename " + (item.kind == .group ? "Group" : "Scene"))
+                })
+                
+                Button(action: {
+                    isPresentingConfirmation = true
+                }, label: {
+                    Text("Delete " + (item.kind == .group ? "Group" : "Scene"))
+                })
+                
+                // TODO: Remove 'dynamics' from scenes that have them
+                if (item.hasDynamics) {
+                    Divider()
                     
                     Button(action: {
-                        item.isRenaming = true
+                        isPresentingDynamicsDelete = true
                     }, label: {
-                        Text("Rename " + (item.kind == .group ? "Group" : "Scene"))
+                        Text("Delete Dynamic Scene")
                     })
-                    
-                    Button(action: {
-                        isPresentingConfirmation = true
-                    }, label: {
-                        Text("Delete " + (item.kind == .group ? "Group" : "Scene"))
-                    })
-                    
-                    // TODO: Remove 'dynamics' from scenes that have them
-                    if (item.hasDynamics) {
-                        Divider()
+                }
+            }
+            .confirmationDialog("Are you sure you want to delete '\(item.name)'?", isPresented: $isPresentingConfirmation) {
+                Button("Delete " + (item.kind == .group ? "Group" : "Scene"), role: .destructive) {
+                    // Call on the REST API to perform deletion
+                    window.clearWarnings()
+                    Task {
+                        if (item.kind == .group) {
+                            try await RESTModel.shared.deleteGroup(groupId: item.groupId)
+                        } else {
+                            try await RESTModel.shared.deleteScene(groupId: item.groupId, sceneId: item.sceneId!)
+                        }
                         
-                        Button(action: {
-                            isPresentingDynamicsDelete = true
-                        }, label: {
-                            Text("Delete Dynamic Scene")
-                        })
+                        // Deleting happens as part of the Task, otherwise the reference to 'item' will change
+                        sidebar.deleteSidebarItem(item)
+                        
+                        // Update Window properties
+                        window.navigationTitle = nil
+                        window.navigationSubtitle = nil
+                        window.groupId = nil
+                        window.sceneId = nil
+                    } catch: { error in
+                        logger.error("\(error, privacy: .public)")
+                        
+                        window.handleError(error)
                     }
                 }
-                .confirmationDialog("Are you sure you want to delete '\(item.name)'?", isPresented: $isPresentingConfirmation) {
-                    Button("Delete " + (item.kind == .group ? "Group" : "Scene"), role: .destructive) {
-                        // Call on the REST API to perform deletion
-                        window.clearWarnings()
-                        Task {
-                            if (item.kind == .group) {
-                                try await RESTModel.shared.deleteGroup(groupId: item.groupId)
-                            } else {
-                                try await RESTModel.shared.deleteScene(groupId: item.groupId, sceneId: item.sceneId!)
-                            }
-                            
-                            // Deleting happens as part of the Task, otherwise the reference to 'item' will change
-                            sidebar.deleteSidebarItem(item)
-                            
-                            // Update Window properties
-                            window.navigationTitle = nil
-                            window.navigationSubtitle = nil
-                            window.groupId = nil
-                            window.sceneId = nil
-                        } catch: { error in
-                            logger.error("\(error, privacy: .public)")
-                            
-                            window.handleError(error)
-                        }
+            }
+            .confirmationDialog("Are you sure you want to delete the Dynamic Scene in '\(item.name)'?", isPresented: $isPresentingDynamicsDelete) {
+                Button("Delete Dynamic Scene", role: .destructive) {
+                    // Call on the REST API to perform deletion
+                    window.clearWarnings()
+                    Task {
+                        // The call on 'window' will take care of updating the UI models, including
+                        // resetting this 'item's 'hasDynamics' flags and updating the Scene's definition
+                        try await window.deleteDynamicScene(fromGroupId: item.groupId, sceneId: item.sceneId!)
+                    } catch: { error in
+                        logger.error("\(error, privacy: .public)")
+                        
+                        window.handleError(error)
                     }
                 }
-                .confirmationDialog("Are you sure you want to delete the Dynamic Scene in '\(item.name)'?", isPresented: $isPresentingDynamicsDelete) {
-                    Button("Delete Dynamic Scene", role: .destructive) {
-                        // Call on the REST API to perform deletion
-                        window.clearWarnings()
-                        Task {
-                            // The call on 'window' will take care of updating the UI models, including
-                            // resetting this 'item's 'hasDynamics' flags and updating the Scene's definition
-                            try await window.deleteDynamicScene(fromGroupId: item.groupId, sceneId: item.sceneId!)
-                        } catch: { error in
-                            logger.error("\(error, privacy: .public)")
-                            
-                            window.handleError(error)
-                        }
-                    }
-                }
+            }
         }
     }
 }
