@@ -84,6 +84,16 @@ struct LightView: View {
                         Task { @MainActor in
                             scrollReader.scrollTo(firstItem, anchor: .center)
                         }
+                        
+                        return
+                    }
+                    
+                    if let firstItem = lights.items.first {
+                        Task { @MainActor in
+                            scrollReader.scrollTo(firstItem, anchor: .center)
+                        }
+                        
+                        return
                     }
                 }
                 .onChange(of: selectedLightItemIds) { previousValue, newValue in
