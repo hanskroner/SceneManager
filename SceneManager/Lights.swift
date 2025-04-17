@@ -11,138 +11,6 @@ import deCONZ
 
 private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "lights")
 
-// MARK: - Lights Model
-
-@Observable
-class Lights {
-    var items: [LightItem] = []
-    var selectedLightItemIds = Set<UUID>()
-    
-    // FIXME: Remove init for proper data feed from a Model
-    convenience init(useDemoData: Bool) {
-        self.init()
-        
-        let contentURL = Bundle.main.url(forResource: "Lights", withExtension: "json")
-        let contentData = try! Data(contentsOf: contentURL!)
-        let decoder = JSONDecoder()
-        
-        do {
-            self.items = try decoder.decode([LightItem].self, from: contentData)
-            
-            // Sort the items
-            self.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
-        } catch {
-            logger.error("\(error, privacy: .public)")
-        }
-    }
-    
-    func lightItem(for id: UUID) -> LightItem? {
-        return items.first(where: { $0.id == id })
-    }
-    
-    var selectedLightItems: Set<LightItem> {
-        // Find the selected LighItems
-        // The lists are traversed in this particular way to preseve the selection ordering.
-        var lightItems = Set<LightItem>()
-        selectedLoop: for (selectedLightItemID) in selectedLightItemIds {
-            existingLoop: for (lightItem) in self.items {
-                if (lightItem.id == selectedLightItemID) {
-                    lightItems.insert(lightItem)
-                    continue selectedLoop
-                }
-            }
-        }
-        
-        return lightItems
-    }
-}
-
-// MARK: - LightItem Model
-
-@Observable
-class LightItem: Identifiable, Codable, Hashable {
-    static func == (lhs: LightItem, rhs: LightItem) -> Bool {
-        return lhs.id == rhs.id
-    }
-    
-    // TODO: Account for more bulb and product models
-    // 'lighName' is provided for situations where the bulb originally included with a
-    // fixture is replaced and its identifiers no longer match a fixture - just a bulb.
-    // The light name is used as an additional differentiator.
-    private static func getImageName(modelId: String, lightName: String = "") -> String? {
-        // Hue Fixture replacements
-        if modelId.contains("LCG")
-            && lightName.localizedCaseInsensitiveContains("fugato") {
-            return "E00-C-57356"    // Hue Fugato Spots
-        }
-        
-        // Hue Fixtures
-        if modelId.contains("929002966") { return "E002-57346" }    // Hue Surimu Panel
-        if modelId.contains("506313") { return "E00-C-57356" }      // Hue Fugato Spots
-        
-        // Hue Products and Bulbs
-        if modelId.contains("LCG") { return "E027-57383" }  // GU10 bulbs
-        if modelId.contains("LCL") { return "E06-A-57450" } // Hue Lightstrip plus
-        if modelId.contains("LCT") { return "E015-57365" }  // E14 candle bulbs
-        if modelId.contains("LCU") { return "E025-57381" }  // E14 luster bulbs
-        if modelId.contains("LCA") { return "E028-57384" }  // A19 bulbs
-        if modelId.contains("LOM") { return "E04-D-57421" } // Hue Smart Plug
-        
-        return nil
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-    
-    let id: UUID
-    
-    let lightId: Int
-    let name: String
-    
-    let imageName: String?
-    
-    enum CodingKeys: CodingKey {
-        case light_id, name, image_name
-    }
-    
-    init(id: UUID = UUID(), lightId: Int, name: String, imageName: String? = nil) {
-        self.id = id
-        self.lightId = lightId
-        self.name = name
-        self.imageName = imageName
-    }
-    
-    convenience init(light: Light) {
-        self.init(lightId: light.lightId,
-                  name: light.name,
-                  imageName: Self.getImageName(modelId: light.modelId,
-                                               lightName: light.name))
-    }
-    
-    required init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        id = UUID()
-        lightId = try container.decode(Int.self, forKey: .light_id)
-        name = try container.decode(String.self, forKey: .name)
-        imageName = try container.decodeIfPresent(String.self, forKey: .image_name)
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        
-        try container.encode(lightId, forKey: .light_id)
-        try container.encode(name, forKey: .name)
-        try container.encodeIfPresent(imageName, forKey: .image_name)
-    }
-}
-
-enum LightItemAction {
-    case addToScene(lightItems: [LightItem])
-    case removeFromScene(lightItems: [LightItem])
-}
-
 // MARK: - Light View
 
 struct LightView: View {
@@ -151,10 +19,19 @@ struct LightView: View {
     @Environment(WindowItem.self) private var window
     
     @State private var isPresentingSheet: Bool = false
+    @State private var selectedLightItemIds = Set<UUID>()
     
-    // !!!: Empty method
-    //      Light selection is not currently useful for anything
-    func selectionDidChange(to selectedItems: Set<LightItem>?) {
+    // LightItems have stable UUIDs, so selection of Lights is preserved across
+    // selection changes of Groups/Scenes. It's possible to select multiple
+    // lights in one Scene, select a different Scene that has only a subset of
+    // the selected lights and click "Apply to Selected" - because selection is
+    // preserved, the state would be applied to more lights than those visibly
+    // selected. To avoid this, the selected lights are intersected with the
+    // lights visible in the Window and the selection stored in 'Lights' is
+    // only what is selected and visible.
+    func selectionDidChange(to selectedItemIds: Set<UUID>) {
+        let lightsSet = Set(lights.items.map(\.self.id))
+        lights.selectedLightItemIds = lightsSet.intersection(selectedItemIds)
     }
     
     private var missingLightItems: [LightItem] {
@@ -175,8 +52,6 @@ struct LightView: View {
     }
     
     var body: some View {
-        @Bindable var lights = lights
-        
         VStack(alignment: .leading) {
             Text("Lights")
                 .font(.title2)
@@ -184,25 +59,36 @@ struct LightView: View {
                 .padding(.top, 4)
                 .padding(.bottom, -4)
             
-            List(lights.items, id: \.self, selection: $lights.selectedLightItemIds) { item in
-                HStack {
-                    if let imageName = item.imageName {
-                        Image(imageName)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxWidth: 24, maxHeight: 24)
-                    } else {
-                        Spacer()
-                            .frame(width: 32, height: 24)
+            ScrollViewReader { scrollReader in
+                List(lights.items, id: \.self, selection: $selectedLightItemIds) { item in
+                    HStack {
+                        if let imageName = item.imageName {
+                            Image(imageName)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: 24, maxHeight: 24)
+                        } else {
+                            Spacer()
+                                .frame(width: 32, height: 24)
+                        }
+                        
+                        Text(item.name)
                     }
-                    
-                    Text(item.name)
+                    .id(item.id)
+                    .listRowSeparator(.hidden)
                 }
-                .id(item.id)
-                .listRowSeparator(.hidden)
-            }
-            .onChange(of: lights.selectedLightItemIds) { previousValue, newValue in
-                selectionDidChange(to: lights.selectedLightItems)
+                .onChange(of: lights.items) { previousValue, newValue in
+                    // Ensure at least one of the selected items is visible when
+                    // the list of available lights changes.
+                    if let firstItem = selectedLightItemIds.first {
+                        Task { @MainActor in
+                            scrollReader.scrollTo(firstItem, anchor: .center)
+                        }
+                    }
+                }
+                .onChange(of: selectedLightItemIds) { previousValue, newValue in
+                    selectionDidChange(to: newValue)
+                }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 LightBottomBarView(isPresentingSheet: $isPresentingSheet)

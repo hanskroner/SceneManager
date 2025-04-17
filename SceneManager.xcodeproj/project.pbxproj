@@ -64,6 +64,9 @@
 		3AD18D112DA2C91800AC1CC8 /* halloween.json in Resources */ = {isa = PBXBuildFile; fileRef = 3AD18D0D2DA2C91800AC1CC8 /* halloween.json */; };
 		3AD18D142DA59A2A00AC1CC8 /* PresetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD18D132DA59A2400AC1CC8 /* PresetModels.swift */; };
 		3AE527402DAF7E04005667D8 /* Warning.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE5273F2DAF7E04005667D8 /* Warning.swift */; };
+		3AE527432DB0C956005667D8 /* LightModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE527422DB0C952005667D8 /* LightModel.swift */; };
+		3AE527452DB0CA17005667D8 /* UUID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE527442DB0CA14005667D8 /* UUID.swift */; };
+		3AE527462DB10472005667D8 /* UUID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE527442DB0CA14005667D8 /* UUID.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -170,6 +173,8 @@
 		3AD18D0E2DA2C91800AC1CC8 /* underwater.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = underwater.json; sourceTree = "<group>"; };
 		3AD18D132DA59A2400AC1CC8 /* PresetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetModels.swift; sourceTree = "<group>"; };
 		3AE5273F2DAF7E04005667D8 /* Warning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Warning.swift; sourceTree = "<group>"; };
+		3AE527422DB0C952005667D8 /* LightModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightModel.swift; sourceTree = "<group>"; };
+		3AE527442DB0CA14005667D8 /* UUID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UUID.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -339,6 +344,7 @@
 		3A93B0412AD2F7290038600F /* SceneManager */ = {
 			isa = PBXGroup;
 			children = (
+				3AE527412DB0C94C005667D8 /* Models */,
 				3A6995682CE4F31A00934BD4 /* Window.swift */,
 				3A93B0422AD2F7290038600F /* SceneManagerApp.swift */,
 				3A93B0442AD2F7290038600F /* ContentView.swift */,
@@ -370,6 +376,15 @@
 				3A1EDD742AE3BEDE001637BD /* Sidebar.json */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		3AE527412DB0C94C005667D8 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				3AE527442DB0CA14005667D8 /* UUID.swift */,
+				3AE527422DB0C952005667D8 /* LightModel.swift */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -598,6 +613,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3AE527462DB10472005667D8 /* UUID.swift in Sources */,
 				3A739F8A2D913DE5003D39D3 /* RESTObjects.swift in Sources */,
 				3A2BDF712CCCF99200B582AA /* deCONZ.docc in Sources */,
 				3A6995672CE0989000934BD4 /* RESTModel.swift in Sources */,
@@ -658,7 +674,9 @@
 				3A1EDD5A2AE2BD9D001637BD /* Sidebar.swift in Sources */,
 				3AD18D142DA59A2A00AC1CC8 /* PresetModels.swift in Sources */,
 				3A93B0432AD2F7290038600F /* SceneManagerApp.swift in Sources */,
+				3AE527452DB0CA17005667D8 /* UUID.swift in Sources */,
 				3A5EAFB12CC1808C00B58A3C /* LightStateView.swift in Sources */,
+				3AE527432DB0C956005667D8 /* LightModel.swift in Sources */,
 				3A6995692CE4F31F00934BD4 /* Window.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

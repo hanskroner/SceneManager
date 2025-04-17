@@ -311,11 +311,28 @@ struct SidebarView: View {
             window.dynamicsEditorText = try await window.jsonDynamicState(forGroupId: selectedItem?.groupId,
                                                                       sceneId: selectedItem?.sceneId)
             
+            // Update the Light State for selected lights
+            if let selectedLightId = window.lights?.selectedLightItems.first?.lightId {
+                window.stateEditorText = try await window.jsonLightState(forLightId: selectedLightId,
+                                                                         groupId: selectedItem?.groupId,
+                                                                         sceneId: selectedItem?.sceneId)
+            }
+            
             // Switch to the Dynamics Editor if it wasn't already selected
             if ((window.dynamicsEditorText != "") && (window.selectedEditorTab != .dynamicScene)) {
                 Task { @MainActor in
                     window.selectedEditorTab = .dynamicScene
                 }
+                return
+            }
+            
+            // Switch to the Dynamics Editor if it wasn't already selected
+            if ((window.stateEditorText != "") && (window.selectedEditorTab != .sceneState)) {
+                Task { @MainActor in
+                    window.selectedEditorTab = .sceneState
+                }
+                
+                return
             }
         } catch: { error in
             logger.error("\(error, privacy: .public)")
