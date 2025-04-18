@@ -28,29 +28,59 @@ struct LightStateView: View {
     private let _decoder = JSONDecoder()
     private let _encoder = JSONEncoder()
     
+    enum EditorField {
+        case state, dynamics
+    }
+    
+    @FocusState private var focus: EditorField?
+    
     var body: some View {
         @Bindable var window = window
         VStack(alignment: .leading) {
             
             ZStack {
                 TabView(selection: $window.selectedEditorTab) {
-                    SimpleJSONTextView(text: $window.stateEditorText, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
-                        .clipped()
-                        .disabled(sidebar.selectedSidebarItem == nil
-                                  || sidebar.selectedSidebarItem?.kind != .scene)
-                        .tabItem {
-                            Text("Scene State")
+                    ZStack {
+                        SimpleJSONTextView(text: $window.stateEditorText, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
+                            .clipped()
+                            .focused($focus, equals: .state)
+                            .disabled(sidebar.selectedSidebarItem == nil
+                                      || sidebar.selectedSidebarItem?.kind != .scene)
+                        
+                        if (lights.selectedLightItems.isEmpty
+                            && focus != .state) {
+                            Text("Select a light or" + (sidebar.selectedSidebarItem?.kind == .scene ? "\n type a state" : " scene"))
+                                .multilineTextAlignment(.center)
+                                .font(.body)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.secondary)
                         }
-                        .tag(Tab.sceneState)
+                    }
+                    .tabItem {
+                        Text("Scene State")
+                    }
+                    .tag(Tab.sceneState)
                     
-                    SimpleJSONTextView(text: $window.dynamicsEditorText, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
-                        .clipped()
-                        .disabled(sidebar.selectedSidebarItem == nil
-                                  || sidebar.selectedSidebarItem?.kind != .scene)
-                        .tabItem {
-                            Text("Dynamic Scene")
+                    ZStack {
+                        SimpleJSONTextView(text: $window.dynamicsEditorText, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
+                            .clipped()
+                            .focused($focus, equals: .dynamics)
+                            .disabled(sidebar.selectedSidebarItem == nil
+                                      || sidebar.selectedSidebarItem?.kind != .scene)
+                        
+                        if ((sidebar.selectedSidebarItem?.kind != .scene || focus != .dynamics)
+                            && window.dynamicsEditorText.isEmpty) {
+                            Text((sidebar.selectedSidebarItem?.kind == .scene ? "Type a dynamic state" : "Select a scene"))
+                                .multilineTextAlignment(.center)
+                                .font(.body)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.secondary)
                         }
-                        .tag(Tab.dynamicScene)
+                    }
+                    .tabItem {
+                        Text("Dynamic Scene")
+                    }
+                    .tag(Tab.dynamicScene)
                 }
                 
                 // !!!: Transparent view to recieve 'PresetItem' drag'n'drops

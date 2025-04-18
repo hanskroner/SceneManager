@@ -145,6 +145,9 @@
     "Scene State" : {
 
     },
+    "Select a scene" : {
+
+    },
     "Show in Finder" : {
 
     },
@@ -161,6 +164,9 @@
 
     },
     "Turn Group Off" : {
+
+    },
+    "Type a dynamic state" : {
 
     }
   },
