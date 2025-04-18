@@ -79,7 +79,9 @@ struct SceneManagerApp: App {
         
 #if os(macOS)
         Settings {
+            // TODO: Won't work with WindowGroup
             SettingsView()
+                .environment(window)
         }
 #endif
     }

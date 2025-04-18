@@ -140,6 +140,15 @@ class WindowItem {
             }
         }
         
+        // Errors related to NSURL
+        if let urlError = error as? URLError {
+            switch urlError {
+            default:
+                warningTitle = "deCONZ REST API Connection Error"
+                warningBody = urlError.localizedDescription
+            }
+        }
+        
         // Errors related to the deCONZ REST API
         if let apiError = error as? APIError {
             switch apiError {

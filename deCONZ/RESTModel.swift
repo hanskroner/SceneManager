@@ -40,14 +40,12 @@ public final class RESTModel {
         }
     }
     
-    public func reconnect() {
+    public func reconnect() async {
         RESTModel.apiKey = UserDefaults.standard.string(forKey: "deconz_key") ?? ""
         RESTModel.apiURL = UserDefaults.standard.string(forKey: "deconz_url") ?? ""
         
-        Task {
-            self._client = RESTClient.init(apiKey: RESTModel.apiKey, apiURL: RESTModel.apiURL)
-            await _client.setActivity(activity)
-        }
+        self._client = RESTClient.init(apiKey: RESTModel.apiKey, apiURL: RESTModel.apiURL)
+        await _client.setActivity(activity)
     }
     
     // MARK: Lights

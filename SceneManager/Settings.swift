@@ -12,6 +12,8 @@ import deCONZ
 private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "settings")
 
 struct SettingsView: View {
+    @Environment(WindowItem.self) private var window
+    
     @AppStorage("deconz_url") private var url = ""
     @AppStorage("deconz_key") private var key = ""
     
@@ -26,15 +28,20 @@ struct SettingsView: View {
     }
     
     private func retryConnection() {
+        guard !url.isEmpty, !key.isEmpty else { return }
+        
+        Task { @MainActor in
+            window.clearWarnings()
+        }
+        
         Task {
-            do {
-                RESTModel.shared.reconnect()
-                
-                try await RESTModel.shared.refreshCache()
-            } catch {
-                // FIXME: Error handling
-                logger.error("\(error, privacy: .public)")
-                return
+            await RESTModel.shared.reconnect()
+            try await RESTModel.shared.refreshCache()
+        } catch: { error in
+            logger.error("\(error, privacy: .public)")
+            
+            Task { @MainActor in
+                window.handleError(error)
             }
         }
     }
@@ -47,10 +54,6 @@ struct SettingsView: View {
                     Text("deCONZ URL:")
                     TextField("http://127.0.0.1:8080", text: $url)
                         .focused($focus, equals: .url)
-                        .onSubmit(of: .text) {
-                            guard url.isEmpty == false, key.isEmpty == false else { return }
-                            retryConnection()
-                        }
                 }
                 
                 GridRow {
@@ -58,14 +61,12 @@ struct SettingsView: View {
                     Text("deCONZ API Key:")
                     TextField("ABCDEF1234", text: $key)
                         .focused($focus, equals: .key)
-                        .onSubmit(of: .text) {
-                            guard url.isEmpty == false, key.isEmpty == false else { return }
-                            retryConnection()
-                        }
                 }
             }
+            .onSubmit(of: .text) {
+                retryConnection()
+            }
             .onChange(of: focus) { oldFocus, newFocus in
-                guard url.isEmpty == false, key.isEmpty == false else { return }
                 retryConnection()
             }
             .tabItem {
