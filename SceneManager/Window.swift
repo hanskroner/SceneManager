@@ -13,6 +13,7 @@ import deCONZ
 
 private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "window")
 
+@MainActor
 @Observable
 class WindowItem {
     weak var sidebar: Sidebar? = nil

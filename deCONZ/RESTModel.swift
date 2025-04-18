@@ -10,6 +10,7 @@ import OSLog
 
 private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "rest-model")
 
+@MainActor
 @Observable
 public final class RESTModel {
     private var _lights: [Int: Light] = [:]
