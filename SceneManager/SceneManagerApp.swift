@@ -46,7 +46,8 @@ struct SceneManagerApp: App {
                 .environment(presets)
                 .sheet(isPresented: $isPresentingStartupConfiguration) {
                 } content: {
-                    StartupConfigurationView()
+                    LightConfigurationView()
+                        .padding(12)
                 }
                 .task {
                     window.clearWarnings()

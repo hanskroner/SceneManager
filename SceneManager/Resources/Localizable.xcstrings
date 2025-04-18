@@ -76,6 +76,9 @@
     "Cancel" : {
 
     },
+    "Configuration Values" : {
+
+    },
     "Configure Startup Values…" : {
 
     },
@@ -155,9 +158,6 @@
 
     },
     "Show in Finder" : {
-
-    },
-    "Startup Configuration Values" : {
 
     },
     "Store as Preset" : {

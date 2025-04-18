@@ -229,3 +229,82 @@ extension Light {
                   modelId: light.modelid)
     }
 }
+
+extension LightConfiguration {
+    init (from light: RESTLight, id lightId: Int) {
+        // 'on' configuration
+        let startupOn: LightConfigurationOnStartup
+        switch light.config?.on?.startup {
+        case .bool(let value):
+            startupOn = .value(on: value)
+            
+        case .string(_):
+            // !!!: Any string is assumed to be 'previous'
+            startupOn = .previous
+            
+        default:
+            // !!!: A missing entry is assumed to be 'previous'
+            startupOn = .previous
+        }
+        
+        let configurationOn = LightConfigurationOn(startupOn: startupOn)
+        
+        // 'bri' configuration
+        let startupBri: LightConfigurationBriStartup
+        switch light.config?.bri?.startup {
+        case .int(let value):
+            startupBri = .value(bri: value)
+            
+        case .string(_):
+            // !!!: Any string is assumed to be 'previous'
+            startupBri = .previous
+            
+        default:
+            // !!!: A missing entry is assumed to be 'previous'
+            startupBri = .previous
+        }
+        
+        let executeIfOffBri: Bool = light.config?.bri?.execute_if_off ?? false
+        let coupleCt: Bool = light.config?.bri?.couple_ct ?? false
+        let configurationBri = LightConfigurationBri(startupBri: startupBri, executeIfOff: executeIfOffBri, coupleCt: coupleCt)
+        
+        // 'color' configuration
+        let startupCt: LightConfigurationCtStartup
+        switch light.config?.color?.ct?.startup {
+        case .int(let value):
+            startupCt = .value(ct: value)
+            
+        case .string(_):
+            // !!!: Any string is assumed to be 'previous'
+            startupCt = .previous
+            
+        default:
+            // !!!: A missing entry is assumed to be 'previous'
+            startupCt = .previous
+        }
+        
+        let startupXy: LightConfigurationXyStartup
+        switch light.config?.color?.xy?.startup {
+        case .double(let xy):
+            startupXy = .value(xy: [xy[0], xy[1]])
+            
+        case .string(_):
+            // !!!: Any string is assumed to be 'previous'
+            startupXy = .previous
+            
+        default:
+            // !!!: A missing entry is assumed to be 'previous'
+            startupXy = .previous
+        }
+        
+        let executeIfOffXy: Bool = light.config?.color?.execute_if_off ?? false
+        let configurationColor = LightConfigurationColor(startupCt: startupCt, startupXy: startupXy, executeIfOff: executeIfOffXy)
+        
+        self.init(lightId: lightId,
+                  name: light.name,
+                  modelId: light.modelid,
+                  on: configurationOn,
+                  bri: configurationBri,
+                  color: configurationColor)
+    }
+}

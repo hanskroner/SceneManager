@@ -307,3 +307,53 @@ public final class DynamicState: Codable {
         self.scene_apply = scene_apply
     }
 }
+
+// MARK: - Light Configuration
+
+public enum LightConfigurationOnStartup {
+    case previous
+    case value(on: Bool)
+}
+
+public struct LightConfigurationOn {
+    public var startupOn: LightConfigurationOnStartup
+}
+
+public enum LightConfigurationBriStartup {
+    case previous
+    case value(bri: Int)
+}
+
+public struct LightConfigurationBri {
+    public var startupBri: LightConfigurationBriStartup
+    public var executeIfOff: Bool
+    public var coupleCt: Bool
+}
+
+public enum LightConfigurationCtStartup {
+    case previous
+    case value(ct: Int)
+}
+
+public enum LightConfigurationXyStartup {
+    case previous
+    case value(xy: [Double])
+}
+
+public struct LightConfigurationColor {
+    public var startupCt: LightConfigurationCtStartup
+    public var startupXy: LightConfigurationXyStartup
+    public var executeIfOff: Bool
+}
+
+public struct LightConfiguration {
+    public let id: UUID = UUID()
+    
+    public let lightId: Int
+    public let name: String
+    public let modelId: String
+    
+    public var on: LightConfigurationOn
+    public var bri: LightConfigurationBri
+    public var color: LightConfigurationColor
+}

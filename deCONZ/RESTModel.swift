@@ -69,6 +69,11 @@ public final class RESTModel {
         return lights.count == hueLights.count
     }
     
+    public func lightConfigurations() async throws -> [LightConfiguration] {
+        let lights = try await _client.getAllLights()
+        return lights.compactMap({LightConfiguration(from: $0.value, id: $0.key)})
+    }
+    
     // MARK: Light State
     
     // TODO: Consider different return from 'String'
