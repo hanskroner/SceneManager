@@ -58,6 +58,9 @@
     "Add Lights to '%@'" : {
 
     },
+    "Apply Configuration" : {
+
+    },
     "Apply to Scene" : {
 
     },
@@ -71,6 +74,9 @@
 
     },
     "Cancel" : {
+
+    },
+    "Configure Startup Values…" : {
 
     },
     "Create Scene Preset" : {
@@ -149,6 +155,9 @@
 
     },
     "Show in Finder" : {
+
+    },
+    "Startup Configuration Values" : {
 
     },
     "Store as Preset" : {

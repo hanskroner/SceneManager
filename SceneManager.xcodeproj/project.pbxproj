@@ -18,6 +18,7 @@
 		3A1EDD6F2AE2C54B001637BD /* warm_bright.json in Resources */ = {isa = PBXBuildFile; fileRef = 3A1EDD652AE2C54B001637BD /* warm_bright.json */; };
 		3A1EDD732AE3B449001637BD /* Initializers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1EDD722AE3B449001637BD /* Initializers.swift */; };
 		3A1EDD772AE449F2001637BD /* Lights.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1EDD762AE449F2001637BD /* Lights.swift */; };
+		3A277A6D2DB25811003BAEF9 /* StartupConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A277A6C2DB25811003BAEF9 /* StartupConfiguration.swift */; };
 		3A2BDF612CCCF87800B582AA /* deCONZ.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A2BDF592CCCF87800B582AA /* deCONZ.framework */; };
 		3A2BDF622CCCF87800B582AA /* deCONZ.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3A2BDF592CCCF87800B582AA /* deCONZ.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3A2BDF702CCCF99200B582AA /* deCONZ.h in Headers */ = {isa = PBXBuildFile; fileRef = 3A2BDF6B2CCCF99200B582AA /* deCONZ.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -122,6 +123,7 @@
 		3A1EDD722AE3B449001637BD /* Initializers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Initializers.swift; sourceTree = "<group>"; };
 		3A1EDD742AE3BEDE001637BD /* Sidebar.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Sidebar.json; sourceTree = "<group>"; };
 		3A1EDD762AE449F2001637BD /* Lights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lights.swift; sourceTree = "<group>"; };
+		3A277A6C2DB25811003BAEF9 /* StartupConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupConfiguration.swift; sourceTree = "<group>"; };
 		3A2BDF012CC7BD2400B582AA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3A2BDF1A2CC8CCA400B582AA /* Lights.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Lights.json; sourceTree = "<group>"; };
 		3A2BDF1C2CC8E1C400B582AA /* Scenes.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Scenes.json; sourceTree = "<group>"; };
@@ -355,14 +357,15 @@
 				3A5EAFB02CC1808C00B58A3C /* LightStateView.swift */,
 				3A1EDD532AE2BB81001637BD /* Presets.swift */,
 				3AD18D132DA59A2400AC1CC8 /* PresetModels.swift */,
+				3A277A6C2DB25811003BAEF9 /* StartupConfiguration.swift */,
 				3A635B5A2CD749B300018B40 /* Settings.swift */,
+				3A36DE0A2DAEA5B400F1CF45 /* Activity.swift */,
+				3AE5273F2DAF7E04005667D8 /* Warning.swift */,
 				3A848E2E2D046D8600BE19C6 /* Resources */,
 				3A5EAFB42CC1839E00B58A3C /* SimpleJSONTextView.swift */,
 				3A4193712DA041E1007E76F1 /* SearchField.swift */,
 				3A1EDD552AE2BBCF001637BD /* Colors.swift */,
 				3A635B6B2CDF831100018B40 /* Tests */,
-				3A36DE0A2DAEA5B400F1CF45 /* Activity.swift */,
-				3AE5273F2DAF7E04005667D8 /* Warning.swift */,
 			);
 			path = SceneManager;
 			sourceTree = "<group>";
@@ -679,6 +682,7 @@
 				3AE527492DB1351C005667D8 /* SidebarModel.swift in Sources */,
 				3A93B0432AD2F7290038600F /* SceneManagerApp.swift in Sources */,
 				3AE527452DB0CA17005667D8 /* UUID.swift in Sources */,
+				3A277A6D2DB25811003BAEF9 /* StartupConfiguration.swift in Sources */,
 				3A5EAFB12CC1808C00B58A3C /* LightStateView.swift in Sources */,
 				3AE527432DB0C956005667D8 /* LightModel.swift in Sources */,
 				3A6995692CE4F31F00934BD4 /* Window.swift in Sources */,

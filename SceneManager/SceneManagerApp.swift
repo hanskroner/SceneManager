@@ -31,6 +31,8 @@ struct SceneManagerApp: App {
     
     @State private var window = WindowItem()
     
+    @State private var isPresentingStartupConfiguration = false
+    
     @Environment(\.openWindow) private var openWindow
     
     var body: some SwiftUI.Scene {
@@ -42,6 +44,10 @@ struct SceneManagerApp: App {
                 .environment(sidebar)
                 .environment(lights)
                 .environment(presets)
+                .sheet(isPresented: $isPresentingStartupConfiguration) {
+                } content: {
+                    StartupConfigurationView()
+                }
                 .task {
                     window.clearWarnings()
                     do {
@@ -63,6 +69,12 @@ struct SceneManagerApp: App {
                         try await RESTModel.shared.refreshCache()
                     }
                 }.keyboardShortcut("r", modifiers: .command)
+            }
+            
+            CommandMenu("Lights") {
+                Button("Configure Startup Values…") {
+                    isPresentingStartupConfiguration = true
+                }.keyboardShortcut("s", modifiers: .command)
             }
             
             CommandGroup(after: .singleWindowList) {
