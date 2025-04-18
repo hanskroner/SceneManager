@@ -65,6 +65,7 @@ class Lights {
 class LightItem: Identifiable, Codable, Hashable {
     static func == (lhs: LightItem, rhs: LightItem) -> Bool {
         return lhs.id == rhs.id
+            && lhs._fetched == rhs._fetched
     }
     
     // TODO: Account for more bulb and product models
@@ -104,6 +105,13 @@ class LightItem: Identifiable, Codable, Hashable {
     
     let imageName: String?
     
+    // Set when the SidebarItem is created.
+    // It's used in the Equatable extension to nudge SwiftUI into thiking two
+    // SidebarItems with identical UUIDs are actually different and to decide
+    // to redraw Views that depend on this SidebarItem.
+    private let _fetched: Date
+    
+    
     enum CodingKeys: CodingKey {
         case light_id, name, image_name
     }
@@ -113,6 +121,8 @@ class LightItem: Identifiable, Codable, Hashable {
         self.lightId = lightId
         self.name = name
         self.imageName = imageName
+        
+        self._fetched = Date()
     }
     
     convenience init(light: Light) {
@@ -130,6 +140,7 @@ class LightItem: Identifiable, Codable, Hashable {
         imageName = try container.decodeIfPresent(String.self, forKey: .image_name)
         
         id = UUID(namespace: uuidNamespace, input: "\(lightId)")!
+        self._fetched = Date()
     }
     
     func encode(to encoder: Encoder) throws {

@@ -128,7 +128,7 @@ struct LightBottomBarView: View {
         // If a Scene is selected, check if all the lights
         // of its parent Group are already part of the Scene
         if (selectedSidebarItem.kind == .scene) {
-            guard window.sceneId != nil else { return true }
+            guard window.groupId != nil, window.sceneId != nil else { return true }
             return window.lights(inGroupId: window.groupId!, butNotIntSceneId: window.sceneId!).isEmpty
         }
         

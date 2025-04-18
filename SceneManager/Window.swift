@@ -46,11 +46,16 @@ class WindowItem {
             self?.stateEditorText = ""
             self?.dynamicsEditorText = ""
             
+            // Keep any SidebarItem UUIDs that are expanded to restore their state later
+            let expandedIds = self?.sidebar?.items.compactMap({ $0.isExpanded ? $0.id : nil }) ?? []
+            let sidebarSelection = self?.sidebar?.selectedSidebarItemId
+            
             let groups = RESTModel.shared.groups
             
             var newItems = [SidebarItem]()
             for group in groups {
                 let groupItem = SidebarItem(name: group.name, groupId: group.groupId)
+                groupItem.isExpanded = expandedIds.contains(groupItem.id)
                 for sceneId in group.sceneIds {
                     let scene = RESTModel.shared.scene(withGroupId: group.groupId, sceneId: sceneId)!
                     let sceneItem = SidebarItem(name: scene.name,
@@ -62,6 +67,25 @@ class WindowItem {
                 
                 groupItem.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
                 newItems.append(groupItem)
+            }
+            
+            // Try to restore selections safely
+            if let sidebarSelection {
+                // Check to see if the selected item exists in the new items
+                var selectedItem: SidebarItem? = nil
+                for item in newItems {
+                    if item.id == sidebarSelection { selectedItem = item; break }
+                    if let child = item.items.first(where: { $0.id == sidebarSelection }) { selectedItem = child; break }
+                }
+                
+                // Restore selection only if it exists in the new items
+                if let selectedItem  {
+                    self?.groupId = selectedItem.groupId
+                    self?.sceneId = selectedItem.sceneId
+                } else {
+                    self?.sidebar?.selectedSidebarItemId = nil
+                    self?.lights?.selectedLightItemIds.removeAll()
+                }
             }
             
             self?.sidebar?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })

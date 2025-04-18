@@ -67,6 +67,7 @@
 		3AE527432DB0C956005667D8 /* LightModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE527422DB0C952005667D8 /* LightModel.swift */; };
 		3AE527452DB0CA17005667D8 /* UUID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE527442DB0CA14005667D8 /* UUID.swift */; };
 		3AE527462DB10472005667D8 /* UUID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE527442DB0CA14005667D8 /* UUID.swift */; };
+		3AE527492DB1351C005667D8 /* SidebarModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE527472DB13518005667D8 /* SidebarModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -175,6 +176,7 @@
 		3AE5273F2DAF7E04005667D8 /* Warning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Warning.swift; sourceTree = "<group>"; };
 		3AE527422DB0C952005667D8 /* LightModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightModel.swift; sourceTree = "<group>"; };
 		3AE527442DB0CA14005667D8 /* UUID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UUID.swift; sourceTree = "<group>"; };
+		3AE527472DB13518005667D8 /* SidebarModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -382,6 +384,7 @@
 			isa = PBXGroup;
 			children = (
 				3AE527442DB0CA14005667D8 /* UUID.swift */,
+				3AE527472DB13518005667D8 /* SidebarModel.swift */,
 				3AE527422DB0C952005667D8 /* LightModel.swift */,
 			);
 			path = Models;
@@ -673,6 +676,7 @@
 				3A1EDD542AE2BB81001637BD /* Presets.swift in Sources */,
 				3A1EDD5A2AE2BD9D001637BD /* Sidebar.swift in Sources */,
 				3AD18D142DA59A2A00AC1CC8 /* PresetModels.swift in Sources */,
+				3AE527492DB1351C005667D8 /* SidebarModel.swift in Sources */,
 				3A93B0432AD2F7290038600F /* SceneManagerApp.swift in Sources */,
 				3AE527452DB0CA17005667D8 /* UUID.swift in Sources */,
 				3A5EAFB12CC1808C00B58A3C /* LightStateView.swift in Sources */,
