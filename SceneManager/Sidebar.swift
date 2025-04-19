@@ -334,10 +334,8 @@ struct SidebarItemView: View {
                 
                 if item.hasDynamics {
                     Image("scene-dynamics")
-                        .renderingMode(.template)
                         .resizable()
                         .scaledToFit()
-                        .foregroundStyle(.white)
                         .frame(height: 20)
                 }
             }
