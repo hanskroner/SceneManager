@@ -313,6 +313,20 @@ public final class DynamicState: Codable {
 public enum LightConfigurationOnStartup {
     case previous
     case value(on: Bool)
+    
+    public init?(string: String) {
+        if string == "previous" {
+            self = .previous
+        } else {
+            if let boolValue = Bool(string) {
+                self = .value(on: boolValue)
+            } else if let intValue = Int(string) {
+                self = .value(on: intValue > 0)
+            } else {
+                return nil
+            }
+        }
+    }
 }
 
 public struct LightConfigurationOn {
@@ -322,6 +336,19 @@ public struct LightConfigurationOn {
 public enum LightConfigurationBriStartup {
     case previous
     case value(bri: Int)
+    
+    public init?(string: String) {
+        if string == "previous" {
+            self = .previous
+        } else {
+            if let intValue = Int(string) {
+                // Clamp 'bri' between '0' and '255'
+                self = .value(bri: max(0, min(255, intValue)))
+            } else {
+                return nil
+            }
+        }
+    }
 }
 
 public struct LightConfigurationBri {
@@ -333,11 +360,39 @@ public struct LightConfigurationBri {
 public enum LightConfigurationCtStartup {
     case previous
     case value(ct: Int)
+    
+    public init?(string: String) {
+        if string == "previous" {
+            self = .previous
+        } else {
+            if let intValue = Int(string) {
+                // Clamp 'ct' between '0' and '65535'
+                self = .value(ct: max(0, min(65535, intValue)))
+            } else {
+                return nil
+            }
+        }
+    }
 }
+
+fileprivate let decoder = JSONDecoder()
 
 public enum LightConfigurationXyStartup {
     case previous
     case value(xy: [Double])
+    
+    public init?(string: String) {
+        if string == "previous" {
+            self = .previous
+        } else {
+            let json = try? decoder.decode(JSON.self, from: string.data(using: .utf8)!)
+            if let array = json?.arrayValue, array.count > 1, let x = array[0].doubleValue, let y = array[1].doubleValue {
+                self = .value(xy: [x, y])
+            } else {
+                return nil
+            }
+        }
+    }
 }
 
 public struct LightConfigurationColor {
@@ -346,7 +401,7 @@ public struct LightConfigurationColor {
     public var executeIfOff: Bool
 }
 
-public struct LightConfiguration {
+public struct LightConfiguration: Identifiable {
     public let id: UUID = UUID()
     
     public let lightId: Int
@@ -356,4 +411,6 @@ public struct LightConfiguration {
     public var on: LightConfigurationOn
     public var bri: LightConfigurationBri
     public var color: LightConfigurationColor
+    
+    public var isEnabled: Bool = true
 }

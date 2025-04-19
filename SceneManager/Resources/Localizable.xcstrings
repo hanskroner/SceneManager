@@ -4,6 +4,18 @@
     "" : {
 
     },
+    "'bri':" : {
+
+    },
+    "'ct':" : {
+
+    },
+    "'on':" : {
+
+    },
+    "'xy':" : {
+
+    },
     "%lld Add Lights" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -76,10 +88,16 @@
     "Cancel" : {
 
     },
+    "Configuration" : {
+
+    },
     "Configuration Values" : {
 
     },
     "Configure Startup Values…" : {
+
+    },
+    "Couple 'ct' to 'bri'" : {
 
     },
     "Create Scene Preset" : {
@@ -106,6 +124,12 @@
     "Dynamic Scene" : {
 
     },
+    "Execute if 'off'" : {
+
+    },
+    "Extras" : {
+
+    },
     "Give the current State a name to store it as a Preset" : {
 
     },
@@ -118,6 +142,9 @@
     "http://127.0.0.1:8080" : {
 
     },
+    "Light" : {
+
+    },
     "Lights" : {
 
     },
@@ -128,6 +155,9 @@
 
     },
     "Preset Name" : {
+
+    },
+    "previous" : {
 
     },
     "Recall Scene" : {
