@@ -97,6 +97,16 @@
     "Configure Startup Values…" : {
 
     },
+    "Configured %lld out of ^[%lld %@](inflect: true)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Configured %1$lld out of ^[%2$lld %3$@](inflect: true)"
+          }
+        }
+      }
+    },
     "Couple 'ct' to 'bri'" : {
 
     },
@@ -189,6 +199,16 @@
     },
     "Show in Finder" : {
 
+    },
+    "Showing %lld out of %lld lights" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Showing %1$lld out of %2$lld lights"
+          }
+        }
+      }
     },
     "Store as Preset" : {
 

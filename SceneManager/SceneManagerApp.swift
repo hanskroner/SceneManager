@@ -47,6 +47,7 @@ struct SceneManagerApp: App {
                 .sheet(isPresented: $isPresentingStartupConfiguration) {
                 } content: {
                     LightConfigurationView()
+                        .environment(window)
                         .frame(width: 680)
                         .padding(12)
                 }

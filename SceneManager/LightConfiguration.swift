@@ -12,6 +12,8 @@ import deCONZ
 private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "light-configuration")
 
 struct LightConfigurationView: View {
+    @Environment(WindowItem.self) private var window
+    
     @Environment(\.dismiss) private var dismiss
     
     @State private var lightsConfiguration: [LightConfiguration] = []
@@ -59,6 +61,25 @@ struct LightConfigurationView: View {
     @State private var globalBri: String = ""
     @State private var globalCt: String = ""
     @State private var globalXy: String = ""
+    
+    // Progress reporting
+    @State private var isPresentingProgress = false
+    @State private var progressValue = 0.0
+    @State private var progressTotal = 100.0
+    @State private var shouldCancel = false
+    
+    private func configureLights(_ lights: [LightConfiguration]) async throws {
+        shouldCancel = false
+        
+        for (index, _) in lights.enumerated() {
+            guard !shouldCancel else { return }
+            
+            progressValue = Double(index)
+            try await Task.sleep(nanoseconds: UInt64(0.3 * Double(NSEC_PER_SEC)))
+        }
+        
+        return
+    }
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -153,6 +174,8 @@ struct LightConfigurationView: View {
             }
             .padding(.horizontal, 16)
             
+            Text("Showing \(filteredLightsConfiguration.count) out of \(lightsConfiguration.count) lights")
+            
             Divider()
             
             ScrollViewReader { scrollReader in
@@ -194,7 +217,18 @@ struct LightConfigurationView: View {
                 .keyboardShortcut(.cancelAction)
                 
                 Button("Apply Configuration") {
+                    let lightsToConfigure = filteredLightsConfiguration.wrappedValue.filter({ $0.isEnabled })
                     
+                    progressTotal = Double(lightsToConfigure.count)
+                    isPresentingProgress = true
+                    
+                    Task {
+                        try await self.configureLights(lightsToConfigure)
+                    } catch: { error in
+                        logger.error("\(error, privacy: .public)")
+                        
+                        window.handleError(error)
+                    }
                 }
                 .fixedSize()
                 .keyboardShortcut(.defaultAction)
@@ -203,6 +237,41 @@ struct LightConfigurationView: View {
         }
         .task {
             lightsConfiguration = (try? await RESTModel.shared.lightConfigurations()) ?? []
+        }
+        .sheet(isPresented: $isPresentingProgress) {
+            ConfigurationProgressView(progressValue: $progressValue,
+                                      progressTotal: $progressTotal,
+                                      shouldCancel: $shouldCancel)
+        }
+    }
+}
+
+struct ConfigurationProgressView: View {
+    @Environment(\.dismiss) private var dismiss
+    
+    @Binding var progressValue: Double
+    @Binding var progressTotal: Double
+    @Binding var shouldCancel: Bool
+    
+    var body: some View {
+        VStack {
+            ProgressView("", value: progressValue, total: progressTotal)
+                .padding(.horizontal, 18)
+            
+            Text("Configured \(Int(progressValue)) out of ^[\(Int(progressTotal)) \("light")](inflect: true)")
+            
+            HStack {
+                Spacer()
+                
+                Button("Cancel") {
+                    shouldCancel = true
+                    dismiss()
+                }
+                .fixedSize()
+                .padding(.trailing, 18)
+                .padding(.bottom, 12)
+                .keyboardShortcut(.defaultAction)
+            }
         }
     }
 }
