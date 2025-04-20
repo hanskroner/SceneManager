@@ -78,25 +78,31 @@ struct RESTLightState: Codable {
 // MARK: Light Configuration
 
 struct RESTLightConfiguration: Codable {
-    let bri: RESTLightConfigurationBrightness?
+    let bri: RESTLightConfigurationBri?
     let color: RESTLightConfigurationColor?
     let groups: [String]?
     let on: RESTLightConfigurationOn?
 }
 
-enum RESTLightConfigurationBrightnessStartup: Codable {
+enum RESTLightConfigurationBriStartup: Codable {
     case int(Int)
     case string(String)
 }
 
-struct RESTLightConfigurationBrightness: Codable {
+struct RESTLightConfigurationBri: Codable {
     enum CodingKeys: String, CodingKey {
         case couple_ct, execute_if_off, startup
     }
     
     let couple_ct: Bool?
     let execute_if_off: Bool?
-    let startup: RESTLightConfigurationBrightnessStartup?
+    let startup: RESTLightConfigurationBriStartup?
+    
+    init(couple_ct: Bool? = nil, execute_if_off: Bool? = nil, startup: RESTLightConfigurationBriStartup? = nil) {
+        self.couple_ct = couple_ct
+        self.execute_if_off = execute_if_off
+        self.startup = startup
+    }
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -105,22 +111,26 @@ struct RESTLightConfigurationBrightness: Codable {
         self.execute_if_off = try container.decodeIfPresent(Bool.self, forKey: .execute_if_off)
         
         if let value = try? container.decode(Int.self, forKey: .startup) {
-            // FIXME: Temp. info to normalize 'startup' of my house lights
-            logger.info("Path \(decoder.codingPath) contains non-'previous' startup")
             self.startup = .int(value)
         } else if let value = try? container.decode(String.self, forKey: .startup) {
             self.startup = .string(value)
         } else {
             let context = DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Unable to decode value for 'startup'")
-            throw DecodingError.typeMismatch(RESTLightConfigurationBrightnessStartup.self, context)
+            throw DecodingError.typeMismatch(RESTLightConfigurationBriStartup.self, context)
         }
     }
 }
 
 struct RESTLightConfigurationColor: Codable {
-    let ct: RESTLightConfigurationColorCT?
+    let ct: RESTLightConfigurationColorCt?
     let execute_if_off: Bool?
-    let xy: RESTLightConfigurationColorXY?
+    let xy: RESTLightConfigurationColorXy?
+    
+    init(ct: RESTLightConfigurationColorCt? = nil, execute_if_off: Bool? = nil, xy: RESTLightConfigurationColorXy? = nil) {
+        self.ct = ct
+        self.execute_if_off = execute_if_off
+        self.xy = xy
+    }
 }
 
 enum RESTLightConfigurationColorCTStartup: Codable {
@@ -128,19 +138,21 @@ enum RESTLightConfigurationColorCTStartup: Codable {
     case string(String)
 }
 
-struct RESTLightConfigurationColorCT: Codable {
+struct RESTLightConfigurationColorCt: Codable {
     enum CodingKeys: String, CodingKey {
         case startup
     }
     
     let startup: RESTLightConfigurationColorCTStartup?
     
+    init(startup: RESTLightConfigurationColorCTStartup? = nil) {
+        self.startup = startup
+    }
+    
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         if let value = try? container.decode(Int.self, forKey: .startup) {
-            // FIXME: Temp. info to normalize 'startup' of my house lights
-            logger.info("Path \(decoder.codingPath) contains non-'previous' startup")
             self.startup = .int(value)
         } else if let value = try? container.decode(String.self, forKey: .startup) {
             self.startup = .string(value)
@@ -156,19 +168,21 @@ enum RESTLightConfigurationColorXYStartup: Codable {
     case string(String)
 }
 
-struct RESTLightConfigurationColorXY: Codable {
+struct RESTLightConfigurationColorXy: Codable {
     enum CodingKeys: String, CodingKey {
         case startup
     }
     
     let startup: RESTLightConfigurationColorXYStartup?
     
+    init(startup: RESTLightConfigurationColorXYStartup? = nil) {
+        self.startup = startup
+    }
+    
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         if let value = try? container.decode([Double].self, forKey: .startup) {
-            // FIXME: Temp. info to normalize 'startup' of my house lights
-            logger.info("Path \(decoder.codingPath) contains non-'previous' startup")
             self.startup = .double(value)
         } else if let value = try? container.decode(String.self, forKey: .startup) {
             self.startup = .string(value)
@@ -191,12 +205,14 @@ struct RESTLightConfigurationOn: Codable {
     
     let startup: RESTLightConfigurationOnStartup?
     
+    init(startup: RESTLightConfigurationOnStartup? = nil) {
+        self.startup = startup
+    }
+    
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         if let value = try? container.decode(Bool.self, forKey: .startup) {
-            // FIXME: Temp. info to normalize 'startup' of my house lights
-            logger.info("Path \(decoder.codingPath) contains non-'previous' startup")
             self.startup = .bool(value)
         } else if let value = try? container.decode(String.self, forKey: .startup) {
             self.startup = .string(value)
@@ -204,6 +220,51 @@ struct RESTLightConfigurationOn: Codable {
             let context = DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Unable to decode value for 'startup'")
             throw DecodingError.typeMismatch(RESTLightConfigurationOnStartup.self, context)
         }
+    }
+}
+
+// MARK: - Extension
+
+extension RESTLightConfiguration {
+    init(configuration: LightConfiguration) {
+        let startupOn: RESTLightConfigurationOnStartup = {
+            switch configuration.on.startupOn {
+            case .previous: return .string("previous")
+            case .value(let on): return .bool(on)
+            }
+        }()
+        
+        let startupBri: RESTLightConfigurationBriStartup = {
+            switch configuration.bri.startupBri {
+            case .previous: return .string("previous")
+            case .value(let bri): return .int(bri)
+            }
+        }()
+        
+        let startupCt = {
+            switch configuration.color.startupCt {
+            case .previous: return RESTLightConfigurationColorCt(startup: .string("previous"))
+            case .value(let ct): return RESTLightConfigurationColorCt(startup: .int(ct))
+            }
+        }()
+        
+        let startupXy = {
+            switch configuration.color.startupXy {
+            case .previous: return RESTLightConfigurationColorXy(startup: .string("previous"))
+            case .value(let xy): return RESTLightConfigurationColorXy(startup: .double(xy))
+            }
+        }()
+        
+        self.bri = RESTLightConfigurationBri(couple_ct: configuration.bri.coupleCt,
+                                                    execute_if_off: configuration.bri.executeIfOff,
+                                                    startup: startupBri)
+        
+        self.color = RESTLightConfigurationColor(ct: startupCt,
+                                                execute_if_off: configuration.color.executeIfOff,
+                                                xy: startupXy)
+        self.groups = nil
+        
+        self.on = RESTLightConfigurationOn(startup: startupOn)
     }
 }
 
