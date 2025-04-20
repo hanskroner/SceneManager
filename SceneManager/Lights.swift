@@ -52,6 +52,7 @@ struct LightView: View {
     }
     
     var body: some View {
+        @Bindable var lights = lights
         VStack(alignment: .leading) {
             Text("Lights")
                 .font(.title2)
@@ -60,20 +61,8 @@ struct LightView: View {
                 .padding(.bottom, -4)
             
             ScrollViewReader { scrollReader in
-                List(lights.items, id: \.self, selection: $selectedLightItemIds) { item in
-                    HStack {
-                        if let imageName = item.imageName {
-                            Image(imageName)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxWidth: 24, maxHeight: 24)
-                        } else {
-                            Spacer()
-                                .frame(width: 32, height: 24)
-                        }
-                        
-                        Text(item.name)
-                    }
+                List($lights.items, id: \.self, selection: $selectedLightItemIds) { $item in
+                    LightItemView(lightItem: $item)
                     .id(item.id)
                     .listRowSeparator(.hidden)
                 }
@@ -108,6 +97,50 @@ struct LightView: View {
         .sheet(isPresented: $isPresentingSheet) {
         } content: {
             AddLightView(lightItems: missingLightItems)
+        }
+    }
+}
+
+struct LightItemView: View {
+    @Binding var lightItem: LightItem
+    
+    @State private var isFocused: Bool = false
+    
+    var body: some View {
+        HStack {
+            if let imageName = lightItem.imageName {
+                Image(imageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: 24, maxHeight: 24)
+            } else {
+                Spacer()
+                    .frame(width: 32, height: 24)
+            }
+            
+            if (lightItem.isRenaming) {
+                EditableText(text: $lightItem.name, hasFocus: $isFocused, isRenaming: $lightItem.isRenaming)
+                    .onChange(of: isFocused) {
+                        // Only act when focus is lost by the TextField the rename is happening in
+                        guard isFocused == false else { return }
+                        
+                        // Clear the 'isRenaming' flag
+                        lightItem.isRenaming = false
+                    }
+                    .onAppear {
+                        isFocused = true
+                    }
+                    .background(.thinMaterial)
+            } else {
+                Text(lightItem.name)
+                    .contextMenu {
+                        Button(action: {
+                            lightItem.isRenaming = true
+                        }, label: {
+                            Text("Rename Light")
+                        })
+                    }
+            }
         }
     }
 }

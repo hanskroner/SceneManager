@@ -101,9 +101,31 @@ class LightItem: Identifiable, Codable, Hashable {
     let id: UUID
     
     let lightId: Int
-    let name: String
+    var name: String
     
     let imageName: String?
+    
+    private var _isRenaming: Bool = false
+    private var _shadowName: String = ""
+    
+    // Store the PresetItem's name in a shadow variable when a rename operation
+    // starts. Should the operation fail, the previous name can be restored by
+    // calling 'restoreName'.
+    /// Is this 'LightItem' being rendered as a 'TextField' allowing its 'name' property to be updated?
+    var isRenaming: Bool {
+        get {
+            return _isRenaming
+        }
+        
+        set {
+            _isRenaming = newValue
+            _shadowName = newValue ? name : _shadowName
+        }
+    }
+    
+    func restoreName() {
+        name = _shadowName
+    }
     
     // Set when the SidebarItem is created.
     // It's used in the Equatable extension to nudge SwiftUI into thiking two
