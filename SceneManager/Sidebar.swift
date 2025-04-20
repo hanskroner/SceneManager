@@ -18,8 +18,6 @@ struct SidebarView: View {
     @Environment(Sidebar.self) private var sidebar
     @Environment(WindowItem.self) private var window
     
-    @FocusState private var isFocused: Bool
-    
     func selectionDidChange(to selectedItem: SidebarItem?) {
         // Handle selection of placeholder items
         if selectedItem?.groupId == Sidebar.NEW_GROUP_ID
