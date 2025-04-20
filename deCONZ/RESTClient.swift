@@ -10,7 +10,7 @@ import Foundation
 // MARK: - REST API Returns
 
 public enum APIError: Error {
-    case apiError(context: APIErrorContext)
+    case apiError(context: [APIResponseContextError])
     case unknownResponse(data: Data?, response: URLResponse?)
 }
 
@@ -25,44 +25,66 @@ extension APIError: CustomStringConvertible {
     }
 }
 
-public struct APIErrorContext: Decodable {
+// MARK: - REST API Response Context
+
+public enum APIResponseContext: Decodable {
+    case error(APIResponseContextError)
+    case success(APIResponseContextSuccess)
+    // TODO: Consider associating 'address' and 'value'
+    //       'address' is the path that was affected and is always
+    //       a string and the "key" in the JSON. 'value' is the value
+    //       associated with the key and can be many different types.
+    case successPartial
+    
+    case unknown
+    
+    enum CodingKeys: CodingKey {
+        case error, success
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let rootContainer = try decoder.container(keyedBy: CodingKeys.self)
+
+        if let successContainer = try? rootContainer.decodeIfPresent(APIResponseContextSuccess.self, forKey: .success) {
+            self = .success(successContainer)
+        } else if let _ = try? rootContainer.nestedUnkeyedContainer(forKey: .success) {
+            self = .successPartial
+        } else if let errorContainer = try rootContainer.decodeIfPresent(APIResponseContextError.self, forKey: .error) {
+            self = .error(errorContainer)
+        } else {
+            self = .unknown
+        }
+    }
+}
+
+public struct APIResponseContextError: Decodable {
     public let type: Int
     public let address: String
     public let description: String
     
-    enum CodingKeys: String, CodingKey {
-        case error
-    }
-    
-    enum ErrorKeys: String, CodingKey {
+    enum CodingKeys: CodingKey {
         case type
         case address
         case description
     }
     
     public init(from decoder: Decoder) throws {
-        let rootContainer = try decoder.container(keyedBy: CodingKeys.self)
-        let errorContainer = try rootContainer.nestedContainer(keyedBy: ErrorKeys.self, forKey: .error)
+        let errorContainer = try decoder.container(keyedBy: CodingKeys.self)
         type = try errorContainer.decode(Int.self, forKey: .type)
         address = try errorContainer.decode(String.self, forKey: .address)
         description = try errorContainer.decode(String.self, forKey: .description)
     }
 }
 
-public struct APISuccessContext: Decodable {
+public struct APIResponseContextSuccess: Decodable {
     let id: String
     
-    enum CodingKeys: String, CodingKey {
-        case success
-    }
-    
-    enum SuccessKeys: String, CodingKey {
+    enum CodingKeys: CodingKey {
         case id
     }
     
     public init(from decoder: Decoder) throws {
-        let rootContainer = try decoder.container(keyedBy: CodingKeys.self)
-        let successContainer = try rootContainer.nestedContainer(keyedBy: SuccessKeys.self, forKey: .success)
+        let successContainer = try decoder.container(keyedBy: CodingKeys.self)
         id = try successContainer.decode(String.self, forKey: .id)
     }
 }
@@ -107,13 +129,30 @@ actor RESTClient {
     }
     
     private func check(data: Data, from response: URLResponse) throws {
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            let errorResponse: [APIErrorContext] = try decoder.decode([APIErrorContext].self, from: data)
-            guard let errorContext = errorResponse.first else { throw APIError.unknownResponse(data: data, response: response) }
-            throw APIError.apiError(context: errorContext)
+        var errorEntries: [APIResponseContextError] = []
+        
+        do {
+            let responseEntries: [APIResponseContext] = try decoder.decode([APIResponseContext].self, from: data)
+            for entry in responseEntries {
+                switch entry {
+                case .successPartial: break
+                case .success(_): break
+                case .unknown: break
+                case .error(let error): errorEntries.append(error)
+                }
+            }
+        } catch {
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                throw APIError.unknownResponse(data: data, response: response)
+            }
+        }
+        
+        // Collect all the error entries and throw an APIError
+        if errorEntries.count > 0 {
+            throw APIError.apiError(context: errorEntries)
         }
     }
-    
+
     // MARK: - Isolated Methods
     
     func setActivity(_ activity: RESTActivity?) {
@@ -145,8 +184,8 @@ actor RESTClient {
         }
     }
     
-    func getLightState(lightID: Int) async throws -> RESTLightState {
-        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/lights/\(lightID)")
+    func getLightState(lightId: Int) async throws -> RESTLightState {
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/lights/\(lightId)")
         
         do {
             let request = request(forPath: activity.path, using: .get)
@@ -160,6 +199,28 @@ actor RESTClient {
             
             self.activity?.append(activity)
             return light.state
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
+    }
+    
+    func setLightConfiguration(lightId: Int, configuration: RESTLightConfiguration) async throws {
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/lights/\(lightId)/config")
+        
+        do {
+            var request = request(forPath: activity.path, using: .put)
+            request.httpBody = try encoder.encode(configuration)
+            activity.request = String(data: request.httpBody!, encoding: .utf8)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            self.activity?.append(activity)
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
             self.activity?.append(activity)
@@ -185,11 +246,15 @@ actor RESTClient {
             
             try check(data: data, from: response)
             
-            let successResponse: [APISuccessContext] = try decoder.decode([APISuccessContext].self, from: data)
-            guard let successContext = successResponse.first,
-                  let responseId = Int(successContext.id)
-            else { throw APIError.unknownResponse(data: data, response: response) }
+            let successResponse: [APIResponseContext] = try decoder.decode([APIResponseContext].self, from: data)
+            let responseId = {
+                switch successResponse.first {
+                case .success(let success): return Int(success.id)
+                default: return nil
+                }
+            }()
             
+            guard let responseId else { throw APIError.unknownResponse(data: data, response: response) }
             self.activity?.append(activity)
             return responseId
         } catch {
@@ -308,10 +373,15 @@ actor RESTClient {
             
             try check(data: data, from: response)
             
-            let successResponse: [APISuccessContext] = try decoder.decode([APISuccessContext].self, from: data)
-            guard let successContext = successResponse.first,
-                  let responseId = Int(successContext.id)
-            else { throw APIError.unknownResponse(data: data, response: response) }
+            let successResponse: [APIResponseContext] = try decoder.decode([APIResponseContext].self, from: data)
+            let responseId = {
+                switch successResponse.first {
+                case .success(let success): return Int(success.id)
+                default: return nil
+                }
+            }()
+            
+            guard let responseId else { throw APIError.unknownResponse(data: data, response: response) }
             
             self.activity?.append(activity)
             return responseId
@@ -350,7 +420,7 @@ actor RESTClient {
         }
     }
     
-    func getSceneAttributes(groupID: Int, sceneID: Int) async throws -> RESTSceneAttributes? {
+    func getSceneAttributes(groupId: Int, sceneId: Int) async throws -> RESTSceneAttributes? {
         // The deCONZ REST API is inconsistent in the way it handles xy Color Mode values.
         // When modifying a Scene that uses xy Color Mode, the values must be passed in as an array under
         // the "xy" JSON key. When getting the attributes of a Scene that uses xy Color Mode, the REST
@@ -379,7 +449,7 @@ actor RESTClient {
             var name: String
         }
         
-        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/groups/\(groupID)/scenes/\(sceneID)/")
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/groups/\(groupId)/scenes/\(sceneId)/")
         
         do {
             let request = request(forPath: activity.path, using: .get)

@@ -71,11 +71,18 @@ struct LightConfigurationView: View {
     private func configureLights(_ lights: [LightConfiguration]) async throws {
         shouldCancel = false
         
-        for (index, _) in lights.enumerated() {
+        for (index, configuration) in lights.enumerated() {
             guard !shouldCancel else { return }
             
-            progressValue = Double(index)
+            do {
+                try await window.configureLight(configuration)
+            } catch {
+                shouldCancel = true
+                throw error
+            }
+            
             try await Task.sleep(nanoseconds: UInt64(0.3 * Double(NSEC_PER_SEC)))
+            progressValue = Double(index + 1)
         }
         
         return
@@ -224,7 +231,9 @@ struct LightConfigurationView: View {
                     
                     Task {
                         try await self.configureLights(lightsToConfigure)
+                        isPresentingProgress = false
                     } catch: { error in
+                        isPresentingProgress = false
                         logger.error("\(error, privacy: .public)")
                         
                         window.handleError(error)

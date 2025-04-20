@@ -74,13 +74,17 @@ public final class RESTModel {
         return lights.compactMap({LightConfiguration(from: $0.value, id: $0.key)})
     }
     
+    public func setLightConfiguration(_ configuration: LightConfiguration) async throws {
+        try await _client.setLightConfiguration(lightId: configuration.lightId, configuration: RESTLightConfiguration(configuration: configuration))
+    }
+    
     // MARK: Light State
     
     // TODO: Consider different return from 'String'
     public func lightState(withLightId lightId: Int, groupId: Int? = nil, sceneId: Int? = nil) async throws -> String {
         // Current state of the light
         guard let groupId, let sceneId else {
-            let state = try await self._client.getLightState(lightID: lightId)
+            let state = try await self._client.getLightState(lightId: lightId)
             let encoded = try _encoder.encode(state)
             let decoded = try _decoder.decode(JSON.self, from: encoded)
             
@@ -88,7 +92,7 @@ public final class RESTModel {
         }
         
         // State defined in a scene
-        let attributes = try await self._client.getSceneAttributes(groupID: groupId, sceneID: sceneId)
+        let attributes = try await self._client.getSceneAttributes(groupId: groupId, sceneId: sceneId)
         guard let state = attributes?.lights.filter({ $0.key == lightId }).first?.1 else { return "" }
         let encoded = try _encoder.encode(state)
         let decoded = try _decoder.decode(JSON.self, from: encoded)
@@ -98,7 +102,7 @@ public final class RESTModel {
     
     // TODO: Consider different return from 'String'
     public func sceneState(forLightId lightId: Int, groupId: Int, sceneId: Int) async throws -> (String, String) {
-        let attributes = try await self._client.getSceneAttributes(groupID: groupId, sceneID: sceneId)
+        let attributes = try await self._client.getSceneAttributes(groupId: groupId, sceneId: sceneId)
         
         let recallString: String
         if let recallState = attributes?.lights[lightId] {
@@ -119,7 +123,7 @@ public final class RESTModel {
     
     // TODO: Consider different return from 'String'
     public func dynamicState(withGroupId groupId: Int, sceneId: Int) async throws -> String {
-        let attributes = try await self._client.getSceneAttributes(groupID: groupId, sceneID: sceneId)
+        let attributes = try await self._client.getSceneAttributes(groupId: groupId, sceneId: sceneId)
         guard let state = attributes?.dynamics else { return "" }
         
         let encoded = try _encoder.encode(state)
@@ -248,7 +252,7 @@ public final class RESTModel {
         // light's current state will be what we use.
         var fetchedLightStates: [Int: RESTLightState] = [:]
         for lightId in lightIds {
-            let lightState = try await self._client.getLightState(lightID: lightId)
+            let lightState = try await self._client.getLightState(lightId: lightId)
             fetchedLightStates[lightId] = lightState
             try await self._client.modifyScene(groupId: groupId, sceneId: sceneId, lightIds: [lightId], lightState: lightState)
         }

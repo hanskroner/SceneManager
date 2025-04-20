@@ -16,16 +16,20 @@ struct WarningView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(window.warningTitle ?? "")
+                .textSelection(.enabled)
                 .font(.headline)
                 .fontWeight(.semibold)
                 .fontDesign(.monospaced)
             
-            Text(window.warningBody ?? "")
-                .font(.callout)
-                .fontDesign(.monospaced)
-                .fixedSize(horizontal: false, vertical: true)
+            ScrollView {
+                Text(window.warningBody ?? "")
+                    .textSelection(.enabled)
+                    .font(.callout)
+                    .fontDesign(.monospaced)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
-        .frame(maxWidth: 340, alignment: .leading)
+        .frame(maxWidth: 340, maxHeight: 160, alignment: .leading)
         .fixedSize()
         .padding(.vertical, 20)
         .padding(.horizontal, 16)

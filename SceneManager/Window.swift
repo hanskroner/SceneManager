@@ -154,7 +154,10 @@ class WindowItem {
             switch apiError {
             case .apiError(let context):
                 warningTitle = "deCONZ REST API Error"
-                warningBody = context.description
+                warningBody = ""
+                for (index, error) in context.enumerated() {
+                    warningBody += "address: \(error.address)\ndescription: \(error.description)\(index == context.count - 1 ? "" : "\n\n")"
+                }
                 
             default:
                 break
@@ -268,6 +271,10 @@ class WindowItem {
     
     func jsonSceneState(forLightId lightId: Int, groupId: Int, sceneId: Int) async throws -> (String, String) {
         return try await RESTModel.shared.sceneState(forLightId: lightId, groupId: groupId, sceneId: sceneId)
+    }
+    
+    func configureLight(_ configuration: LightConfiguration) async throws {
+        return try await RESTModel.shared.setLightConfiguration(configuration)
     }
     
     // MARK: - Light Methods

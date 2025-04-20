@@ -119,6 +119,22 @@ struct RESTLightConfigurationBri: Codable {
             throw DecodingError.typeMismatch(RESTLightConfigurationBriStartup.self, context)
         }
     }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encodeIfPresent(couple_ct, forKey: .couple_ct)
+        try container.encodeIfPresent(execute_if_off, forKey: .execute_if_off)
+        
+        switch startup {
+        case .int(let value):
+            try container.encode(value, forKey: .startup)
+        case .string(let string):
+            try container.encode(string, forKey: .startup)
+        case .none:
+            break
+        }
+    }
 }
 
 struct RESTLightConfigurationColor: Codable {
@@ -133,7 +149,7 @@ struct RESTLightConfigurationColor: Codable {
     }
 }
 
-enum RESTLightConfigurationColorCTStartup: Codable {
+enum RESTLightConfigurationColorCtStartup: Codable {
     case int(Int)
     case string(String)
 }
@@ -143,9 +159,9 @@ struct RESTLightConfigurationColorCt: Codable {
         case startup
     }
     
-    let startup: RESTLightConfigurationColorCTStartup?
+    let startup: RESTLightConfigurationColorCtStartup?
     
-    init(startup: RESTLightConfigurationColorCTStartup? = nil) {
+    init(startup: RESTLightConfigurationColorCtStartup? = nil) {
         self.startup = startup
     }
     
@@ -158,12 +174,25 @@ struct RESTLightConfigurationColorCt: Codable {
             self.startup = .string(value)
         } else {
             let context = DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Unable to decode value for 'startup'")
-            throw DecodingError.typeMismatch(RESTLightConfigurationColorCTStartup.self, context)
+            throw DecodingError.typeMismatch(RESTLightConfigurationColorCtStartup.self, context)
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        switch startup {
+        case .int(let value):
+            try container.encode(value, forKey: .startup)
+        case .string(let string):
+            try container.encode(string, forKey: .startup)
+        case .none:
+            break
         }
     }
 }
 
-enum RESTLightConfigurationColorXYStartup: Codable {
+enum RESTLightConfigurationColorXyStartup: Codable {
     case double([Double])
     case string(String)
 }
@@ -173,9 +202,9 @@ struct RESTLightConfigurationColorXy: Codable {
         case startup
     }
     
-    let startup: RESTLightConfigurationColorXYStartup?
+    let startup: RESTLightConfigurationColorXyStartup?
     
-    init(startup: RESTLightConfigurationColorXYStartup? = nil) {
+    init(startup: RESTLightConfigurationColorXyStartup? = nil) {
         self.startup = startup
     }
     
@@ -188,7 +217,20 @@ struct RESTLightConfigurationColorXy: Codable {
             self.startup = .string(value)
         } else {
             let context = DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Unable to decode value for 'startup'")
-            throw DecodingError.typeMismatch(RESTLightConfigurationColorXYStartup.self, context)
+            throw DecodingError.typeMismatch(RESTLightConfigurationColorXyStartup.self, context)
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        switch startup {
+        case .double(let value):
+            try container.encode(value, forKey: .startup)
+        case .string(let string):
+            try container.encode(string, forKey: .startup)
+        case .none:
+            break
         }
     }
 }
@@ -219,6 +261,19 @@ struct RESTLightConfigurationOn: Codable {
         } else {
             let context = DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Unable to decode value for 'startup'")
             throw DecodingError.typeMismatch(RESTLightConfigurationOnStartup.self, context)
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        switch startup {
+        case .bool(let value):
+            try container.encode(value, forKey: .startup)
+        case .string(let string):
+            try container.encode(string, forKey: .startup)
+        case .none:
+            break
         }
     }
 }
