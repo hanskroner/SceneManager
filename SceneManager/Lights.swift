@@ -88,6 +88,18 @@ struct LightView: View {
                 .onChange(of: selectedLightItemIds) { previousValue, newValue in
                     selectionDidChange(to: newValue)
                 }
+                // Use 'scrollToLightItemId' to scroll a specific item into view.
+                // Note that for the ScrollViewReader proxy to know what item to scroll to, ".id()"
+                // must be set in LightView's view builder.
+                .onChange(of: lights.scrollToLightItemId) {
+                    if let item = lights.scrollToLightItemId {
+                        lights.scrollToLightItemId = nil
+                        
+                        withAnimation {
+                            scrollReader.scrollTo(item, anchor: .center)
+                        }
+                    }
+                }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 LightBottomBarView(isPresentingSheet: $isPresentingSheet)
@@ -102,6 +114,9 @@ struct LightView: View {
 }
 
 struct LightItemView: View {
+    @Environment(Lights.self) private var lights
+    @Environment(WindowItem.self) private var window
+    
     @Binding var lightItem: LightItem
     
     @State private var isFocused: Bool = false
@@ -126,6 +141,30 @@ struct LightItemView: View {
                         
                         // Clear the 'isRenaming' flag
                         lightItem.isRenaming = false
+                        
+                        // Make sure the light being renamed is selected
+                        lights.selectedLightItemIds.insert(lightItem.id)
+                        
+                        // Scroll to renamed light
+                        // FIXME: Only scroll if lightItem isn't visible
+                        lights.scrollToLightItemId = lightItem.id
+                        
+                        // Carry out the rename operation
+                        window.clearWarnings()
+                        Task {
+                            try await RESTModel.shared.renameLight(lightId: lightItem.lightId, name: lightItem.name)
+                            
+                            // Sort the list of LightItems
+                            lights.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+                        } catch: { error in
+                            // If rename fails, restore the previous name for
+                            // the Light before handling the error.
+                            lightItem.restoreName()
+                            
+                            logger.error("\(error, privacy: .public)")
+                            
+                            window.handleError(error)
+                        }
                     }
                     .onAppear {
                         isFocused = true
@@ -133,6 +172,7 @@ struct LightItemView: View {
                     .background(.thinMaterial)
             } else {
                 Text(lightItem.name)
+                    .fixedSize()
                     .contextMenu {
                         Button(action: {
                             lightItem.isRenaming = true

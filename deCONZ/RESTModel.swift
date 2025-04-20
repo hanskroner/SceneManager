@@ -69,6 +69,13 @@ public final class RESTModel {
         return lights.count == hueLights.count
     }
     
+    public func renameLight(lightId: Int, name: String) async throws {
+        try await self._client.setLightAttributes(lightId: lightId, name: name)
+        
+        // Update the model's cache
+        self._lights[lightId]?.name = name
+    }
+    
     public func lightConfigurations() async throws -> [LightConfiguration] {
         let lights = try await _client.getAllLights()
         return lights.compactMap({LightConfiguration(from: $0.value, id: $0.key)})

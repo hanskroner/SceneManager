@@ -5,6 +5,13 @@
 //  Created by Hans Kröner on 24/03/2025.
 //
 
+// MARK: Light
+
+struct RESTLightObject: Codable, Hashable {
+    var id: String?
+    var name: String?
+}
+
 // MARK: Group
 
 struct RESTGroupObject: Codable, Hashable {

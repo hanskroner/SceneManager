@@ -19,6 +19,7 @@ private let uuidNamespace = "com.hanskroner.scenemanager.light"
 class Lights {
     var items: [LightItem] = []
     var selectedLightItemIds = Set<UUID>()
+    var scrollToLightItemId: UUID? = nil
     
     // FIXME: Remove init for proper data feed from a Model
     convenience init(useDemoData: Bool) {

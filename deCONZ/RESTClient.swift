@@ -207,6 +207,30 @@ actor RESTClient {
         }
     }
     
+    func setLightAttributes(lightId: Int, name: String? = nil) async throws {
+        let light = RESTLightObject(name: name)
+
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/lights/\(lightId)/")
+
+        do {
+            var request = request(forPath: activity.path, using: .put)
+            request.httpBody = try encoder.encode(light)
+            activity.request = String(data: request.httpBody!, encoding: .utf8)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            self.activity?.append(activity)
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
+    }
+    
     func setLightConfiguration(lightId: Int, configuration: RESTLightConfiguration) async throws {
         var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/lights/\(lightId)/config")
         
