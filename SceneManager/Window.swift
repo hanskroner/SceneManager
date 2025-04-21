@@ -202,17 +202,17 @@ class WindowItem {
                 //   State Editor shows light state
                 //   Dynamics Editor is cleared
                 //   State Editor tab is selected
-                self.stateEditorText = try await self.jsonLightState(forLightId: selectedLightId,
-                                                                         groupId: groupId,
-                                                                         sceneId: nil)
+                let lightState = try await self.jsonLightState(forLightId: selectedLightId,
+                                                               groupId: groupId,
+                                                               sceneId: nil)
+                if ((lightState != "") && (self.selectedEditorTab != .sceneState)) {
+                    self.selectedEditorTab = .sceneState
+                }
+                
+                self.stateEditorText = lightState
                 self.dynamicsEditorText = ""
                 
-                if ((self.stateEditorText != "") && (self.selectedEditorTab != .sceneState)) {
-                    Task { @MainActor in
-                        self.selectedEditorTab = .sceneState
-                    }
-                    return
-                }
+                return
             } else {
                 // No lights are selected
                 //   Clear out both Editors
@@ -230,31 +230,32 @@ class WindowItem {
                 //   Dynamics Editor shows dynamic scene
                 //   State Editor tab is selected only if dynamics is empty
                 let sceneState = try await self.jsonSceneState(forLightId: selectedLightId,
-                                                                 groupId: groupId,
-                                                                 sceneId: sceneId)
+                                                               groupId: groupId,
+                                                               sceneId: sceneId)
+                
+                if ((sceneState.1 == "") && (self.selectedEditorTab != .sceneState)) {
+                    self.selectedEditorTab = .sceneState
+                }
+                
                 self.stateEditorText = sceneState.0
                 self.dynamicsEditorText = sceneState.1
                 
-                if ((self.dynamicsEditorText == "") && (self.selectedEditorTab != .sceneState)) {
-                    Task { @MainActor in
-                        self.selectedEditorTab = .sceneState
-                    }
-                    return
-                }
+                return
             } else {
                 // No lights are selected
                 //   State Editor is cleared
                 //   Dynamics Editor shows dynamic scene
                 //   Dynamics Editor tab is selected only if dynamics is not empty
-                self.stateEditorText = ""
-                self.dynamicsEditorText = try await self.jsonDynamicState(forGroupId: groupId, sceneId: sceneId)
+                let dynamicState = try await self.jsonDynamicState(forGroupId: groupId, sceneId: sceneId)
                 
-                if ((self.dynamicsEditorText != "") && (self.selectedEditorTab != .dynamicScene)) {
-                    Task { @MainActor in
-                        self.selectedEditorTab = .dynamicScene
-                    }
-                    return
+                if ((dynamicState != "") && (self.selectedEditorTab != .dynamicScene)) {
+                    self.selectedEditorTab = .dynamicScene
                 }
+                
+                self.stateEditorText = ""
+                self.dynamicsEditorText = dynamicState
+                
+                return
             }
         }
     }

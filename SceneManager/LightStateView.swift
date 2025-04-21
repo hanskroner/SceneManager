@@ -48,7 +48,8 @@ struct LightStateView: View {
                                       || sidebar.selectedSidebarItem?.kind != .scene)
                         
                         if (lights.selectedLightItems.isEmpty
-                            && focus != .state) {
+                            && focus != .state
+                            && window.stateEditorText.isEmpty) {
                             Text("Select a light or" + (sidebar.selectedSidebarItem?.kind == .scene ? "\n type a state" : " scene"))
                                 .multilineTextAlignment(.center)
                                 .font(.body)
@@ -96,11 +97,11 @@ struct LightStateView: View {
                         
                         switch first.state {
                         case .recall(_):
-                            window.stateEditorText = first.state.json.prettyPrint()
                             window.selectedEditorTab = .sceneState
+                            window.stateEditorText = first.state.json.prettyPrint()
                         case .dynamic(_):
-                            window.dynamicsEditorText = first.state.json.prettyPrint()
                             window.selectedEditorTab = .dynamicScene
+                            window.dynamicsEditorText = first.state.json.prettyPrint()
                         }
                         
                         return true
