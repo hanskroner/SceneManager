@@ -48,6 +48,18 @@ public final class RESTModel {
         await _client.setActivity(activity)
     }
     
+    // MARK: Configuration
+    
+    public func createAPIKey(name: String? = nil, key: String? = nil) async throws -> String {
+        let apiKey = try await self._client.acquireAPIKey(name: name, key: key)
+        
+        return apiKey
+    }
+    
+    public func deleteAPIKey(key: String) async throws {
+        try await self._client.deleteAPIKey(key: key)
+    }
+    
     // MARK: Lights
     
     public var lights: [Light] {

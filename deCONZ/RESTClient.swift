@@ -148,6 +148,92 @@ actor RESTClient {
         self.activity = activity
     }
     
+    // MARK: - deCONZ Configuration REST API Methods
+    
+    func getFullState() async throws -> RESTConfiguration {
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/config/")
+        
+        do {
+            let request = request(forPath: activity.path, using: .get)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            let configuration = try decoder.decode(RESTConfiguration.self, from: data)
+            
+            self.activity?.append(activity)
+            return configuration
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
+    }
+    
+    func acquireAPIKey(name: String? = nil, key: String? = nil) async throws -> String {
+        // Generate a name with the format "SceneManager#xxxxxxxx" if one
+        // isn't provided. Confusingly, the REST API calls the key "username" and
+        // the identifier name for the key "devicetype" in this API call.
+        let hexDate = String(abs(Date().hashValue), radix: 16, uppercase: false)
+        let config = RESTAPIKeyObject(devicetype: name ?? String("SceneManager#"+hexDate.prefix(8)), username: key)
+        
+        var activity = RESTActivityEntry(path: "/api")
+        
+        do {
+            var request = request(forPath: activity.path, using: .post)
+            request.httpBody = try encoder.encode(config)
+            activity.request = String(data: request.httpBody!, encoding: .utf8)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            let successResponse: [APIResponseContext] = try decoder.decode([APIResponseContext].self, from: data)
+            let username: String? = {
+                switch successResponse.first {
+                case .success(let success):
+                    guard success.path == "username", let username = success.value as? String else { return nil }
+                    return username
+                    
+                default: return nil
+                }
+            }()
+            
+            guard let username else { throw APIError.unknownResponse(data: data, response: response) }
+            self.activity?.append(activity)
+            return username
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
+    }
+    
+    func deleteAPIKey(key: String) async throws {
+        var activity = RESTActivityEntry(path: "/api/\(self.apiKey)/config/whitelist/\(key)")
+        
+        do {
+            let request = request(forPath: activity.path, using: .delete)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            activity.response = String(data: data, encoding: .utf8)
+            
+            try check(data: data, from: response)
+            
+            self.activity?.append(activity)
+        } catch {
+            activity.outcome = .failure(description: error.localizedDescription)
+            self.activity?.append(activity)
+            
+            throw error
+        }
+    }
+    
     // MARK: - deCONZ Lights REST API Methods
     
     func getAllLights() async throws -> [Int: RESTLight] {

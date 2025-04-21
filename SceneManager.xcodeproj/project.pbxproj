@@ -69,6 +69,7 @@
 		3AE527452DB0CA17005667D8 /* UUID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE527442DB0CA14005667D8 /* UUID.swift */; };
 		3AE527462DB10472005667D8 /* UUID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE527442DB0CA14005667D8 /* UUID.swift */; };
 		3AE527492DB1351C005667D8 /* SidebarModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE527472DB13518005667D8 /* SidebarModel.swift */; };
+		3AE527632DB67C47005667D8 /* RESTConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE527622DB67C44005667D8 /* RESTConfiguration.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -179,6 +180,7 @@
 		3AE527422DB0C952005667D8 /* LightModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightModel.swift; sourceTree = "<group>"; };
 		3AE527442DB0CA14005667D8 /* UUID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UUID.swift; sourceTree = "<group>"; };
 		3AE527472DB13518005667D8 /* SidebarModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarModel.swift; sourceTree = "<group>"; };
+		3AE527622DB67C44005667D8 /* RESTConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RESTConfiguration.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -272,6 +274,7 @@
 				3A2BDFA52CCE124A00B582AA /* RESTLight.swift */,
 				3A2BDFA82CCE731E00B582AA /* RESTGroup.swift */,
 				3A2BDFAA2CCE778A00B582AA /* RESTScene.swift */,
+				3AE527622DB67C44005667D8 /* RESTConfiguration.swift */,
 			);
 			path = RESTModels;
 			sourceTree = "<group>";
@@ -628,6 +631,7 @@
 				3A2BDFAB2CCE778A00B582AA /* RESTScene.swift in Sources */,
 				3A2BDF772CCD082C00B582AA /* RESTClient.swift in Sources */,
 				3A2BDFA62CCE125100B582AA /* RESTLight.swift in Sources */,
+				3AE527632DB67C47005667D8 /* RESTConfiguration.swift in Sources */,
 				3A2BDF722CCCF99200B582AA /* JSON.swift in Sources */,
 				3A2BDF752CCCFCCD00B582AA /* Models.swift in Sources */,
 			);

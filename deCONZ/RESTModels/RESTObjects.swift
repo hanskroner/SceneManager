@@ -5,6 +5,13 @@
 //  Created by Hans Kröner on 24/03/2025.
 //
 
+// MARK: Configuration
+
+struct RESTAPIKeyObject: Codable, Hashable {
+    var devicetype: String
+    var username: String?
+}
+
 // MARK: Light
 
 struct RESTLightObject: Codable, Hashable {
