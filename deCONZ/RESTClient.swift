@@ -30,29 +30,21 @@ extension APIError: CustomStringConvertible {
 public enum APIResponseContext: Decodable {
     case error(APIResponseContextError)
     case success(APIResponseContextSuccess)
-    // TODO: Consider associating 'address' and 'value'
-    //       'address' is the path that was affected and is always
-    //       a string and the "key" in the JSON. 'value' is the value
-    //       associated with the key and can be many different types.
-    case successPartial
-    
-    case unknown
     
     enum CodingKeys: CodingKey {
         case error, success
     }
     
     public init(from decoder: Decoder) throws {
-        let rootContainer = try decoder.container(keyedBy: CodingKeys.self)
+        let rootContainer = try! decoder.container(keyedBy: CodingKeys.self)
 
         if let successContainer = try? rootContainer.decodeIfPresent(APIResponseContextSuccess.self, forKey: .success) {
             self = .success(successContainer)
-        } else if let _ = try? rootContainer.nestedUnkeyedContainer(forKey: .success) {
-            self = .successPartial
-        } else if let errorContainer = try rootContainer.decodeIfPresent(APIResponseContextError.self, forKey: .error) {
+        } else if let errorContainer = try? rootContainer.decodeIfPresent(APIResponseContextError.self, forKey: .error) {
             self = .error(errorContainer)
         } else {
-            self = .unknown
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath,
+                                                                    debugDescription: "Not a 'success' or 'error' response"))
         }
     }
 }
@@ -61,31 +53,30 @@ public struct APIResponseContextError: Decodable {
     public let type: Int
     public let address: String
     public let description: String
-    
-    enum CodingKeys: CodingKey {
-        case type
-        case address
-        case description
-    }
-    
-    public init(from decoder: Decoder) throws {
-        let errorContainer = try decoder.container(keyedBy: CodingKeys.self)
-        type = try errorContainer.decode(Int.self, forKey: .type)
-        address = try errorContainer.decode(String.self, forKey: .address)
-        description = try errorContainer.decode(String.self, forKey: .description)
-    }
 }
 
 public struct APIResponseContextSuccess: Decodable {
-    let id: String
-    
-    enum CodingKeys: CodingKey {
-        case id
-    }
+    let path: String
+    let value: Any
     
     public init(from decoder: Decoder) throws {
-        let successContainer = try decoder.container(keyedBy: CodingKeys.self)
-        id = try successContainer.decode(String.self, forKey: .id)
+        let container = try decoder.singleValueContainer()
+        if let entries = try container.decode(JSON.self).objectValue {
+            path = entries.keys.first ?? ""
+            
+            if let string = entries.values.first?.stringValue {
+                value = string
+            } else if let double = entries.values.first?.doubleValue {
+                value = double
+            } else if let boolean = entries.values.first?.boolValue {
+                value = boolean
+            } else {
+                value = ""
+            }
+        } else {
+            path = ""
+            value = ""
+        }
     }
 }
 
@@ -135,9 +126,7 @@ actor RESTClient {
             let responseEntries: [APIResponseContext] = try decoder.decode([APIResponseContext].self, from: data)
             for entry in responseEntries {
                 switch entry {
-                case .successPartial: break
                 case .success(_): break
-                case .unknown: break
                 case .error(let error): errorEntries.append(error)
                 }
             }
@@ -271,9 +260,13 @@ actor RESTClient {
             try check(data: data, from: response)
             
             let successResponse: [APIResponseContext] = try decoder.decode([APIResponseContext].self, from: data)
-            let responseId = {
+            let responseId: Int? = {
                 switch successResponse.first {
-                case .success(let success): return Int(success.id)
+                case .success(let success):
+                    // The REST API returns "id" as a String
+                    guard success.path == "id", let id = success.value as? String else { return nil }
+                    return Int(id)
+                    
                 default: return nil
                 }
             }()
@@ -398,9 +391,13 @@ actor RESTClient {
             try check(data: data, from: response)
             
             let successResponse: [APIResponseContext] = try decoder.decode([APIResponseContext].self, from: data)
-            let responseId = {
+            let responseId: Int? = {
                 switch successResponse.first {
-                case .success(let success): return Int(success.id)
+                case .success(let success):
+                    // The REST API returns "id" as a String
+                    guard success.path == "id", let id = success.value as? String else { return nil }
+                    return Int(id)
+                    
                 default: return nil
                 }
             }()
