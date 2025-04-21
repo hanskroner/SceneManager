@@ -61,6 +61,26 @@ struct SettingsView: View {
                     Text("deCONZ API Key:")
                     TextField("ABCDEF1234", text: $key)
                         .focused($focus, equals: .key)
+                    
+                    Button("Acquire Key") {
+                        Task { @MainActor in
+                            window.clearWarnings()
+                        }
+                        
+                        Task {
+                            // Ensure the RESTModel.shared object has a client
+                            // configured to the URL in the 'url' TextField.
+                            await RESTModel.shared.reconnect()
+                            
+                            key = try await RESTModel.shared.createAPIKey()
+                        } catch: { error in
+                            logger.error("\(error, privacy: .public)")
+                            
+                            Task { @MainActor in
+                                window.handleError(error)
+                            }
+                        }
+                    }
                 }
             }
             .onSubmit(of: .text) {
@@ -75,7 +95,7 @@ struct SettingsView: View {
             .tag(Tabs.deconz)
         }
         .padding()
-        .frame(width: 375, height: 100)
+        .frame(width: 400, height: 100)
     }
 }
 

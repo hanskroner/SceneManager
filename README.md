@@ -57,10 +57,13 @@ does so for the REST commands.
 ## Setup
 
 Scene Manager needs to know the URL for the deCONZ REST API, as well as have a valid API Key to access the
-API endpoints. Both are provided through the 'Settings' (Scene Manager -> Settings...) menu bar item.
+API endpoints. Both are provided through the 'Settings' (Scene Manager -> Settings...) menu bar item. If
+the deCONZ gateway is unlocked, Scene Manager can acquire a key for itself by clicking on the 'Acquire Key'
+button.
 
 Read [here](https://dresden-elektronik.github.io/deconz-rest-doc/misc/authorization/) for help on how to
-generate and acquire an API key.
+generate and acquire an API key as well as how to unlock the gateway to allow Scene Manager to acquire a
+key on its own.
 
 ## Groups
 
