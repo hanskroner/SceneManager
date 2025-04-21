@@ -414,3 +414,15 @@ public struct LightConfiguration: Identifiable {
     
     public var isEnabled: Bool = true
 }
+
+// MARK: - Gateway Configuration
+
+public struct ConfigurationAPIKey: Identifiable {
+    public let id: UUID = UUID()
+    
+    public let key: String
+    public let name: String
+    
+    public let created: Date
+    public let lastUsed: Date
+}

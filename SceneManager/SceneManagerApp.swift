@@ -33,6 +33,9 @@ struct SceneManagerApp: App {
     
     @State private var isPresentingStartupConfiguration = false
     
+    @State private var isPresentingPhosconDelete = false
+    @State private var phosconKeys: [String] = []
+    
     @Environment(\.openWindow) private var openWindow
     
     var body: some SwiftUI.Scene {
@@ -45,11 +48,25 @@ struct SceneManagerApp: App {
                 .environment(lights)
                 .environment(presets)
                 .sheet(isPresented: $isPresentingStartupConfiguration) {
-                } content: {
                     LightConfigurationView()
                         .environment(window)
                         .frame(width: 680)
                         .padding(12)
+                }
+                .confirmationDialog("Are you sure you want to delete \(phosconKeys.count) Phoscon keys?", isPresented: $isPresentingPhosconDelete) {
+                    Button("Delete \(phosconKeys.count) Keys", role: .destructive) {
+                        // Call on the REST API to perform deletion
+                        window.clearWarnings()
+                        Task {
+                            for key in phosconKeys {
+                                try await RESTModel.shared.deleteAPIKey(key: key)
+                            }
+                        } catch: { error in
+                            logger.error("\(error, privacy: .public)")
+                            
+                            window.handleError(error)
+                        }
+                    }
                 }
                 .task {
                     window.clearWarnings()
@@ -72,6 +89,17 @@ struct SceneManagerApp: App {
                         try await RESTModel.shared.refreshCache()
                     }
                 }.keyboardShortcut("r", modifiers: .command)
+                
+                Divider()
+                
+                Button("Delete Phoscon Keys…") {
+                    Task {
+                        let allKeys = try await RESTModel.shared.allAPIKeys()
+                        phosconKeys = allKeys.filter({ $0.name.hasPrefix("Phoscon#") }).map({ $0.key })
+                        
+                        isPresentingPhosconDelete = true
+                    }
+                }
             }
             
             CommandMenu("Lights") {

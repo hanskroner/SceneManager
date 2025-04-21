@@ -85,6 +85,9 @@
     "Are you sure you want to delete '%@'?" : {
 
     },
+    "Are you sure you want to delete %lld Phoscon keys?" : {
+
+    },
     "Are you sure you want to delete the Dynamic Scene in '%@'?" : {
 
     },
@@ -125,7 +128,13 @@
     "deCONZ URL:" : {
 
     },
+    "Delete %lld Keys" : {
+
+    },
     "Delete Dynamic Scene" : {
+
+    },
+    "Delete Phoscon Keys…" : {
 
     },
     "Delete Preset" : {
@@ -150,6 +159,9 @@
 
     },
     "Groups" : {
+
+    },
+    "Hello, World!" : {
 
     },
     "Hide or show the Scene Presets" : {

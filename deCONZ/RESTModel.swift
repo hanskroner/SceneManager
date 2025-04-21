@@ -50,6 +50,13 @@ public final class RESTModel {
     
     // MARK: Configuration
     
+    public func allAPIKeys() async throws -> [ConfigurationAPIKey] {
+        let configuration = try await self._client.getFullState()
+        return configuration.whitelist.map({ key, value in
+            ConfigurationAPIKey(key: key, configuration: value)
+        })
+    }
+    
     public func createAPIKey(name: String? = nil, key: String? = nil) async throws -> String {
         let apiKey = try await self._client.acquireAPIKey(name: name, key: key)
         
