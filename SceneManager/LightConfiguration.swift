@@ -19,6 +19,9 @@ struct LightConfigurationView: View {
     @State private var lightsConfiguration: [LightConfiguration] = []
     @State private var filterLightNames: String = ""
     
+    @State private var isLoading = true
+    @State private var hasError = true
+    
     private var filteredLightsConfiguration: Binding<[LightConfiguration]> {
         Binding {
             guard !filterLightNames.isEmpty else {
@@ -185,33 +188,63 @@ struct LightConfigurationView: View {
             
             Divider()
             
-            ScrollViewReader { scrollReader in
-                Table(filteredLightsConfiguration) {
-                    TableColumn("Light") { $configuration in
-                        ConfigurationView(light: $configuration)
-                            .padding(.vertical, 4)
-                    }
-                    .width(240)
+            if isLoading {
+                HStack {
+                    Spacer()
                     
-                    TableColumn("Configuration") { $configuration in
-                        ConfigurationEntriesView(light: $configuration)
-                            .padding(.vertical, 4)
-                    }
-                    .width(240)
+                    ProgressView()
                     
-                    TableColumn("Extras") { $configuration in
-                        ConfigurationExtrasView(light: $configuration)
-                            .padding(.vertical, 4)
-                    }
-                    .width(130)
+                    Spacer()
                 }
-                .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
-                .tableColumnHeaders(.hidden)
-                .tableStyle(.inset(alternatesRowBackgrounds: false))
-                // Size must be set explicitly
-                .frame(idealHeight: 400)
-                .scrollBounceBehavior(.basedOnSize)
+                .frame(height: 300)
                 .padding(.bottom, 8)
+            } else if hasError {
+                HStack {
+                    Spacer()
+                    
+                    VStack {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .symbolRenderingMode(.multicolor)
+                            .frame(height: 32)
+                        
+                        Text("Error loading lights")
+                            .foregroundStyle(.yellow)
+                    }
+                    
+                    Spacer()
+                }
+                .padding(.vertical, 8)
+            } else {
+                ScrollViewReader { scrollReader in
+                    Table(filteredLightsConfiguration) {
+                        TableColumn("Light") { $configuration in
+                            ConfigurationView(light: $configuration)
+                                .padding(.vertical, 4)
+                        }
+                        .width(240)
+                        
+                        TableColumn("Configuration") { $configuration in
+                            ConfigurationEntriesView(light: $configuration)
+                                .padding(.vertical, 4)
+                        }
+                        .width(240)
+                        
+                        TableColumn("Extras") { $configuration in
+                            ConfigurationExtrasView(light: $configuration)
+                                .padding(.vertical, 4)
+                        }
+                        .width(130)
+                    }
+                    .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+                    .tableColumnHeaders(.hidden)
+                    .tableStyle(.inset(alternatesRowBackgrounds: false))
+                    // Size must be set explicitly
+                    .frame(height: 300)
+                    .scrollBounceBehavior(.basedOnSize)
+                    .padding(.bottom, 8)
+                }
             }
             
             HStack {
@@ -241,11 +274,24 @@ struct LightConfigurationView: View {
                 }
                 .fixedSize()
                 .keyboardShortcut(.defaultAction)
+                .disabled(isLoading || hasError)
             }
             .padding(.horizontal, 18)
         }
         .task {
-            lightsConfiguration = (try? await RESTModel.shared.lightConfigurations()) ?? []
+            do {
+                hasError = false
+                window.clearWarnings()
+                lightsConfiguration = try await RESTModel.shared.lightConfigurations()
+            } catch {
+                hasError = true
+                
+                logger.error("\(error, privacy: .public)")
+                
+                window.handleError(error)
+            }
+            
+            isLoading = false
         }
         .sheet(isPresented: $isPresentingProgress) {
             ConfigurationProgressView(progressValue: $progressValue,
