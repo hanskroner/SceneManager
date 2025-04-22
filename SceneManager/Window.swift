@@ -224,9 +224,9 @@ class WindowItem {
                 //   State Editor shows light state
                 //   Dynamics Editor is cleared
                 //   State Editor tab is selected
-                let lightState = try await self.jsonLightState(forLightId: selectedLightId,
-                                                               groupId: groupId,
-                                                               sceneId: nil)
+                let lightState = try await RESTModel.shared.lightState(withLightId: selectedLightId,
+                                                             groupId: groupId)
+
                 if ((lightState != "") && (self.selectedEditorTab != .sceneState)) {
                     self.selectedEditorTab = .sceneState
                 }
@@ -251,9 +251,9 @@ class WindowItem {
                 //   State Editor shows light state for scene
                 //   Dynamics Editor shows dynamic scene
                 //   State Editor tab is selected only if dynamics is empty
-                let sceneState = try await self.jsonSceneState(forLightId: selectedLightId,
-                                                               groupId: groupId,
-                                                               sceneId: sceneId)
+                let sceneState = try await RESTModel.shared.sceneState(forLightId: selectedLightId,
+                                                                       groupId: groupId,
+                                                                       sceneId: sceneId)
                 
                 if ((sceneState.1 == "") && (self.selectedEditorTab != .sceneState)) {
                     self.selectedEditorTab = .sceneState
@@ -268,7 +268,8 @@ class WindowItem {
                 //   State Editor is cleared
                 //   Dynamics Editor shows dynamic scene
                 //   Dynamics Editor tab is selected only if dynamics is not empty
-                let dynamicState = try await self.jsonDynamicState(forGroupId: groupId, sceneId: sceneId)
+                let dynamicState = try await RESTModel.shared.dynamicState(withGroupId: groupId,
+                                                                           sceneId: sceneId)
                 
                 if ((dynamicState != "") && (self.selectedEditorTab != .dynamicScene)) {
                     self.selectedEditorTab = .dynamicScene
@@ -280,24 +281,6 @@ class WindowItem {
                 return
             }
         }
-    }
-    
-    // MARK: - Light State Methods
-    
-    func jsonLightState(forLightId lightId: Int, groupId: Int? = nil, sceneId: Int? = nil) async throws -> String {
-        return try await RESTModel.shared.lightState(withLightId: lightId, groupId: groupId, sceneId: sceneId)
-    }
-    
-    func jsonDynamicState(forGroupId groupId: Int, sceneId: Int) async throws -> String {
-        return try await RESTModel.shared.dynamicState(withGroupId: groupId, sceneId: sceneId)
-    }
-    
-    func jsonSceneState(forLightId lightId: Int, groupId: Int, sceneId: Int) async throws -> (String, String) {
-        return try await RESTModel.shared.sceneState(forLightId: lightId, groupId: groupId, sceneId: sceneId)
-    }
-    
-    func configureLight(_ configuration: LightConfiguration) async throws {
-        return try await RESTModel.shared.setLightConfiguration(configuration)
     }
     
     // MARK: - Light Methods

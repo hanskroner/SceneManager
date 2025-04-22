@@ -78,7 +78,7 @@ struct LightConfigurationView: View {
             guard !shouldCancel else { return }
             
             do {
-                try await window.configureLight(configuration)
+                try await RESTModel.shared.setLightConfiguration(configuration)
             } catch {
                 shouldCancel = true
                 throw error
