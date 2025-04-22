@@ -311,23 +311,21 @@ class WindowItem {
     // MARK: - Scene Methods
     
     func applyState(_ state: PresetStateDefinition, toGroupId groupId: Int, sceneId: Int, lightIds: [Int]) async throws {
-        do {
-            switch state {
-            case .recall(_):
-                return try await RESTModel.shared.modifyLightStateInScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonLightState: state.json.prettyPrint())
-                
-            case .dynamic(_):
-                try await RESTModel.shared.applyDynamicStatesToScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonDynamicState: state.json.prettyPrint())
-                
-                // Update UI models
-                // Updating a dynamic scene needs to be reflected in the Sidebar model
-                if let sidebarItem = self.sidebar?.sidebarItem(forGroupId: groupId, sceneId: sceneId) {
-                    sidebarItem.hasDynamics = true
-                }
-                
-                return
+        switch state {
+        case .recall(_):
+            try await RESTModel.shared.modifyLightStateInScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonLightState: state.json.prettyPrint())
+            
+        case .dynamic(_):
+            try await RESTModel.shared.applyDynamicStatesToScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, jsonDynamicState: state.json.prettyPrint())
+            
+            // Update UI models
+            // Updating a dynamic scene needs to be reflected in the Sidebar model
+            if let sidebarItem = self.sidebar?.sidebarItem(forGroupId: groupId, sceneId: sceneId) {
+                sidebarItem.hasDynamics = true
             }
         }
+        
+        RESTModel.shared.signalUpdate()
     }
     
     func deleteDynamicScene(fromGroupId groupId: Int, sceneId: Int) async throws {
@@ -345,5 +343,6 @@ class WindowItem {
             self.selectedEditorTab = .sceneState
         }
         
+        RESTModel.shared.signalUpdate()
     }
 }

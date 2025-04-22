@@ -169,6 +169,10 @@ public final class RESTModel {
         self._groups[groupId] = Group(groupId: groupId, name: name)
         self._scenes[groupId] = [Int: Scene]()
         return groupId
+        
+        // !!!: Don't signal for model update
+        //      Sidebar performs additional operations on the SidebarItem
+        //      and will signal the model itself when its done.
     }
     
     public func renameGroup(groupId: Int, name: String) async throws {
@@ -176,6 +180,10 @@ public final class RESTModel {
         
         // Update the model's cache
         self._groups[groupId]?.name = name
+        
+        // !!!: Don't signal for model update
+        //      Sidebar performs additional operations on the SidebarItem
+        //      and will signal the model itself when its done.
     }
     
     public func addLightsToGroup(groupId: Int, lightIds: [Int]) async throws {
@@ -270,6 +278,10 @@ public final class RESTModel {
         self._groups[groupId]?.sceneIds.append(sceneId)
         self._scenes[groupId]?[sceneId] = Scene(sceneId: sceneId, groupId: groupId, name: name)
         return sceneId
+        
+        // !!!: Don't signal for model update
+        //      Sidebar performs additional operations on the SidebarItem
+        //      and will signal the model itself when its done.
     }
     
     public func renameScene(groupId: Int, sceneId: Int, name: String) async throws {
@@ -277,6 +289,10 @@ public final class RESTModel {
         
         // Update the model's cache
         self._scenes[groupId]?[sceneId]?.name = name
+        
+        // !!!: Don't signal for model update
+        //      Sidebar performs additional operations on the SidebarItem
+        //      and will signal the model itself when its done.
     }
     
     public func addLightsToScene(groupId: Int, sceneId: Int, lightIds: [Int]) async throws {
@@ -353,6 +369,15 @@ public final class RESTModel {
         } else {
             try await self._client.modifyScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds, lightState: restLightState)
         }
+        
+        // Update the model's cache
+        for lightId in lightIds {
+            self._scenes[groupId]?[sceneId]?.lightStates[lightId] = lightState
+        }
+        
+        // !!!: Don't signal for model update
+        //      Window performs additional operations on the UI
+        //      and will signal the model itself when its done.
     }
     
     public func applyDynamicStatesToScene(groupId: Int, sceneId: Int, lightIds: [Int], jsonDynamicState: String) async throws {
@@ -426,10 +451,24 @@ public final class RESTModel {
                                             auto_dynamic: dynamics.auto_dynamic)
         
         try await self._client.modifyHueDynamicScene(groupId: groupId, sceneId: sceneId, dynamicState: dynamicState)
+        
+        // Update the model's cache
+        self._scenes[groupId]?[sceneId]?.dynamicState = dynamics
+        
+        // !!!: Don't signal for model update
+        //      Window performs additional operations on the UI
+        //      and will signal the model itself when its done.
     }
     
     public func deleteDynamicStatesFromScene(groupId: Int, sceneId: Int) async throws {
         try await self._client.modifyHueDynamicScene(groupId: groupId, sceneId: sceneId, dynamicState: nil)
+        
+        // Update the model's cache
+        self._scenes[groupId]?[sceneId]?.dynamicState = nil
+        
+        // !!!: Don't signal for model update
+        //      Window performs additional operations on the UI
+        //      and will signal the model itself when its done.
     }
     
     public func deleteScene(groupId: Int, sceneId: Int) async throws {
@@ -438,6 +477,10 @@ public final class RESTModel {
         // Update the model's cache
         self._groups[groupId]?.sceneIds.removeAll { $0 == sceneId }
         self._scenes[groupId]?.removeValue(forKey: sceneId)
+        
+        // !!!: Don't signal for model update
+        //      Sidebar performs additional operations on the SidebarItem
+        //      and will signal the model itself when its done.
     }
     
     public func recallScene(groupId: Int, sceneId: Int) async throws {
