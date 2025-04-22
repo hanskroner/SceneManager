@@ -12,7 +12,7 @@ import deCONZ
 private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "settings")
 
 struct SettingsView: View {
-    @Environment(WindowItem.self) private var window
+//    @Environment(WindowItem.self) private var window
     
     @AppStorage("deconz_url") private var url = ""
     @AppStorage("deconz_key") private var key = ""
@@ -31,7 +31,7 @@ struct SettingsView: View {
         guard !url.isEmpty, !key.isEmpty else { return }
         
         Task { @MainActor in
-            window.clearWarnings()
+//            window.clearWarnings()
         }
         
         Task {
@@ -41,7 +41,7 @@ struct SettingsView: View {
             logger.error("\(error, privacy: .public)")
             
             Task { @MainActor in
-                window.handleError(error)
+//                window.handleError(error)
             }
         }
     }
@@ -64,7 +64,7 @@ struct SettingsView: View {
                     
                     Button("Acquire Key") {
                         Task { @MainActor in
-                            window.clearWarnings()
+//                            window.clearWarnings()
                         }
                         
                         Task {
@@ -77,7 +77,7 @@ struct SettingsView: View {
                             logger.error("\(error, privacy: .public)")
                             
                             Task { @MainActor in
-                                window.handleError(error)
+//                                window.handleError(error)
                             }
                         }
                     }

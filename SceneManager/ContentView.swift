@@ -7,13 +7,20 @@
 
 import SwiftUI
 import OSLog
+import deCONZ
 
 private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "content-view")
 
 struct ContentView: View {
-    @Environment(Sidebar.self) private var sidebar
-    @Environment(Lights.self) private var lights
-    @Environment(WindowItem.self) private var window
+    @State private var sidebar = Sidebar()
+    @State private var lights = Lights()
+    @State private var presets = Presets()
+    
+    @State private var window = WindowItem()
+    
+//    @Environment(Sidebar.self) private var sidebar
+//    @Environment(Lights.self) private var lights
+//    @Environment(WindowItem.self) private var window
     
     @Environment(\.appearsActive) private var appearsActive
     
@@ -151,6 +158,45 @@ struct ContentView: View {
             }
             .inspectorColumnWidth(min: 200, ideal: 200, max: 200)
         }
+        .sheet(isPresented: $window.isPresentingStartupConfiguration) {
+            LightConfigurationView()
+                .environment(window)
+                .frame(width: 680)
+                .padding(12)
+        }
+        .confirmationDialog("Are you sure you want to delete \(window.phosconKeys.count) Phoscon keys?", isPresented: $window.isPresentingPhosconDelete) {
+            Button("Delete \(window.phosconKeys.count) Keys", role: .destructive) {
+                // Call on the REST API to perform deletion
+                window.clearWarnings()
+                Task {
+                    for key in window.phosconKeys {
+                        try await RESTModel.shared.deleteAPIKey(key: key)
+                    }
+                } catch: { error in
+                    logger.error("\(error, privacy: .public)")
+                    
+                    window.handleError(error)
+                }
+            }
+        }
+        .task {
+            window.clearWarnings()
+            do {
+                window.sidebar = sidebar
+                window.lights = lights
+                
+                try await RESTModel.shared.refreshCache()
+            } catch {
+                logger.error("\(error, privacy: .public)")
+                
+                window.handleError(error)
+            }
+        }
+        .focusedSceneValue(\.activeWindow, window)
+        .environment(window)
+        .environment(sidebar)
+        .environment(lights)
+        .environment(presets)
     }
 }
 

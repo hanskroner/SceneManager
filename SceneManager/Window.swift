@@ -13,26 +13,46 @@ import deCONZ
 
 private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "window")
 
+struct FocusedWindowItem: FocusedValueKey {
+    typealias Value = WindowItem
+}
+
+extension FocusedValues {
+    var activeWindow: FocusedWindowItem.Value? {
+        get { self[FocusedWindowItem.self] }
+        set { self[FocusedWindowItem.self] = newValue }
+    }
+}
+
+
 @MainActor
 @Observable
 class WindowItem {
     weak var sidebar: Sidebar? = nil
     weak var lights: Lights? = nil
     
-    var navigationTitle: String? = nil
-    var navigationSubtitle: String? = nil
-    
     var groupId: Int? = nil
     var sceneId: Int? = nil
     
+    // Navigation Bar
+    var navigationTitle: String? = nil
+    var navigationSubtitle: String? = nil
+    
+    // State editors
     var selectedEditorTab: Tab = .sceneState
     var stateEditorText: String = ""
     var dynamicsEditorText: String = ""
     
+    // Warning indicator
     var hasWarning: Bool = false
     var isShowingWarning: Bool = false
     var warningTitle: String? = nil
     var warningBody: String? = nil
+    
+    // Menu Bar actions
+    var isPresentingStartupConfiguration = false
+    var isPresentingPhosconDelete = false
+    var phosconKeys: [String] = []
     
     var modelRefreshedSubscription: AnyCancellable? = nil
         

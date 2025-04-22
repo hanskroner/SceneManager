@@ -25,88 +25,16 @@ extension Task where Failure == Never, Success == Void {
 
 @main
 struct SceneManagerApp: App {
-    @State private var sidebar = Sidebar()
-    @State private var lights = Lights()
-    @State private var presets = Presets()
-    
-    @State private var window = WindowItem()
-    
-    @State private var isPresentingStartupConfiguration = false
-    
-    @State private var isPresentingPhosconDelete = false
-    @State private var phosconKeys: [String] = []
-    
     @Environment(\.openWindow) private var openWindow
     
     var body: some SwiftUI.Scene {
-        // TODO: Independent instances of environment objects per-window seems complicated with SwiftUI
-        //        Use 'Window' instead of 'WindowGroup' - which won't allow the app to have multiple windows.
-        Window("Scene Manager", id: "scenemanager") {
+        WindowGroup(for: UUID.self) { _ in
             ContentView()
-                .environment(window)
-                .environment(sidebar)
-                .environment(lights)
-                .environment(presets)
-                .sheet(isPresented: $isPresentingStartupConfiguration) {
-                    LightConfigurationView()
-                        .environment(window)
-                        .frame(width: 680)
-                        .padding(12)
-                }
-                .confirmationDialog("Are you sure you want to delete \(phosconKeys.count) Phoscon keys?", isPresented: $isPresentingPhosconDelete) {
-                    Button("Delete \(phosconKeys.count) Keys", role: .destructive) {
-                        // Call on the REST API to perform deletion
-                        window.clearWarnings()
-                        Task {
-                            for key in phosconKeys {
-                                try await RESTModel.shared.deleteAPIKey(key: key)
-                            }
-                        } catch: { error in
-                            logger.error("\(error, privacy: .public)")
-                            
-                            window.handleError(error)
-                        }
-                    }
-                }
-                .task {
-                    window.clearWarnings()
-                    do {
-                        window.sidebar = sidebar
-                        window.lights = lights
-                        
-                        try await RESTModel.shared.refreshCache()
-                    } catch {
-                        logger.error("\(error, privacy: .public)")
-                        
-                        window.handleError(error)
-                    }
-                }
         }
         .commands {
-            CommandMenu("deCONZ") {
-                Button("Reload") {
-                    Task {
-                        try await RESTModel.shared.refreshCache()
-                    }
-                }.keyboardShortcut("r", modifiers: .command)
-                
-                Divider()
-                
-                Button("Delete Phoscon Keys…") {
-                    Task {
-                        let allKeys = try await RESTModel.shared.allAPIKeys()
-                        phosconKeys = allKeys.filter({ $0.name.hasPrefix("Phoscon#") }).map({ $0.key })
-                        
-                        isPresentingPhosconDelete = true
-                    }
-                }
-            }
+            deCONZCommandMenu()
             
-            CommandMenu("Lights") {
-                Button("Configure Startup Values…") {
-                    isPresentingStartupConfiguration = true
-                }.keyboardShortcut("s", modifiers: .command)
-            }
+            LightsCommandMenu()
             
             CommandGroup(after: .singleWindowList) {
                 Button("Activity") {
@@ -124,8 +52,51 @@ struct SceneManagerApp: App {
         Settings {
             // TODO: Won't work with WindowGroup
             SettingsView()
-                .environment(window)
+//                .environment(window)
         }
 #endif
+    }
+}
+
+struct deCONZCommandMenu: Commands {
+    @FocusedValue(\.activeWindow) var activeWindow
+    
+    var body: some Commands {
+        CommandMenu("deCONZ") {
+            Button("Reload") {
+                Task {
+                    try await RESTModel.shared.refreshCache()
+                }
+            }.keyboardShortcut("r", modifiers: .command)
+            
+            Divider()
+            
+            Button("Delete Phoscon Keys…") {
+                guard let activeWindow else { return }
+                
+                Task {
+                    let allKeys = try await RESTModel.shared.allAPIKeys()
+                    activeWindow.phosconKeys = allKeys.filter({ $0.name.hasPrefix("Phoscon#") }).map({ $0.key })
+                    
+                    // FIXME: Don't show if 'count' is 0
+                    //        Instead, show a dialog saying there are not Phoscon Keys.
+                    activeWindow.isPresentingPhosconDelete = true
+                }
+            }
+        }
+    }
+}
+
+struct LightsCommandMenu: Commands {
+    @FocusedValue(\.activeWindow) var activeWindow
+    
+    var body: some Commands {
+        CommandMenu("Lights") {
+            Button("Configure Startup Values…") {
+                guard let activeWindow else { return }
+                
+                activeWindow.isPresentingStartupConfiguration = true
+            }.keyboardShortcut("s", modifiers: .command)
+        }
     }
 }
