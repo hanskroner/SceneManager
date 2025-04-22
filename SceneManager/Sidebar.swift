@@ -315,6 +315,10 @@ struct SidebarItemView: View {
                             let parent = sidebar.items.filter({ $0.items.contains(item) }).first!
                             parent.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
                         }
+                        
+                        // Signal RESTModel to issue a notification that
+                        // it's data has been updated.
+                        RESTModel.shared.signalUpdate()
                     } catch: { error in
                         logger.error("\(error, privacy: .public)")
                         
@@ -392,6 +396,10 @@ struct SidebarItemView: View {
                         window.navigationSubtitle = nil
                         window.groupId = nil
                         window.sceneId = nil
+                        
+                        // Signal RESTModel to issue a notification that
+                        // it's data has been updated.
+                        RESTModel.shared.signalUpdate()
                     } catch: { error in
                         logger.error("\(error, privacy: .public)")
                         

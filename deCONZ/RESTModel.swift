@@ -261,6 +261,7 @@ public final class RESTModel {
         let sceneId = try await self._client.createScene(groupId: groupId, name: name)
         
         // Insert a new, empty Scene into the model's cache
+        self._groups[groupId]?.sceneIds.append(sceneId)
         self._scenes[groupId]?[sceneId] = Scene(sceneId: sceneId, groupId: groupId, name: name)
         return sceneId
     }
@@ -424,6 +425,7 @@ public final class RESTModel {
         try await self._client.deleteScene(groupId: groupId, sceneId: sceneId)
         
         // Update the model's cache
+        self._groups[groupId]?.sceneIds.removeAll { $0 == sceneId }
         self._scenes[groupId]?.removeValue(forKey: sceneId)
     }
     
@@ -455,6 +457,10 @@ public final class RESTModel {
     
     // MARK: Refresh
     
+    public func signalUpdate() {
+        self.onDataRefreshed.send(Date())
+    }
+    
     public func refreshCache() async throws {
         self._lights.removeAll()
         self._groups.removeAll()
@@ -469,8 +475,7 @@ public final class RESTModel {
             restGroups = try await _client.getAllGroups()
             restScenes = try await _client.getAllScenes()
         } catch {
-            // Publish update
-            self.onDataRefreshed.send(Date())
+            signalUpdate()
             
             throw error
         }
@@ -506,7 +511,6 @@ public final class RESTModel {
             groupDictionary[groupEntry.0] = Group(from: groupEntry.1, id: groupEntry.0, lightIds: groupLightIds, sceneIds: groupSceneIds)
         })
         
-        // Publish update
-        self.onDataRefreshed.send(Date())
+        signalUpdate()
     }
 }
