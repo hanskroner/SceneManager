@@ -325,14 +325,6 @@ class WindowItem {
         return RESTModel.shared.lights.filter { inGroupButNotInSceneLightIds.contains($0.lightId) }
     }
     
-    // MARK: - Group Methods
-    
-    func turnOff(groupId: Int) async throws {
-        try await RESTModel.shared.modifyGroupState(groupId: groupId, lightState: LightState(on: false))
-        
-        // No need to update UI models - they don't track the state of lights
-    }
-    
     // MARK: - Scene Methods
     
     func applyState(_ state: PresetStateDefinition, toGroupId groupId: Int, sceneId: Int, lightIds: [Int]) async throws {
@@ -370,10 +362,5 @@ class WindowItem {
             self.selectedEditorTab = .sceneState
         }
         
-    }
-    
-    func recall(groupId: Int, sceneId: Int) async throws {
-        try await RESTModel.shared.recallScene(groupId: groupId, sceneId: sceneId)
-        // No need to update UI models - they don't track the state of lights
     }
 }

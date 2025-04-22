@@ -33,7 +33,7 @@ struct ContentView: View {
         
         window.clearWarnings()
         Task {
-            try await window.recall(groupId: groupId, sceneId: sceneId)
+            try await RESTModel.shared.recallScene(groupId: groupId, sceneId: sceneId)
         } catch: { error in
             logger.error("\(error, privacy: .public)")
             
@@ -46,7 +46,7 @@ struct ContentView: View {
         
         window.clearWarnings()
         Task {
-            try await window.turnOff(groupId: groupId)
+            try await RESTModel.shared.modifyGroupState(groupId: groupId, lightState: LightState(on: false))
         } catch: { error in
             logger.error("\(error, privacy: .public)")
             
