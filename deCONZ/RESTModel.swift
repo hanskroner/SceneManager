@@ -93,6 +93,8 @@ public final class RESTModel {
         
         // Update the model's cache
         self._lights[lightId]?.name = name
+        
+        signalUpdate()
     }
     
     public func lightConfigurations() async throws -> [LightConfiguration] {
@@ -189,6 +191,8 @@ public final class RESTModel {
         let cachedGroup = self._groups[groupId]!
         cachedGroup.lightIds = newLightsInGroup
         self._groups[groupId] = cachedGroup
+        
+        signalUpdate()
     }
     
     public func removeLightsFromGroup(groupId: Int, lightIds: [Int]) async throws {
@@ -213,6 +217,8 @@ public final class RESTModel {
             cachedScene.lightStates = cachedScene.lightStates.filter{ !lightIds.contains($0.key) }
             self._scenes[groupId]?[sceneId] = cachedScene
         }
+        
+        signalUpdate()
     }
     
     public func modifyGroupState(groupId: Int, lightState: LightState) async throws {
@@ -295,6 +301,9 @@ public final class RESTModel {
         cachedScene.lightStates = lightIds.reduce(into: [Int: LightState](), { stateDictionary, lightId in
             stateDictionary[lightId] = LightState(from: fetchedLightStates[lightId]!)
         })
+        self._scenes[groupId]?[sceneId] = cachedScene
+        
+        signalUpdate()
     }
     
     public func removeLightsFromScene(groupId: Int, sceneId: Int, lightIds: [Int]) async throws {
@@ -315,6 +324,8 @@ public final class RESTModel {
         if (newLightsInScene.isEmpty) {
             self._scenes[groupId]?.removeValue(forKey: sceneId)
         }
+        
+        signalUpdate()
     }
     
     public func modifyLightStateInScene(groupId: Int, sceneId: Int, lightIds: [Int], jsonLightState: String) async throws {
@@ -458,7 +469,9 @@ public final class RESTModel {
     // MARK: Refresh
     
     public func signalUpdate() {
-        self.onDataRefreshed.send(Date())
+        Task {
+            self.onDataRefreshed.send(Date())
+        }
     }
     
     public func refreshCache() async throws {

@@ -88,6 +88,10 @@ struct LightView: View {
                 .onChange(of: selectedLightItemIds) { previousValue, newValue in
                     selectionDidChange(to: newValue)
                 }
+                .onChange(of: lights.selectedLightItemIds) { previousValue, newValue in
+                    // Apply changes to selection donw directly in the model to the View
+                    selectedLightItemIds = newValue
+                }
                 // Use 'scrollToLightItemId' to scroll a specific item into view.
                 // Note that for the ScrollViewReader proxy to know what item to scroll to, ".id()"
                 // must be set in LightView's view builder.
@@ -240,20 +244,23 @@ struct LightBottomBarView: View {
                 
                 Button(action: {
                     window.clearWarnings()
+                    
+                    // Remove selection
+                    let lightIds = Array(lights.selectedLightItems).map({ $0.lightId })
+                    lights.selectedLightItemIds.removeAll()
+                    
                     Task {
                         switch (sidebar.selectedSidebarItem?.kind) {
                         case .group:
-                            try await window.remove(lightIds: Array(lights.selectedLightItems).map({ $0.lightId }), fromGroupId: window.groupId!)
+                            try await RESTModel.shared.removeLightsFromGroup(groupId: window.groupId!,
+                                                                             lightIds: lightIds)
                             
                         case .scene:
-                            try await window.remove(lightIds: Array(lights.selectedLightItems).map({ $0.lightId }), fromGroupId: window.groupId!, sceneId: window.sceneId!)
+                            try await RESTModel.shared.removeLightsFromScene(groupId: window.groupId!,
+                                                                             sceneId: window.sceneId!,
+                                                                             lightIds: lightIds)
                         default:
                             break
-                        }
-                        
-                        Task { @MainActor in
-                            // Remove selection
-                            lights.selectedLightItemIds.removeAll()
                         }
                     } catch: { error in
                         logger.error("\(error, privacy: .public)")
@@ -341,11 +348,14 @@ struct AddLightView: View {
                     Task {
                         switch (sidebar.selectedSidebarItem?.kind) {
                         case .group:
-                            try await window.add(lightIds: Array(addLightItems).map({ $0.lightId }), toGroupId: window.groupId!)
+                            try await RESTModel.shared.addLightsToGroup(groupId: window.groupId!,
+                                                                        lightIds: Array(addLightItems).map({ $0.lightId }))
                             
                         case .scene:
-                            try await window.add(lightIds: Array(addLightItems).map({ $0.lightId }), toGroupId: window.groupId!, sceneId: window.sceneId!)
-                            
+                            try await RESTModel.shared.addLightsToScene(groupId: window.groupId!,
+                                                                        sceneId: window.sceneId!,
+                                                                        lightIds: Array(addLightItems).map({ $0.lightId }))
+
                         default:
                             break
                         }

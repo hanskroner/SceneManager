@@ -47,9 +47,9 @@ class Lights {
         // Find the selected LighItems
         // The lists are traversed in this particular way to preseve the selection ordering.
         var lightItems = Set<LightItem>()
-        selectedLoop: for (selectedLightItemID) in selectedLightItemIds {
+        selectedLoop: for (selectedLightItemId) in selectedLightItemIds {
             existingLoop: for (lightItem) in self.items {
-                if (lightItem.id == selectedLightItemID) {
+                if (lightItem.id == selectedLightItemId) {
                     lightItems.insert(lightItem)
                     continue selectedLoop
                 }

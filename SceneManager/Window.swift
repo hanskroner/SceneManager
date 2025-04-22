@@ -90,27 +90,29 @@ class WindowItem {
                 newItems.append(groupItem)
             }
             
-            // Try to restore selections safely
-            if let sidebarSelection {
-                // Check to see if the selected item exists in the new items
-                var selectedItem: SidebarItem? = nil
-                for item in newItems {
-                    if item.id == sidebarSelection { selectedItem = item; break }
-                    if let child = item.items.first(where: { $0.id == sidebarSelection }) { selectedItem = child; break }
+            Task { @MainActor in
+                // Try to restore selections safely
+                if let sidebarSelection {
+                    // Check to see if the selected item exists in the new items
+                    var selectedItem: SidebarItem? = nil
+                    for item in newItems {
+                        if item.id == sidebarSelection { selectedItem = item; break }
+                        if let child = item.items.first(where: { $0.id == sidebarSelection }) { selectedItem = child; break }
+                    }
+                    
+                    // Restore selection only if it exists in the new items
+                    if let selectedItem  {
+                        self?.groupId = selectedItem.groupId
+                        self?.sceneId = selectedItem.sceneId
+                    } else {
+                        self?.sidebar?.selectedSidebarItemId = nil
+                        self?.lights?.selectedLightItemIds.removeAll()
+                    }
                 }
                 
-                // Restore selection only if it exists in the new items
-                if let selectedItem  {
-                    self?.groupId = selectedItem.groupId
-                    self?.sceneId = selectedItem.sceneId
-                } else {
-                    self?.sidebar?.selectedSidebarItemId = nil
-                    self?.lights?.selectedLightItemIds.removeAll()
-                }
+                self?.sidebar?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+                self?.updateLights(forGroupId: self?.groupId, sceneId: self?.sceneId)
             }
-            
-            self?.sidebar?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
-            self?.updateLights(forGroupId: self?.groupId, sceneId: self?.sceneId)
         }
     }
     
@@ -321,46 +323,6 @@ class WindowItem {
         let inGroupButNotInSceneLightIds = groupLightIds.filter { !sceneLightIds.contains($0) }
         
         return RESTModel.shared.lights.filter { inGroupButNotInSceneLightIds.contains($0.lightId) }
-    }
-    
-    func add(lightIds: [Int], toGroupId groupId: Int) async throws {
-        try await RESTModel.shared.addLightsToGroup(groupId: groupId, lightIds: lightIds)
-        
-        // Update UI models
-        let addedItems = lightIds.map({
-            LightItem(light: RESTModel.shared.light(withLightId: $0)!)
-        })
-        
-        let newItems = Array(Set([self.lights?.items ?? [], addedItems].joined()))
-        self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
-    }
-    
-    func add(lightIds: [Int], toGroupId groupId: Int, sceneId: Int) async throws {
-        try await RESTModel.shared.addLightsToScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds)
-        
-        // Update UI models
-        let addedItems = lightIds.map({
-            LightItem(light: RESTModel.shared.light(withLightId: $0)!)
-        })
-        
-        let newItems = Array(Set([self.lights?.items ?? [], addedItems].joined()))
-        self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
-    }
-    
-    func remove(lightIds: [Int], fromGroupId groupId: Int) async throws {
-        try await RESTModel.shared.removeLightsFromGroup(groupId: groupId, lightIds: lightIds)
-        
-        // Update UI models
-        let newItems = self.lights?.items.filter { !lightIds.contains($0.lightId) } ?? []
-        self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
-    }
-    
-    func remove(lightIds: [Int], fromGroupId groupId: Int, sceneId: Int) async throws {
-        try await RESTModel.shared.removeLightsFromScene(groupId: groupId, sceneId: sceneId, lightIds: lightIds)
-        
-        // Update UI models
-        let newItems = self.lights?.items.filter { !lightIds.contains($0.lightId) } ?? []
-        self.lights?.items = newItems.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
     }
     
     // MARK: - Group Methods
