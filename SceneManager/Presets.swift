@@ -284,6 +284,14 @@ struct PresetItemView: View {
         }
     }
     
+    var drawColors: Bool {
+        switch presetItem.state {
+        case .recall(_):
+            return !(presetItem.state.effectPalette.count == 1 && presetItem.state.colorPalette.count == 1)
+        default: return true
+        }
+    }
+    
     var body: some View {
         VStack(alignment: .leading) {
             if (presetItem.isRenaming) {
@@ -370,17 +378,19 @@ struct PresetItemView: View {
                     .zIndex(Double(effects.count + colors.count - index))
                 }
                 
-                ForEach(Array(colors.enumerated()), id: \.offset) { index, presetColor in
-                    HStack(spacing: 0) {
-                        Color.clear
-                            .frame(width: CGFloat(effects.isEmpty ? index : index + 1) * spacing, height: 44)
-                        
-                        Circle()
-                            .fill(presetColor.color)
-                            .shadow(color: .black, radius: 4, x: 0, y: 0)
-                            .frame(width: 32, height: 32)
+                if drawColors {
+                    ForEach(Array(colors.enumerated()), id: \.offset) { index, presetColor in
+                        HStack(spacing: 0) {
+                            Color.clear
+                                .frame(width: CGFloat(effects.isEmpty ? index : index + 1) * spacing, height: 44)
+                            
+                            Circle()
+                                .fill(presetColor.color)
+                                .shadow(color: .black, radius: 4, x: 0, y: 0)
+                                .frame(width: 32, height: 32)
+                        }
+                        .zIndex(Double(colors.count - index))
                     }
-                    .zIndex(Double(colors.count - index))
                 }
             }
             .padding(.horizontal, 12)
