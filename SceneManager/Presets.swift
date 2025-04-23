@@ -6,11 +6,13 @@
 //
 
 import SwiftUI
+import Combine
 import UniformTypeIdentifiers
 import OSLog
 import deCONZ
 
 private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "presets")
+private let uuidNamespace = "com.hanskroner.scenemanager.presets"
 
 // MARK: - Presets Model
 
@@ -20,180 +22,23 @@ class Presets {
     
     var scrollToPresetItemId: UUID? = nil
     
-    private let decoder = JSONDecoder()
-    private let encoder = JSONEncoder()
+    var modelRefreshedSubscription: AnyCancellable? = nil
     
     init() {
-        // Pretty-print JSON output
-        encoder.outputFormatting = .prettyPrinted
-        
-        do {
-            if let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
-                let documentsContents = try FileManager.default.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
-                
-                if documentsContents.isEmpty {
-                    try copyFilesFromBundleToDocumentsDirectoryConformingTo(.json)
-                }
-                
-                groups = try loadPresetItemsFromDocumentsDirectory()
-            }
-        } catch DecodingError.typeMismatch(_, let context) {
-            logger.error("\(context.debugDescription, privacy: .public)")
-        } catch {
-            logger.error("\(error, privacy: .public)")
-        }
-    }
-    
-    func copyFilesFromBundleToDocumentsDirectoryConformingTo(_ fileType: UTType) throws {
-        if let resPath = Bundle.main.resourcePath {
-            let dirContents = try FileManager.default.contentsOfDirectory(atPath: resPath)
-            let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
-            
-            var filteredFiles = [String]()
-            for (fileExtension) in fileType.tags[.filenameExtension] ?? [] {
-                filteredFiles.append(contentsOf: dirContents.filter { $0.contains(fileExtension) })
-            }
-            
-            for (fileName) in filteredFiles {
-                if let documentsURL = documentsURL {
-                    let sourceURL = URL(fileURLWithPath: Bundle.main.resourcePath!).appendingPathComponent(fileName, conformingTo: fileType)
-                    let destURL = documentsURL.appendingPathComponent(fileName)
-                    try FileManager.default.copyItem(at: sourceURL, to: destURL)
-                }
-            }
-        }
-    }
-    
-    private func filesInDocumentsDirectoryConformingTo(_ fileType: UTType) throws -> [URL] {
-        var fileURLs = [URL]()
-        guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return fileURLs }
-        
-        // Add files for the Documents directory
-        let dirContents = try FileManager.default.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
-        for (fileExtension) in fileType.tags[.filenameExtension] ?? [] {
-            fileURLs.append(contentsOf: dirContents.filter{ $0.absoluteString.contains(fileExtension) })
-        }
-        
-        // Add files for each sub directory in the Documents directory
-        // This is quicker and simpler than performing deep enumeration using
-        // a method like 'enumeratorAtURL'.
-        let dirs = try dirContents.filter { try $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory ?? false }
-        for (dirURL) in dirs {
-            let dirContents = try FileManager.default.contentsOfDirectory(at: dirURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
-            for (fileExtension) in fileType.tags[.filenameExtension] ?? [] {
-                fileURLs.append(contentsOf: dirContents.filter{ $0.absoluteString.contains(fileExtension) })
-            }
-        }
-        
-        return fileURLs
-    }
-    
-    enum PresetFileError: Error {
-        case noURLError(String)
-    }
-    
-    private func urlForPresetItem(_ presetItem: PresetItem) throws -> URL {
-        // Create file name from Preset name
-        let fileName = presetItem.name.lowercased().replacing(" ", with: "_").appending(".json")
-        
-        let url = presetItem.url?.deletingLastPathComponent().appendingPathComponent(fileName)
-        
-        // If the URL is nil, this PresetItem doesn't have a file representation.
-        // Its URL would be the base 'Documents' directory with 'fileName' appended to it.
-        if url == nil {
-            guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-                throw PresetFileError.noURLError("Could not get URL for '\(presetItem.name)'")
-            }
-            
-            return documentsURL.appendingPathComponent(fileName)
-        }
-        
-        guard let url else {
-            throw PresetFileError.noURLError("Could not get URL for '\(presetItem.name)'")
-        }
-        
-        return url
-    }
-    
-    func loadPresetItemsFromDocumentsDirectory() throws -> [PresetItemGroup] {
-        // Use a temporary Dictionary to store the Presets
-        // Appending a PresetItem into the array that belongs to subdirectory
-        // becomes a bit less of a hassle with Dictionaries
-        var presetDirs: [String: [PresetItem]] = [:]
-        
-        guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return [] }
-        
-        let presetFiles = try filesInDocumentsDirectoryConformingTo(.json)
-        for (presetFile) in presetFiles {
-            // Check if this preset file is in a subdirectory
-            let subDir: String
-            if (presetFile.deletingLastPathComponent().lastPathComponent != documentsURL.lastPathComponent) {
-                subDir = presetFile.deletingLastPathComponent().lastPathComponent
-            } else {
-                subDir = "custom"
-            }
-            
-            // Decode the preset file's contents and add them to Preset Dictionary
-            let json = try String(contentsOf: presetFile, encoding: .utf8)
-            let presetItem = try decoder.decode(PresetItem.self, from: json.data(using: .utf8)!)
-            presetItem.url = presetFile
-            presetDirs[subDir, default: []].append(presetItem)
-        }
-        
-        // Re-pack the dictionary into a sorted Array of PresetItemGroup
-        // The presets in each group are also sorted. The 'custom' group
-        // is included last, and as the first group.
-        var presetGroups: [PresetItemGroup] = []
-        let withoutCustom = presetDirs.filter { $0.key != "custom" }
-        for (group, presets) in withoutCustom.sorted(by: { $0.key.localizedStandardCompare($1.key) == .orderedAscending }) {
-            presetGroups.append(PresetItemGroup(name: group,
-                                                presets: presets.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })))
-        }
-        
-        if let customGroup = presetDirs["custom"] {
-            presetGroups.insert(PresetItemGroup(name: "custom",
-                                                presets: customGroup.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })), at: 0)
-        }
-        
-        return presetGroups
-    }
-    
-    func savePresetItemToDocumentsDirectory(_ presetItem: PresetItem) throws {
-        let fileContents = try encoder.encode(presetItem)
-        let destURL = try urlForPresetItem(presetItem)
-        try fileContents.write(to: destURL)
-    }
-    
-    func renamePresetItemInDocumentsDirectory(_ presetItem: PresetItem) throws {
-      guard let file = presetItem.url else { return }
-        
-        let newFileURL = try urlForPresetItem(presetItem)
-        var previousFileURL = file
-        
-        var resourceValues = URLResourceValues()
-        resourceValues.name = newFileURL.lastPathComponent
-        presetItem.url = newFileURL
-        
-        try previousFileURL.setResourceValues(resourceValues)
-        try savePresetItemToDocumentsDirectory(presetItem)
-    }
-    
-    func deletePresetItemInDocumentsDirectory(_ presetItem: PresetItem) throws {
-        guard let url = presetItem.url else {
-            throw PresetFileError.noURLError("Could not get URL for '\(presetItem.name)'")
-        }
-        
-        try FileManager.default.removeItem(at: url)
-        
-        // FIXME: Remove the directory if empty
-        guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-        let subdirURL = url.deletingLastPathComponent()
-        guard documentsURL != subdirURL else { return }
-        
-        // Add files for the Documents directory
-        let dirContents = try FileManager.default.contentsOfDirectory(at: subdirURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
-        if dirContents.isEmpty {
-            try FileManager.default.removeItem(at: subdirURL)
+        modelRefreshedSubscription = PresetsModel.shared.onPresetsUpdated.sink { [weak self] groups in
+            // 'groups', being an array, is a value type - but PresetItemGroup is a class (reference type).
+            // Each window requires an a copy of the 'PresetItemGroup's to be able to operate on it
+            // independently. The operations are commited to PresetModel, which then signals the other
+            // windows when they need to update their local copies of 'PresetItemGroup's.
+            self?.groups = groups.map({ group in
+                let newGroup = PresetItemGroup(name: group.name)
+                newGroup.presets = group.presets.map({
+                    let item = PresetItem(name: $0.name, image: $0.image, state: $0.state)
+                    item.url = $0.url
+                    return item
+                })
+                return newGroup
+            })
         }
     }
 }
@@ -202,12 +47,14 @@ class Presets {
 
 @Observable
 class PresetItemGroup: Identifiable, Codable {
-    let id: UUID = UUID()
+    let id: UUID
     
     let name: String
     var presets: [PresetItem]
     
     init(name: String, presets: [PresetItem] = []) {
+        self.id = UUID(namespace: uuidNamespace, input: "group-\(name)")!
+        
         self.name = name
         self.presets = presets
     }
@@ -221,6 +68,8 @@ class PresetItemGroup: Identifiable, Codable {
         
         name = try container.decode(String.self, forKey: .name)
         presets = try container.decode([PresetItem].self, forKey: .presets)
+        
+        self.id = UUID(namespace: uuidNamespace, input: "group-\(name)")!
     }
     
     func encode(to encoder: Encoder) throws {
@@ -233,7 +82,7 @@ class PresetItemGroup: Identifiable, Codable {
 
 @Observable
 class PresetItem: Identifiable, Codable, Transferable {
-    let id: UUID = UUID()
+    let id: UUID
     
     var name: String
     var image: String?
@@ -268,6 +117,8 @@ class PresetItem: Identifiable, Codable, Transferable {
     }
     
     init(name: String, image: String? = nil, state: PresetStateDefinition) {
+        self.id = UUID(namespace: uuidNamespace, input: "\(name)")!
+        
         self.name = name
         self.image = image
         self.state = state
@@ -280,7 +131,8 @@ class PresetItem: Identifiable, Codable, Transferable {
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        name = try container.decode(String.self, forKey: .name)
+        let name = try container.decode(String.self, forKey: .name)
+        self.name = name
         image = try container.decodeIfPresent(String.self, forKey: .image)
         
         let recall = try container.decodeIfPresent(PresetState.self, forKey: .state)
@@ -293,6 +145,8 @@ class PresetItem: Identifiable, Codable, Transferable {
         } else {
             throw DecodingError.valueNotFound(PresetStateDefinition.self, DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Could not decode preset state"))
         }
+        
+        id = UUID(namespace: uuidNamespace, input: "\(name)")!
     }
     
     func encode(to encoder: Encoder) throws {
@@ -329,15 +183,12 @@ struct PresetsView: View {
         return group.name.replacing("_", with: " ").capitalized
     }
     
-    var body: some View {
-        @Bindable var presets = presets
-        
-        var filteredPresetGroups: [PresetItemGroup] {
+    private var filteredPresetGroups: Binding<[PresetItemGroup]> {
+        Binding {
             guard !presetsSearchText.isEmpty else { return presets.groups }
             
             var displayPresetGroups: [PresetItemGroup] = []
             
-            // Filter
             for group in presets.groups {
                 let filteredPresets = group.presets.filter {
                     $0.name.localizedCaseInsensitiveContains(presetsSearchText)
@@ -346,20 +197,28 @@ struct PresetsView: View {
                 displayPresetGroups.append(PresetItemGroup(name: group.name,
                                                            presets: filteredPresets))
             }
-    
+            
             return displayPresetGroups
+        } set: { presetGroups in
+            for group in presetGroups {
+                presets.groups.removeAll(where: { $0.id == group.id })
+            }
+            
+            presets.groups.append(contentsOf: presetGroups)
         }
-        
+    }
+    
+    var body: some View {
         ScrollViewReader { scrollReader in
             List {
                 // Empty section to keep filter results from "floating" up
                 // and hiding under the search bar.
                 Section { }
                 
-                ForEach(filteredPresetGroups, id: \.id) { group in
+                ForEach(filteredPresetGroups, id: \.id) { $group in
                     Section {
-                        ForEach(group.presets, id: \.id) { item in
-                            PresetItemView(presetItem: item)
+                        ForEach($group.presets, id: \.id) { $item in
+                            PresetItemView(presetItem: $item)
                         }
                     } header: {
                         // Offset the list section
@@ -410,11 +269,11 @@ struct PresetItemView: View {
     @Environment(Presets.self) private var presets
     @Environment(WindowItem.self) private var window
     
-    @State var presetItem: PresetItem
+    @Binding var presetItem: PresetItem
     
     @State private var isPresentingConfirmation: Bool = false
     
-    @FocusState private var isFocused: Bool
+    @State private var isFocused: Bool = false
     
     func presetImage(forPresetItem item: PresetItem) -> String {
         if let image = item.image { return image }
@@ -428,12 +287,11 @@ struct PresetItemView: View {
     var body: some View {
         VStack(alignment: .leading) {
             if (presetItem.isRenaming) {
-                TextField("", text: $presetItem.name)
+                EditableText(text: $presetItem.name, hasFocus: $isFocused, isRenaming: $presetItem.isRenaming)
                     .id(presetItem.id)
                     .font(.headline)
                     .padding([.leading, .trailing], 12)
                     .padding(.top, 32)
-                    .focused($isFocused)
                     .onChange(of: isFocused) {
                         // Only act when focus is lost by the TextField the rename is happening in
                         guard isFocused == false else { return }
@@ -443,7 +301,7 @@ struct PresetItemView: View {
                         
                         window.clearWarnings()
                         do {
-                            try presets.renamePresetItemInDocumentsDirectory(presetItem)
+                            try PresetsModel.shared.renamePresetItem(presetItem)
                         } catch {
                             logger.error("\(error, privacy: .public)")
                             
@@ -582,7 +440,7 @@ struct PresetItemView: View {
     func deletePresetItem(_ presetItem: PresetItem) {
         window.clearWarnings()
         do {
-            try presets.deletePresetItemInDocumentsDirectory(presetItem)
+            try PresetsModel.shared.deletePresetItem(presetItem)
         } catch {
             logger.error("\(error, privacy: .public)")
             
@@ -627,7 +485,6 @@ struct AddPresetView: View {
     
     @Binding var showingPopover: Bool
     
-    private let _encoder = JSONEncoder()
     private let _decoder = JSONDecoder()
     
     var body: some View {
@@ -681,20 +538,24 @@ struct AddPresetView: View {
                     // overwrite its state instead of creating a new file.
                     if let index = customGroup.presets.firstIndex(where: { $0.name == newPresetName }) {
                         window.clearWarnings()
+                        // Update the state of the existing preset, but save it in case
+                        // the filesystem operation fails and it needs to be reverted.
+                        let existingPreset = customGroup.presets[index]
+                        let currentState = existingPreset.state
+                        existingPreset.state = stateDefinition
                         do {
-                            try presets.savePresetItemToDocumentsDirectory(customGroup.presets[index])
+                            existingPreset.state = stateDefinition
+                            try PresetsModel.shared.savePresetItem(existingPreset)
                         } catch {
+                            existingPreset.state = currentState
+                            
                             logger.error("\(error, privacy: .public)")
                             
                             window.handleError(error)
                             return
                         }
                         
-                        // If the filesystem operation was successful, update the PresetItem
-                        // in the model and scroll it into view. The popover can now be dismissed.
-                        
                         withAnimation {
-                            customGroup.presets[index].state = stateDefinition
                             showingPopover = false
                         }
                         
@@ -706,7 +567,7 @@ struct AddPresetView: View {
                         
                         window.clearWarnings()
                         do {
-                            try presets.savePresetItemToDocumentsDirectory(newPresetItem)
+                            try PresetsModel.shared.savePresetItem(newPresetItem)
                         } catch {
                             logger.error("\(error, privacy: .public)")
                             
@@ -739,8 +600,9 @@ struct AddPresetView: View {
                 .disabled(newPresetName.isEmpty)
                 .keyboardShortcut(.defaultAction)
             }
-            .padding(.top, 6)
+            .padding(.vertical, 6)
         }
+        .fixedSize()
         .padding()
     }
 }
@@ -755,5 +617,4 @@ struct AddPresetView: View {
         return PresetsView()
             .frame(width: 200, height: 420, alignment: .center)
             .environment(presets)
-    
 }

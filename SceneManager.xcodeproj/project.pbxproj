@@ -23,7 +23,6 @@
 		3A2BDF622CCCF87800B582AA /* deCONZ.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3A2BDF592CCCF87800B582AA /* deCONZ.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3A2BDF702CCCF99200B582AA /* deCONZ.h in Headers */ = {isa = PBXBuildFile; fileRef = 3A2BDF6B2CCCF99200B582AA /* deCONZ.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3A2BDF712CCCF99200B582AA /* deCONZ.docc in Sources */ = {isa = PBXBuildFile; fileRef = 3A2BDF6C2CCCF99200B582AA /* deCONZ.docc */; };
-		3A2BDF722CCCF99200B582AA /* JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2BDF6D2CCCF99200B582AA /* JSON.swift */; };
 		3A2BDF752CCCFCCD00B582AA /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2BDF742CCCFCCD00B582AA /* Models.swift */; };
 		3A2BDF772CCD082C00B582AA /* RESTClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2BDF762CCD082C00B582AA /* RESTClient.swift */; };
 		3A2BDF9E2CCD682A00B582AA /* deCONZTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2BDF9D2CCD682A00B582AA /* deCONZTests.swift */; };
@@ -37,10 +36,12 @@
 		3A4193682D9EF98B007E76F1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A4193642D9EF98B007E76F1 /* Assets.xcassets */; };
 		3A41936B2D9F0179007E76F1 /* CLIPModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A41936A2D9F0179007E76F1 /* CLIPModels.swift */; };
 		3A41936D2D9F0F60007E76F1 /* PresetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A41936C2D9F0F60007E76F1 /* PresetModels.swift */; };
-		3A41936E2DA0083F007E76F1 /* JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2BDF6D2CCCF99200B582AA /* JSON.swift */; };
 		3A4193722DA041E4007E76F1 /* SearchField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A4193712DA041E1007E76F1 /* SearchField.swift */; };
 		3A462A7E2D8FE84200760E44 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 3A462A7D2D8FE84200760E44 /* InfoPlist.strings */; };
 		3A462A832D8FF09B00760E44 /* ColorTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3A462A822D8FF09B00760E44 /* ColorTests.xctestplan */; };
+		3A4F8AF22DB7C47600C6FD91 /* JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A4F8AF12DB7C47600C6FD91 /* JSON.swift */; };
+		3A4F8AF32DB7C47600C6FD91 /* JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A4F8AF12DB7C47600C6FD91 /* JSON.swift */; };
+		3A4F8AF52DB7C4D300C6FD91 /* PresetsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A4F8AF42DB7C4D000C6FD91 /* PresetsModel.swift */; };
 		3A5EAFB12CC1808C00B58A3C /* LightStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5EAFB02CC1808C00B58A3C /* LightStateView.swift */; };
 		3A5EAFB52CC1839E00B58A3C /* SimpleJSONTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5EAFB42CC1839E00B58A3C /* SimpleJSONTextView.swift */; };
 		3A635B5B2CD749B700018B40 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A635B5A2CD749B300018B40 /* Settings.swift */; };
@@ -131,7 +132,6 @@
 		3A2BDF592CCCF87800B582AA /* deCONZ.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = deCONZ.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A2BDF6B2CCCF99200B582AA /* deCONZ.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = deCONZ.h; sourceTree = "<group>"; };
 		3A2BDF6C2CCCF99200B582AA /* deCONZ.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = deCONZ.docc; sourceTree = "<group>"; };
-		3A2BDF6D2CCCF99200B582AA /* JSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSON.swift; sourceTree = "<group>"; };
 		3A2BDF742CCCFCCD00B582AA /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		3A2BDF762CCD082C00B582AA /* RESTClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RESTClient.swift; sourceTree = "<group>"; };
 		3A2BDF9B2CCD682A00B582AA /* deCONZTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = deCONZTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -153,6 +153,8 @@
 		3A462A7D2D8FE84200760E44 /* InfoPlist.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = InfoPlist.strings; sourceTree = "<group>"; };
 		3A462A7F2D8FE85C00760E44 /* screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screenshot.png; sourceTree = "<group>"; };
 		3A462A822D8FF09B00760E44 /* ColorTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = ColorTests.xctestplan; sourceTree = "<group>"; };
+		3A4F8AF12DB7C47600C6FD91 /* JSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSON.swift; sourceTree = "<group>"; };
+		3A4F8AF42DB7C4D000C6FD91 /* PresetsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsModel.swift; sourceTree = "<group>"; };
 		3A5EAFB02CC1808C00B58A3C /* LightStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightStateView.swift; sourceTree = "<group>"; };
 		3A5EAFB42CC1839E00B58A3C /* SimpleJSONTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleJSONTextView.swift; sourceTree = "<group>"; };
 		3A635B5A2CD749B300018B40 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
@@ -248,7 +250,6 @@
 				3A6995662CE0988D00934BD4 /* RESTModel.swift */,
 				3A2BDF762CCD082C00B582AA /* RESTClient.swift */,
 				3A2BDFA72CCE72AF00B582AA /* RESTModels */,
-				3A2BDF6D2CCCF99200B582AA /* JSON.swift */,
 				3A2BDFA42CCD684100B582AA /* Tests */,
 				3A2BDF6C2CCCF99200B582AA /* deCONZ.docc */,
 			);
@@ -351,6 +352,7 @@
 		3A93B0412AD2F7290038600F /* SceneManager */ = {
 			isa = PBXGroup;
 			children = (
+				3A4F8AF42DB7C4D000C6FD91 /* PresetsModel.swift */,
 				3AE527412DB0C94C005667D8 /* Models */,
 				3A6995682CE4F31A00934BD4 /* Window.swift */,
 				3A93B0422AD2F7290038600F /* SceneManagerApp.swift */,
@@ -389,6 +391,7 @@
 		3AE527412DB0C94C005667D8 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				3A4F8AF12DB7C47600C6FD91 /* JSON.swift */,
 				3AE527442DB0CA14005667D8 /* UUID.swift */,
 				3AE527472DB13518005667D8 /* SidebarModel.swift */,
 				3AE527422DB0C952005667D8 /* LightModel.swift */,
@@ -625,6 +628,7 @@
 				3AE527462DB10472005667D8 /* UUID.swift in Sources */,
 				3A739F8A2D913DE5003D39D3 /* RESTObjects.swift in Sources */,
 				3A2BDF712CCCF99200B582AA /* deCONZ.docc in Sources */,
+				3A4F8AF32DB7C47600C6FD91 /* JSON.swift in Sources */,
 				3A6995672CE0989000934BD4 /* RESTModel.swift in Sources */,
 				3A2BDFA92CCE731E00B582AA /* RESTGroup.swift in Sources */,
 				3A36DE092DAE6D8F00F1CF45 /* RESTActivity.swift in Sources */,
@@ -632,7 +636,6 @@
 				3A2BDF772CCD082C00B582AA /* RESTClient.swift in Sources */,
 				3A2BDFA62CCE125100B582AA /* RESTLight.swift in Sources */,
 				3AE527632DB67C47005667D8 /* RESTConfiguration.swift in Sources */,
-				3A2BDF722CCCF99200B582AA /* JSON.swift in Sources */,
 				3A2BDF752CCCFCCD00B582AA /* Models.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -652,7 +655,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				3A41935E2D9EC8B8007E76F1 /* SceneConverterApp.swift in Sources */,
-				3A41936E2DA0083F007E76F1 /* JSON.swift in Sources */,
 				3A41936B2D9F0179007E76F1 /* CLIPModels.swift in Sources */,
 				3A41935F2D9EC8B8007E76F1 /* ContentView.swift in Sources */,
 				3A41936D2D9F0F60007E76F1 /* PresetModels.swift in Sources */,
@@ -677,11 +679,13 @@
 				3A36DE0B2DAEA5B400F1CF45 /* Activity.swift in Sources */,
 				3A1EDD772AE449F2001637BD /* Lights.swift in Sources */,
 				3A1EDD732AE3B449001637BD /* Initializers.swift in Sources */,
+				3A4F8AF52DB7C4D300C6FD91 /* PresetsModel.swift in Sources */,
 				3A635B5B2CD749B700018B40 /* Settings.swift in Sources */,
 				3A93B0452AD2F7290038600F /* ContentView.swift in Sources */,
 				3A4193722DA041E4007E76F1 /* SearchField.swift in Sources */,
 				3A1EDD542AE2BB81001637BD /* Presets.swift in Sources */,
 				3A1EDD5A2AE2BD9D001637BD /* Sidebar.swift in Sources */,
+				3A4F8AF22DB7C47600C6FD91 /* JSON.swift in Sources */,
 				3AD18D142DA59A2A00AC1CC8 /* PresetModels.swift in Sources */,
 				3AE527492DB1351C005667D8 /* SidebarModel.swift in Sources */,
 				3A93B0432AD2F7290038600F /* SceneManagerApp.swift in Sources */,

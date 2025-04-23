@@ -185,6 +185,7 @@ struct ContentView: View {
                 window.sidebar = sidebar
                 window.lights = lights
                 
+                try PresetsModel.shared.loadPresetItems()
                 try await RESTModel.shared.refreshCache()
             } catch {
                 logger.error("\(error, privacy: .public)")

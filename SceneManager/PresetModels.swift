@@ -7,13 +7,14 @@
 
 import SwiftUI
 import OSLog
-import deCONZ
 
 private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "preset-models")
 
 protocol JSONExportable: Codable {
     var json: JSON { get }
 }
+
+// MARK: - Preset State Definition
 
 enum PresetStateDefinition: PresetPalette, JSONExportable {
     case recall(PresetState)
