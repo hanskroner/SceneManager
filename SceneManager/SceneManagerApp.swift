@@ -6,13 +6,22 @@
 //
 
 import SwiftUI
+import AppKit
 import OSLog
 import deCONZ
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        return true
+    }
+}
 
 private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "app")
 
 @main
 struct SceneManagerApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
     @Environment(\.openWindow) private var openWindow
     
     var body: some SwiftUI.Scene {
