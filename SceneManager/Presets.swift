@@ -350,7 +350,7 @@ struct PresetItemView: View {
                 let effects = presetItem.state.effectPalette
                 let colors = presetItem.state.colorPalette
                 let count = effects.count + colors.count
-                let spacing = CGFloat(count > 5 ? 130 / count : 26)
+                let spacing = CGFloat(count > 4 ? 110 / count : 26)
                 
                 ForEach(Array(effects.enumerated()), id: \.offset) { index, presetEffect in
                     HStack(spacing: 0) {
