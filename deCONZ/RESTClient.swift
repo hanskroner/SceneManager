@@ -49,7 +49,7 @@ public enum APIResponseContext: Decodable {
     }
 }
 
-public struct APIResponseContextError: Decodable {
+public struct APIResponseContextError: Decodable, Sendable {
     public let type: Int
     public let address: String
     public let description: String

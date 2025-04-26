@@ -234,11 +234,15 @@ class LineNumberRulerView: NSRulerView {
         clientView = textView.enclosingScrollView!.documentView
         
         NotificationCenter.default.addObserver(forName: NSView.frameDidChangeNotification, object: textView, queue: nil) { [weak self] _ in
-            self?.needsDisplay = true
+            Task { @MainActor in
+                self?.needsDisplay = true
+            }
         }
         
         NotificationCenter.default.addObserver(forName: NSText.didChangeNotification, object: textView, queue: nil) { [weak self] _ in
-            self?.needsDisplay = true
+            Task { @MainActor in
+                self?.needsDisplay = true
+            }
         }
     }
     

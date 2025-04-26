@@ -11,18 +11,6 @@ import deCONZ
 
 private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "app")
 
-extension Task where Failure == Never, Success == Void {
-    @discardableResult init(priority: TaskPriority? = nil, operation: @escaping () async throws -> Void, `catch`: @escaping (Error) -> Void) {
-        self.init(priority: priority) {
-            do {
-                _ = try await operation()
-            } catch {
-                `catch`(error)
-            }
-        }
-    }
-}
-
 @main
 struct SceneManagerApp: App {
     @Environment(\.openWindow) private var openWindow

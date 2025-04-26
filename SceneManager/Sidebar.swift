@@ -48,17 +48,19 @@ struct SidebarView: View {
         
         window.clearWarnings()
         Task {
-            // Update the content of the Editors
-            if let selectedLightItems = window.lights?.selectedLightItems {
-                let selectedLightIds = selectedLightItems.map({ $0.lightId })
-                try await window.updateEditors(selectedGroupId: selectedItem?.groupId,
-                                               selectedSceneId: selectedItem?.sceneId,
-                                               selectedLightIds: selectedLightIds)
+            do {
+                // Update the content of the Editors
+                if let selectedLightItems = window.lights?.selectedLightItems {
+                    let selectedLightIds = selectedLightItems.map({ $0.lightId })
+                    try await window.updateEditors(selectedGroupId: selectedItem?.groupId,
+                                                   selectedSceneId: selectedItem?.sceneId,
+                                                   selectedLightIds: selectedLightIds)
+                }
+            } catch {
+                logger.error("\(error, privacy: .public)")
+                
+                window.handleError(error)
             }
-        } catch: { error in
-            logger.error("\(error, privacy: .public)")
-            
-            window.handleError(error)
         }
     }
     
@@ -258,71 +260,73 @@ struct SidebarItemView: View {
                     // Select between a create or rename operation
                     window.clearWarnings()
                     Task {
-                        if ((item.groupId == Sidebar.NEW_GROUP_ID) && (item.sceneId == nil)) {
-                            do {
-                                let groupId = try await RESTModel.shared.createGroup(name: item.name)
-                                item.groupId = groupId
-                            } catch {
-                                // If creation fails, remove the SidebarItem from
-                                // the model and pass the error forward
-                                sidebar.deleteSidebarItem(item)
-                                throw error
+                        do {
+                            if ((item.groupId == Sidebar.NEW_GROUP_ID) && (item.sceneId == nil)) {
+                                do {
+                                    let groupId = try await RESTModel.shared.createGroup(name: item.name)
+                                    item.groupId = groupId
+                                } catch {
+                                    // If creation fails, remove the SidebarItem from
+                                    // the model and pass the error forward
+                                    sidebar.deleteSidebarItem(item)
+                                    throw error
+                                }
+                            } else if ((item.groupId != Sidebar.NEW_GROUP_ID) && (item.sceneId == Sidebar.NEW_SCENE_ID)) {
+                                do {
+                                    let sceneId = try await RESTModel.shared.createScene(groupId: item.groupId, name: item.name)
+                                    item.sceneId = sceneId
+                                } catch {
+                                    // If creation fails, remove the SidebarItem from
+                                    // the model and pass the error forward
+                                    sidebar.deleteSidebarItem(item)
+                                    throw error
+                                }
+                            } else if ((item.groupId != Sidebar.NEW_GROUP_ID) && (item.sceneId == nil)) {
+                                do {
+                                    try await RESTModel.shared.renameGroup(groupId: item.groupId, name: item.name)
+                                } catch {
+                                    // If rename fails, restore the previous name for
+                                    // the Group and pass the error forward
+                                    item.restoreName()
+                                    throw error
+                                }
+                            } else {
+                                do {
+                                    try await RESTModel.shared.renameScene(groupId: item.groupId, sceneId: item.sceneId!, name: item.name)
+                                } catch {
+                                    // If rename fails, restore the previous name for
+                                    // the Group and pass the error forward
+                                    item.restoreName()
+                                    throw error
+                                }
                             }
-                        } else if ((item.groupId != Sidebar.NEW_GROUP_ID) && (item.sceneId == Sidebar.NEW_SCENE_ID)) {
-                            do {
-                                let sceneId = try await RESTModel.shared.createScene(groupId: item.groupId, name: item.name)
-                                item.sceneId = sceneId
-                            } catch {
-                                // If creation fails, remove the SidebarItem from
-                                // the model and pass the error forward
-                                sidebar.deleteSidebarItem(item)
-                                throw error
+                            
+                            // Update Window properties
+                            let group = sidebar.items.first(where: { $0.groupId == item.groupId && $0.sceneId == nil })
+                            let scene = group?.items.first(where: { $0.sceneId == item.sceneId })
+                            
+                            window.navigationTitle = item.kind == .group ? group?.name : nil
+                            window.navigationSubtitle = item.kind == .scene ? scene?.name : nil
+                            window.groupId = item.groupId
+                            window.sceneId = item.sceneId
+                            
+                            // Keep the lists sorted
+                            // Sorting happens as part of the Task, otherwise the reference to 'item' will change
+                            if (item.kind == .group) {
+                                sidebar.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+                            } else {
+                                let parent = sidebar.items.filter({ $0.items.contains(item) }).first!
+                                parent.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
                             }
-                        } else if ((item.groupId != Sidebar.NEW_GROUP_ID) && (item.sceneId == nil)) {
-                            do {
-                                try await RESTModel.shared.renameGroup(groupId: item.groupId, name: item.name)
-                            } catch {
-                                // If rename fails, restore the previous name for
-                                // the Group and pass the error forward
-                                item.restoreName()
-                                throw error
-                            }
-                        } else {
-                            do {
-                                try await RESTModel.shared.renameScene(groupId: item.groupId, sceneId: item.sceneId!, name: item.name)
-                            } catch {
-                                // If rename fails, restore the previous name for
-                                // the Group and pass the error forward
-                                item.restoreName()
-                                throw error
-                            }
+                            
+                            // Signal RESTModel to issue a notification that
+                            // it's data has been updated.
+                            RESTModel.shared.signalUpdate()
+                        } catch {
+                            logger.error("\(error, privacy: .public)")
+                            
+                            window.handleError(error)
                         }
-                        
-                        // Update Window properties
-                        let group = sidebar.items.first(where: { $0.groupId == item.groupId && $0.sceneId == nil })
-                        let scene = group?.items.first(where: { $0.sceneId == item.sceneId })
-                        
-                        window.navigationTitle = item.kind == .group ? group?.name : nil
-                        window.navigationSubtitle = item.kind == .scene ? scene?.name : nil
-                        window.groupId = item.groupId
-                        window.sceneId = item.sceneId
-                        
-                        // Keep the lists sorted
-                        // Sorting happens as part of the Task, otherwise the reference to 'item' will change
-                        if (item.kind == .group) {
-                            sidebar.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
-                        } else {
-                            let parent = sidebar.items.filter({ $0.items.contains(item) }).first!
-                            parent.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
-                        }
-                        
-                        // Signal RESTModel to issue a notification that
-                        // it's data has been updated.
-                        RESTModel.shared.signalUpdate()
-                    } catch: { error in
-                        logger.error("\(error, privacy: .public)")
-                        
-                        window.handleError(error)
                     }
                 }
                 .onAppear {
@@ -382,28 +386,30 @@ struct SidebarItemView: View {
                     // Call on the REST API to perform deletion
                     window.clearWarnings()
                     Task {
-                        if (item.kind == .group) {
-                            try await RESTModel.shared.deleteGroup(groupId: item.groupId)
-                        } else {
-                            try await RESTModel.shared.deleteScene(groupId: item.groupId, sceneId: item.sceneId!)
+                        do {
+                            if (item.kind == .group) {
+                                try await RESTModel.shared.deleteGroup(groupId: item.groupId)
+                            } else {
+                                try await RESTModel.shared.deleteScene(groupId: item.groupId, sceneId: item.sceneId!)
+                            }
+                            
+                            // Deleting happens as part of the Task, otherwise the reference to 'item' will change
+                            sidebar.deleteSidebarItem(item)
+                            
+                            // Update Window properties
+                            window.navigationTitle = nil
+                            window.navigationSubtitle = nil
+                            window.groupId = nil
+                            window.sceneId = nil
+                            
+                            // Signal RESTModel to issue a notification that
+                            // it's data has been updated.
+                            RESTModel.shared.signalUpdate()
+                        } catch {
+                            logger.error("\(error, privacy: .public)")
+                            
+                            window.handleError(error)
                         }
-                        
-                        // Deleting happens as part of the Task, otherwise the reference to 'item' will change
-                        sidebar.deleteSidebarItem(item)
-                        
-                        // Update Window properties
-                        window.navigationTitle = nil
-                        window.navigationSubtitle = nil
-                        window.groupId = nil
-                        window.sceneId = nil
-                        
-                        // Signal RESTModel to issue a notification that
-                        // it's data has been updated.
-                        RESTModel.shared.signalUpdate()
-                    } catch: { error in
-                        logger.error("\(error, privacy: .public)")
-                        
-                        window.handleError(error)
                     }
                 }
             }
@@ -412,13 +418,15 @@ struct SidebarItemView: View {
                     // Call on the REST API to perform deletion
                     window.clearWarnings()
                     Task {
-                        // The call on 'window' will take care of updating the UI models, including
-                        // resetting this 'item's 'hasDynamics' flags and updating the Scene's definition
-                        try await window.deleteDynamicScene(fromGroupId: item.groupId, sceneId: item.sceneId!)
-                    } catch: { error in
-                        logger.error("\(error, privacy: .public)")
-                        
-                        window.handleError(error)
+                        do {
+                            // The call on 'window' will take care of updating the UI models, including
+                            // resetting this 'item's 'hasDynamics' flags and updating the Scene's definition
+                            try await window.deleteDynamicScene(fromGroupId: item.groupId, sceneId: item.sceneId!)
+                        } catch {
+                            logger.error("\(error, privacy: .public)")
+                            
+                            window.handleError(error)
+                        }
                     }
                 }
             }

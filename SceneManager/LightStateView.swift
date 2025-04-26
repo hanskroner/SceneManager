@@ -122,13 +122,15 @@ struct LightStateView: View {
                         
                         window.clearWarnings()
                         Task {
-                            let recall = try _decoder.decode(PresetState.self, from: data)
-                            
-                            try await window.applyState(.recall(recall), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
-                        } catch: { error in
-                            logger.error("\(error, privacy: .public)")
-                            
-                            window.handleError(error)
+                            do {
+                                let recall = try _decoder.decode(PresetState.self, from: data)
+                                
+                                try await window.applyState(.recall(recall), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
+                            } catch {
+                                logger.error("\(error, privacy: .public)")
+                                
+                                window.handleError(error)
+                            }
                         }
                         
                     case .dynamicScene:
@@ -142,13 +144,15 @@ struct LightStateView: View {
                         
                         window.clearWarnings()
                         Task {
-                            let dynamic = try _decoder.decode(PresetDynamics.self, from: data)
-                            
-                            try await window.applyState(.dynamic(dynamic), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
-                        } catch: { error in
-                            logger.error("\(error, privacy: .public)")
-                            
-                            window.handleError(error)
+                            do {
+                                let dynamic = try _decoder.decode(PresetDynamics.self, from: data)
+                                
+                                try await window.applyState(.dynamic(dynamic), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
+                            } catch {
+                                logger.error("\(error, privacy: .public)")
+                                
+                                window.handleError(error)
+                            }
                         }
                     }
                 }
@@ -167,13 +171,15 @@ struct LightStateView: View {
                     
                     window.clearWarnings()
                     Task {
-                        let recall = try _decoder.decode(PresetState.self, from: data)
-                        
-                        try await window.applyState(.recall(recall), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.selectedLightItems.map{ $0.lightId })
-                    } catch: { error in
-                        logger.error("\(error, privacy: .public)")
-                        
-                        window.handleError(error)
+                        do {
+                            let recall = try _decoder.decode(PresetState.self, from: data)
+                            
+                            try await window.applyState(.recall(recall), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.selectedLightItems.map{ $0.lightId })
+                        } catch {
+                            logger.error("\(error, privacy: .public)")
+                            
+                            window.handleError(error)
+                        }
                     }
                 }
                 .disabled(sidebar.selectedSidebarItem == nil
@@ -189,14 +195,16 @@ struct LightStateView: View {
         .onChange(of: light) { oldValue, newValue in
             window.clearWarnings()
             Task {
-                let selectedLightIds = newValue == nil ? [] : [newValue!.lightId]
-                try await window.updateEditors(selectedGroupId: window.groupId,
-                                               selectedSceneId: window.sceneId,
-                                               selectedLightIds: selectedLightIds)
-            } catch: { error in
-                logger.error("\(error, privacy: .public)")
-                
-                window.handleError(error)
+                do {
+                    let selectedLightIds = newValue == nil ? [] : [newValue!.lightId]
+                    try await window.updateEditors(selectedGroupId: window.groupId,
+                                                   selectedSceneId: window.sceneId,
+                                                   selectedLightIds: selectedLightIds)
+                } catch {
+                    logger.error("\(error, privacy: .public)")
+                    
+                    window.handleError(error)
+                }
             }
         }
     }

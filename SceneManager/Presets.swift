@@ -16,6 +16,7 @@ private let uuidNamespace = "com.hanskroner.scenemanager.presets"
 
 // MARK: - Presets Model
 
+@MainActor
 @Observable
 class Presets {
     var groups: [PresetItemGroup] = []
@@ -169,7 +170,7 @@ class PresetItem: Identifiable, Codable, Transferable {
 }
 
 extension UTType {
-    static var presetItem = UTType(exportedAs: "com.hanskroner.scenemanager.preset-item")
+    static let presetItem = UTType(exportedAs: "com.hanskroner.scenemanager.preset-item")
 }
 
 // MARK: - Presets View

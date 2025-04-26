@@ -35,13 +35,15 @@ struct SettingsView: View {
         }
         
         Task {
-            await RESTModel.shared.reconnect()
-            try await RESTModel.shared.refreshCache()
-        } catch: { error in
-            logger.error("\(error, privacy: .public)")
-            
-            Task { @MainActor in
-//                window.handleError(error)
+            do {
+                await RESTModel.shared.reconnect()
+                try await RESTModel.shared.refreshCache()
+            } catch {
+                logger.error("\(error, privacy: .public)")
+                
+                Task { @MainActor in
+//                    window.handleError(error)
+                }
             }
         }
     }
@@ -68,16 +70,18 @@ struct SettingsView: View {
                         }
                         
                         Task {
-                            // Ensure the RESTModel.shared object has a client
-                            // configured to the URL in the 'url' TextField.
-                            await RESTModel.shared.reconnect()
-                            
-                            key = try await RESTModel.shared.createAPIKey()
-                        } catch: { error in
-                            logger.error("\(error, privacy: .public)")
-                            
-                            Task { @MainActor in
-//                                window.handleError(error)
+                            do {
+                                // Ensure the RESTModel.shared object has a client
+                                // configured to the URL in the 'url' TextField.
+                                await RESTModel.shared.reconnect()
+                                
+                                key = try await RESTModel.shared.createAPIKey()
+                            } catch {
+                                logger.error("\(error, privacy: .public)")
+                                
+                                Task { @MainActor in
+//                                    window.handleError(error)
+                                }
                             }
                         }
                     }

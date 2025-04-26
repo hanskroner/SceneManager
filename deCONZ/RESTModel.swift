@@ -21,7 +21,7 @@ public final class RESTModel {
     public let onDataRefreshed = PassthroughSubject<Date, Never>()
     
     private var _client: RESTClient
-    public var activity = RESTActivity()
+    public let activity = RESTActivity()
     
     private let _decoder = JSONDecoder()
     private let _encoder = JSONEncoder()
@@ -35,7 +35,7 @@ public final class RESTModel {
         
         _client = client
         
-        Task {
+        Task { [activity] in
             await _client.setActivity(activity)
         }
     }
@@ -45,7 +45,10 @@ public final class RESTModel {
         RESTModel.apiURL = UserDefaults.standard.string(forKey: "deconz_url") ?? ""
         
         self._client = RESTClient.init(apiKey: RESTModel.apiKey, apiURL: RESTModel.apiURL)
-        await _client.setActivity(activity)
+        
+        Task { [activity] in
+            await _client.setActivity(activity)
+        }
     }
     
     // MARK: Configuration

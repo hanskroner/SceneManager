@@ -33,11 +33,13 @@ struct ContentView: View {
         
         window.clearWarnings()
         Task {
-            try await RESTModel.shared.recallScene(groupId: groupId, sceneId: sceneId)
-        } catch: { error in
-            logger.error("\(error, privacy: .public)")
-            
-            window.handleError(error)
+            do {
+                try await RESTModel.shared.recallScene(groupId: groupId, sceneId: sceneId)
+            } catch {
+                logger.error("\(error, privacy: .public)")
+                
+                window.handleError(error)
+            }
         }
     }
     
@@ -46,11 +48,13 @@ struct ContentView: View {
         
         window.clearWarnings()
         Task {
-            try await RESTModel.shared.modifyGroupState(groupId: groupId, lightState: LightState(on: false))
-        } catch: { error in
-            logger.error("\(error, privacy: .public)")
-            
-            window.handleError(error)
+            do {
+                try await RESTModel.shared.modifyGroupState(groupId: groupId, lightState: LightState(on: false))
+            } catch {
+                logger.error("\(error, privacy: .public)")
+                
+                window.handleError(error)
+            }
         }
     }
     
@@ -169,13 +173,15 @@ struct ContentView: View {
                 // Call on the REST API to perform deletion
                 window.clearWarnings()
                 Task {
-                    for key in window.phosconKeys {
-                        try await RESTModel.shared.deleteAPIKey(key: key)
+                    do {
+                        for key in window.phosconKeys {
+                            try await RESTModel.shared.deleteAPIKey(key: key)
+                        }
+                    } catch {
+                        logger.error("\(error, privacy: .public)")
+                        
+                        window.handleError(error)
                     }
-                } catch: { error in
-                    logger.error("\(error, privacy: .public)")
-                    
-                    window.handleError(error)
                 }
             }
         }

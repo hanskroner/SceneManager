@@ -156,18 +156,20 @@ struct LightItemView: View {
                         // Carry out the rename operation
                         window.clearWarnings()
                         Task {
-                            try await RESTModel.shared.renameLight(lightId: lightItem.lightId, name: lightItem.name)
-                            
-                            // Sort the list of LightItems
-                            lights.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
-                        } catch: { error in
-                            // If rename fails, restore the previous name for
-                            // the Light before handling the error.
-                            lightItem.restoreName()
-                            
-                            logger.error("\(error, privacy: .public)")
-                            
-                            window.handleError(error)
+                            do {
+                                try await RESTModel.shared.renameLight(lightId: lightItem.lightId, name: lightItem.name)
+                                
+                                // Sort the list of LightItems
+                                lights.items.sort(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+                            } catch {
+                                // If rename fails, restore the previous name for
+                                // the Light before handling the error.
+                                lightItem.restoreName()
+                                
+                                logger.error("\(error, privacy: .public)")
+                                
+                                window.handleError(error)
+                            }
                         }
                     }
                     .onAppear {
@@ -250,22 +252,24 @@ struct LightBottomBarView: View {
                     lights.selectedLightItemIds.removeAll()
                     
                     Task {
-                        switch (sidebar.selectedSidebarItem?.kind) {
-                        case .group:
-                            try await RESTModel.shared.removeLightsFromGroup(groupId: window.groupId!,
-                                                                             lightIds: lightIds)
+                        do {
+                            switch (sidebar.selectedSidebarItem?.kind) {
+                            case .group:
+                                try await RESTModel.shared.removeLightsFromGroup(groupId: window.groupId!,
+                                                                                 lightIds: lightIds)
+                                
+                            case .scene:
+                                try await RESTModel.shared.removeLightsFromScene(groupId: window.groupId!,
+                                                                                 sceneId: window.sceneId!,
+                                                                                 lightIds: lightIds)
+                            default:
+                                break
+                            }
+                        } catch {
+                            logger.error("\(error, privacy: .public)")
                             
-                        case .scene:
-                            try await RESTModel.shared.removeLightsFromScene(groupId: window.groupId!,
-                                                                             sceneId: window.sceneId!,
-                                                                             lightIds: lightIds)
-                        default:
-                            break
+                            window.handleError(error)
                         }
-                    } catch: { error in
-                        logger.error("\(error, privacy: .public)")
-                        
-                        window.handleError(error)
                     }
                 }) {
                     Label("", systemImage: "minus")
@@ -346,27 +350,29 @@ struct AddLightView: View {
                 Button("\(addLightItems.count) Add Lights") {
                     window.clearWarnings()
                     Task {
-                        switch (sidebar.selectedSidebarItem?.kind) {
-                        case .group:
-                            try await RESTModel.shared.addLightsToGroup(groupId: window.groupId!,
-                                                                        lightIds: Array(addLightItems).map({ $0.lightId }))
+                        do {
+                            switch (sidebar.selectedSidebarItem?.kind) {
+                            case .group:
+                                try await RESTModel.shared.addLightsToGroup(groupId: window.groupId!,
+                                                                            lightIds: Array(addLightItems).map({ $0.lightId }))
+                                
+                            case .scene:
+                                try await RESTModel.shared.addLightsToScene(groupId: window.groupId!,
+                                                                            sceneId: window.sceneId!,
+                                                                            lightIds: Array(addLightItems).map({ $0.lightId }))
+                                
+                            default:
+                                break
+                            }
                             
-                        case .scene:
-                            try await RESTModel.shared.addLightsToScene(groupId: window.groupId!,
-                                                                        sceneId: window.sceneId!,
-                                                                        lightIds: Array(addLightItems).map({ $0.lightId }))
-
-                        default:
-                            break
+                            Task { @MainActor in
+                                dismiss()
+                            }
+                        } catch {
+                            logger.error("\(error, privacy: .public)")
+                            
+                            window.handleError(error)
                         }
-                        
-                        Task { @MainActor in
-                            dismiss()
-                        }
-                    } catch: { error in
-                        logger.error("\(error, privacy: .public)")
-                        
-                        window.handleError(error)
                     }
                 }
                 .fixedSize()

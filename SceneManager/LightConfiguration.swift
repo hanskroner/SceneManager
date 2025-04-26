@@ -263,13 +263,15 @@ struct LightConfigurationView: View {
                     isPresentingProgress = true
                     
                     Task {
-                        try await self.configureLights(lightsToConfigure)
-                        isPresentingProgress = false
-                    } catch: { error in
-                        isPresentingProgress = false
-                        logger.error("\(error, privacy: .public)")
-                        
-                        window.handleError(error)
+                        do {
+                            try await self.configureLights(lightsToConfigure)
+                            isPresentingProgress = false
+                        } catch {
+                            isPresentingProgress = false
+                            logger.error("\(error, privacy: .public)")
+                            
+                            window.handleError(error)
+                        }
                     }
                 }
                 .fixedSize()

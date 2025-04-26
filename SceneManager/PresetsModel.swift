@@ -11,6 +11,7 @@ import OSLog
 
 private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "preset-model")
 
+@MainActor
 public final class PresetsModel {
     private let _decoder = JSONDecoder()
     private let _encoder = JSONEncoder()
