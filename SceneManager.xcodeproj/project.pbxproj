@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		3A1430E32DBCCFCB00D19460 /* EditableText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1430E22DBCCFC600D19460 /* EditableText.swift */; };
+		3A1430F02DBEA30100D19460 /* PickerDropper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1430EF2DBEA30100D19460 /* PickerDropper.swift */; };
+		3A1430F12DBEA30100D19460 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1430EE2DBEA30100D19460 /* Extensions.swift */; };
+		3A1430F22DBEA30100D19460 /* ColorGradientPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1430EC2DBEA30100D19460 /* ColorGradientPicker.swift */; };
+		3A1430F32DBEA30100D19460 /* ColorTemperaturePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1430ED2DBEA30100D19460 /* ColorTemperaturePicker.swift */; };
 		3A1EDD542AE2BB81001637BD /* Presets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1EDD532AE2BB81001637BD /* Presets.swift */; };
 		3A1EDD562AE2BBCF001637BD /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1EDD552AE2BBCF001637BD /* Colors.swift */; };
 		3A1EDD5A2AE2BD9D001637BD /* Sidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1EDD592AE2BD9D001637BD /* Sidebar.swift */; };
@@ -114,6 +118,10 @@
 
 /* Begin PBXFileReference section */
 		3A1430E22DBCCFC600D19460 /* EditableText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditableText.swift; sourceTree = "<group>"; };
+		3A1430EC2DBEA30100D19460 /* ColorGradientPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorGradientPicker.swift; sourceTree = "<group>"; };
+		3A1430ED2DBEA30100D19460 /* ColorTemperaturePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTemperaturePicker.swift; sourceTree = "<group>"; };
+		3A1430EE2DBEA30100D19460 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		3A1430EF2DBEA30100D19460 /* PickerDropper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickerDropper.swift; sourceTree = "<group>"; };
 		3A1EDD532AE2BB81001637BD /* Presets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Presets.swift; sourceTree = "<group>"; };
 		3A1EDD552AE2BBCF001637BD /* Colors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		3A1EDD592AE2BD9D001637BD /* Sidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar.swift; sourceTree = "<group>"; };
@@ -235,6 +243,17 @@
 				3A4193712DA041E1007E76F1 /* SearchField.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		3A1430F42DBEA30500D19460 /* Picker */ = {
+			isa = PBXGroup;
+			children = (
+				3A1430EE2DBEA30100D19460 /* Extensions.swift */,
+				3A1430EC2DBEA30100D19460 /* ColorGradientPicker.swift */,
+				3A1430ED2DBEA30100D19460 /* ColorTemperaturePicker.swift */,
+				3A1430EF2DBEA30100D19460 /* PickerDropper.swift */,
+			);
+			path = Picker;
 			sourceTree = "<group>";
 		};
 		3A1EDD5B2AE2C54B001637BD /* Presets */ = {
@@ -366,6 +385,7 @@
 			children = (
 				3AE527412DB0C94C005667D8 /* Models */,
 				3A1430E42DBCD03300D19460 /* Views */,
+				3A1430F42DBEA30500D19460 /* Picker */,
 				3A93B0422AD2F7290038600F /* SceneManagerApp.swift */,
 				3A6995682CE4F31A00934BD4 /* Window.swift */,
 				3AE5273F2DAF7E04005667D8 /* Warning.swift */,
@@ -690,6 +710,10 @@
 				3A36DE0B2DAEA5B400F1CF45 /* Activity.swift in Sources */,
 				3A1430E32DBCCFCB00D19460 /* EditableText.swift in Sources */,
 				3A1EDD772AE449F2001637BD /* Lights.swift in Sources */,
+				3A1430F02DBEA30100D19460 /* PickerDropper.swift in Sources */,
+				3A1430F12DBEA30100D19460 /* Extensions.swift in Sources */,
+				3A1430F22DBEA30100D19460 /* ColorGradientPicker.swift in Sources */,
+				3A1430F32DBEA30100D19460 /* ColorTemperaturePicker.swift in Sources */,
 				3A1EDD732AE3B449001637BD /* Initializers.swift in Sources */,
 				3A4F8AF52DB7C4D300C6FD91 /* PresetsModel.swift in Sources */,
 				3A635B5B2CD749B700018B40 /* Settings.swift in Sources */,

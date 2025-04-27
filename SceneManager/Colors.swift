@@ -93,11 +93,23 @@ private func closestPoint(toPoint point: CGPoint, inGamut gamut: Gamut) -> CGPoi
     return CGPoint(x: closestPoint.x, y: closestPoint.y)
 }
 
+private func mired(fromCCT cct: CGFloat) -> Int {
+    return Int(pow(10, 6) / CGFloat(cct))
+}
+
 private func cct(fromMired mired: Int) -> CGFloat {
     return pow(10, 6) / CGFloat(mired)
 }
 
-private func xy(fromCCT cct: CGFloat) -> CGPoint? {
+// MARK: - Public Methods
+
+func cct(fromXY xy: CGPoint) -> CGFloat {
+    // McCamy's approximation
+    let n = (xy.x - 0.3320) / (xy.y - 0.1858)
+    return (-449 * pow(n, 3)) + (3525 * pow(n, 2)) - (6823.3 * n) + 5520.33
+}
+
+func xy(fromCCT cct: CGFloat) -> CGPoint? {
     var x: CGFloat = 0.0
     var y: CGFloat = 0.0
     
@@ -136,7 +148,7 @@ private func xy(fromCCT cct: CGFloat) -> CGPoint? {
     return CGPoint(x: x, y: y)
 }
 
-private func xy(fromColor color: NSColor, inGamut gamut: Gamut = .gamutC) -> CGPoint {
+func xy(fromColor color: NSColor, inGamut gamut: Gamut = .gamutC) -> CGPoint {
     var r = CGFloat()
     var g = CGFloat()
     var b = CGFloat()
@@ -164,9 +176,7 @@ private func xy(fromColor color: NSColor, inGamut gamut: Gamut = .gamutC) -> CGP
     return xy
 }
 
-// MARK: - Public Methods
-
-func color(fromXY point: CGPoint, brightness: CGFloat = 0.5, inGamut gamut: Gamut = .gamutC) -> NSColor {
+func color(fromXY point: CGPoint, brightness: CGFloat = 1.0, inGamut gamut: Gamut = .gamutC) -> NSColor {
     var xy = point
     if !isPoint(xy, inGamut: gamut) {
         xy = closestPoint(toPoint: point, inGamut: gamut)
@@ -199,10 +209,23 @@ func color(fromXY point: CGPoint, brightness: CGFloat = 0.5, inGamut gamut: Gamu
         b = b / max
     }
     
-    return NSColor(red: r, green: g, blue: b, alpha: 1.0)
+    return NSColor(red: r, green: g, blue: b, alpha: 1.0).usingColorSpace(.sRGB)!
 }
 
 func color(fromMired mired: Int) -> NSColor? {
     guard let xy = xy(fromCCT: cct(fromMired: mired)) else { return nil }
     return color(fromXY: xy)
+}
+
+func mired(fromColor color: NSColor) -> Int {
+    let xy = xy(fromColor: color)
+    return mired(fromCCT: cct(fromXY: xy))
+}
+
+func isDark(_ color: Color) -> Bool {
+    var r, g, b, a: CGFloat
+    (r, g, b, a) = (0, 0, 0, 0)
+    NSColor(color).getRed(&r, green: &g, blue: &b, alpha: &a)
+    let lum = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    return  lum < 0.77
 }
