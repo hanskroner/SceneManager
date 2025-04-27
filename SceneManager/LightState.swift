@@ -1,5 +1,5 @@
 //
-//  LightStateView.swift
+//  LightState.swift
 //  SceneManager
 //
 //  Created by Hans Kröner on 16/11/2022.

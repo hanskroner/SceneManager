@@ -1,5 +1,5 @@
 //
-//  PresetModels.swift
+//  PresetModel.swift
 //  SceneManager
 //
 //  Created by Hans Kröner on 08/04/2025.

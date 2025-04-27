@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3A1430E32DBCCFCB00D19460 /* EditableText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1430E22DBCCFC600D19460 /* EditableText.swift */; };
 		3A1EDD542AE2BB81001637BD /* Presets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1EDD532AE2BB81001637BD /* Presets.swift */; };
 		3A1EDD562AE2BBCF001637BD /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1EDD552AE2BBCF001637BD /* Colors.swift */; };
 		3A1EDD5A2AE2BD9D001637BD /* Sidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1EDD592AE2BD9D001637BD /* Sidebar.swift */; };
@@ -42,7 +43,7 @@
 		3A4F8AF22DB7C47600C6FD91 /* JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A4F8AF12DB7C47600C6FD91 /* JSON.swift */; };
 		3A4F8AF32DB7C47600C6FD91 /* JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A4F8AF12DB7C47600C6FD91 /* JSON.swift */; };
 		3A4F8AF52DB7C4D300C6FD91 /* PresetsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A4F8AF42DB7C4D000C6FD91 /* PresetsModel.swift */; };
-		3A5EAFB12CC1808C00B58A3C /* LightStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5EAFB02CC1808C00B58A3C /* LightStateView.swift */; };
+		3A5EAFB12CC1808C00B58A3C /* LightState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5EAFB02CC1808C00B58A3C /* LightState.swift */; };
 		3A5EAFB52CC1839E00B58A3C /* SimpleJSONTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5EAFB42CC1839E00B58A3C /* SimpleJSONTextView.swift */; };
 		3A635B5B2CD749B700018B40 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A635B5A2CD749B300018B40 /* Settings.swift */; };
 		3A635B6C2CDF831100018B40 /* ColorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A635B6A2CDF831100018B40 /* ColorTests.swift */; };
@@ -64,7 +65,7 @@
 		3AD18D0F2DA2C91800AC1CC8 /* christmas.json in Resources */ = {isa = PBXBuildFile; fileRef = 3AD18D0C2DA2C91800AC1CC8 /* christmas.json */; };
 		3AD18D102DA2C91800AC1CC8 /* underwater.json in Resources */ = {isa = PBXBuildFile; fileRef = 3AD18D0E2DA2C91800AC1CC8 /* underwater.json */; };
 		3AD18D112DA2C91800AC1CC8 /* halloween.json in Resources */ = {isa = PBXBuildFile; fileRef = 3AD18D0D2DA2C91800AC1CC8 /* halloween.json */; };
-		3AD18D142DA59A2A00AC1CC8 /* PresetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD18D132DA59A2400AC1CC8 /* PresetModels.swift */; };
+		3AD18D142DA59A2A00AC1CC8 /* PresetModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD18D132DA59A2400AC1CC8 /* PresetModel.swift */; };
 		3AE527402DAF7E04005667D8 /* Warning.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE5273F2DAF7E04005667D8 /* Warning.swift */; };
 		3AE527432DB0C956005667D8 /* LightModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE527422DB0C952005667D8 /* LightModel.swift */; };
 		3AE527452DB0CA17005667D8 /* UUID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE527442DB0CA14005667D8 /* UUID.swift */; };
@@ -112,6 +113,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		3A1430E22DBCCFC600D19460 /* EditableText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditableText.swift; sourceTree = "<group>"; };
 		3A1EDD532AE2BB81001637BD /* Presets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Presets.swift; sourceTree = "<group>"; };
 		3A1EDD552AE2BBCF001637BD /* Colors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		3A1EDD592AE2BD9D001637BD /* Sidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar.swift; sourceTree = "<group>"; };
@@ -155,7 +157,7 @@
 		3A462A822D8FF09B00760E44 /* ColorTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = ColorTests.xctestplan; sourceTree = "<group>"; };
 		3A4F8AF12DB7C47600C6FD91 /* JSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSON.swift; sourceTree = "<group>"; };
 		3A4F8AF42DB7C4D000C6FD91 /* PresetsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsModel.swift; sourceTree = "<group>"; };
-		3A5EAFB02CC1808C00B58A3C /* LightStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightStateView.swift; sourceTree = "<group>"; };
+		3A5EAFB02CC1808C00B58A3C /* LightState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightState.swift; sourceTree = "<group>"; };
 		3A5EAFB42CC1839E00B58A3C /* SimpleJSONTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleJSONTextView.swift; sourceTree = "<group>"; };
 		3A635B5A2CD749B300018B40 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		3A635B612CDF830700018B40 /* ColorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ColorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -177,7 +179,7 @@
 		3AD18D0C2DA2C91800AC1CC8 /* christmas.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = christmas.json; sourceTree = "<group>"; };
 		3AD18D0D2DA2C91800AC1CC8 /* halloween.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = halloween.json; sourceTree = "<group>"; };
 		3AD18D0E2DA2C91800AC1CC8 /* underwater.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = underwater.json; sourceTree = "<group>"; };
-		3AD18D132DA59A2400AC1CC8 /* PresetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetModels.swift; sourceTree = "<group>"; };
+		3AD18D132DA59A2400AC1CC8 /* PresetModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetModel.swift; sourceTree = "<group>"; };
 		3AE5273F2DAF7E04005667D8 /* Warning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Warning.swift; sourceTree = "<group>"; };
 		3AE527422DB0C952005667D8 /* LightModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightModel.swift; sourceTree = "<group>"; };
 		3AE527442DB0CA14005667D8 /* UUID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UUID.swift; sourceTree = "<group>"; };
@@ -225,6 +227,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3A1430E42DBCD03300D19460 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				3A1430E22DBCCFC600D19460 /* EditableText.swift */,
+				3A5EAFB42CC1839E00B58A3C /* SimpleJSONTextView.swift */,
+				3A4193712DA041E1007E76F1 /* SearchField.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
 		3A1EDD5B2AE2C54B001637BD /* Presets */ = {
 			isa = PBXGroup;
 			children = (
@@ -352,23 +364,21 @@
 		3A93B0412AD2F7290038600F /* SceneManager */ = {
 			isa = PBXGroup;
 			children = (
-				3A4F8AF42DB7C4D000C6FD91 /* PresetsModel.swift */,
 				3AE527412DB0C94C005667D8 /* Models */,
-				3A6995682CE4F31A00934BD4 /* Window.swift */,
+				3A1430E42DBCD03300D19460 /* Views */,
 				3A93B0422AD2F7290038600F /* SceneManagerApp.swift */,
+				3A6995682CE4F31A00934BD4 /* Window.swift */,
+				3AE5273F2DAF7E04005667D8 /* Warning.swift */,
 				3A93B0442AD2F7290038600F /* ContentView.swift */,
 				3A1EDD592AE2BD9D001637BD /* Sidebar.swift */,
 				3A1EDD762AE449F2001637BD /* Lights.swift */,
-				3A5EAFB02CC1808C00B58A3C /* LightStateView.swift */,
+				3A5EAFB02CC1808C00B58A3C /* LightState.swift */,
 				3A1EDD532AE2BB81001637BD /* Presets.swift */,
-				3AD18D132DA59A2400AC1CC8 /* PresetModels.swift */,
+				3A4F8AF42DB7C4D000C6FD91 /* PresetsModel.swift */,
 				3A277A6C2DB25811003BAEF9 /* LightConfiguration.swift */,
 				3A635B5A2CD749B300018B40 /* Settings.swift */,
 				3A36DE0A2DAEA5B400F1CF45 /* Activity.swift */,
-				3AE5273F2DAF7E04005667D8 /* Warning.swift */,
 				3A848E2E2D046D8600BE19C6 /* Resources */,
-				3A5EAFB42CC1839E00B58A3C /* SimpleJSONTextView.swift */,
-				3A4193712DA041E1007E76F1 /* SearchField.swift */,
 				3A1EDD552AE2BBCF001637BD /* Colors.swift */,
 				3A635B6B2CDF831100018B40 /* Tests */,
 			);
@@ -395,6 +405,7 @@
 				3AE527442DB0CA14005667D8 /* UUID.swift */,
 				3AE527472DB13518005667D8 /* SidebarModel.swift */,
 				3AE527422DB0C952005667D8 /* LightModel.swift */,
+				3AD18D132DA59A2400AC1CC8 /* PresetModel.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -677,6 +688,7 @@
 				3A5EAFB52CC1839E00B58A3C /* SimpleJSONTextView.swift in Sources */,
 				3AE527402DAF7E04005667D8 /* Warning.swift in Sources */,
 				3A36DE0B2DAEA5B400F1CF45 /* Activity.swift in Sources */,
+				3A1430E32DBCCFCB00D19460 /* EditableText.swift in Sources */,
 				3A1EDD772AE449F2001637BD /* Lights.swift in Sources */,
 				3A1EDD732AE3B449001637BD /* Initializers.swift in Sources */,
 				3A4F8AF52DB7C4D300C6FD91 /* PresetsModel.swift in Sources */,
@@ -686,12 +698,12 @@
 				3A1EDD542AE2BB81001637BD /* Presets.swift in Sources */,
 				3A1EDD5A2AE2BD9D001637BD /* Sidebar.swift in Sources */,
 				3A4F8AF22DB7C47600C6FD91 /* JSON.swift in Sources */,
-				3AD18D142DA59A2A00AC1CC8 /* PresetModels.swift in Sources */,
+				3AD18D142DA59A2A00AC1CC8 /* PresetModel.swift in Sources */,
 				3AE527492DB1351C005667D8 /* SidebarModel.swift in Sources */,
 				3A93B0432AD2F7290038600F /* SceneManagerApp.swift in Sources */,
 				3AE527452DB0CA17005667D8 /* UUID.swift in Sources */,
 				3A277A6D2DB25811003BAEF9 /* LightConfiguration.swift in Sources */,
-				3A5EAFB12CC1808C00B58A3C /* LightStateView.swift in Sources */,
+				3A5EAFB12CC1808C00B58A3C /* LightState.swift in Sources */,
 				3AE527432DB0C956005667D8 /* LightModel.swift in Sources */,
 				3A6995692CE4F31F00934BD4 /* Window.swift in Sources */,
 			);
