@@ -252,20 +252,6 @@ struct PresetsView: View {
 
 // MARK: - PresetItem View
 
-extension Color {
-    func adjust(hue: CGFloat = 0, saturation: CGFloat = 0, brightness: CGFloat = 0, opacity: CGFloat = 1) -> Color {
-        let color = NSColor(self)
-        var currentHue: CGFloat = 0
-        var currentSaturation: CGFloat = 0
-        var currentBrigthness: CGFloat = 0
-        var currentOpacity: CGFloat = 0
-
-        color.getHue(&currentHue, saturation: &currentSaturation, brightness: &currentBrigthness, alpha: &currentOpacity)
-        
-        return Color(hue: currentHue + hue, saturation: currentSaturation + saturation, brightness: currentBrigthness + brightness, opacity: currentOpacity + opacity)
-    }
-}
-
 struct PresetItemView: View {
     @Environment(Presets.self) private var presets
     @Environment(WindowItem.self) private var window

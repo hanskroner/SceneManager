@@ -7,6 +7,25 @@
 
 import SwiftUI
 
+// MARK: - Color
+
+extension Color {
+    func adjust(hue: CGFloat = 0, saturation: CGFloat = 0, brightness: CGFloat = 0, opacity: CGFloat = 1) -> Color {
+        let color = NSColor(self).usingColorSpace(.sRGB)!
+        var currentHue: CGFloat = 0
+        var currentSaturation: CGFloat = 0
+        var currentBrigthness: CGFloat = 0
+        var currentOpacity: CGFloat = 0
+
+        color.getHue(&currentHue, saturation: &currentSaturation, brightness: &currentBrigthness, alpha: &currentOpacity)
+        
+        return Color(hue: currentHue + hue,
+                     saturation: currentSaturation + saturation,
+                     brightness: currentBrigthness + brightness,
+                     opacity: currentOpacity + opacity)
+    }
+}
+
 // MARK: - NSColor
 
 extension NSColor {
@@ -31,7 +50,7 @@ extension NSColor {
         let green = from.green + percent * (to.green - from.green)
         let blue = from.blue + percent * (to.blue - from.blue)
         let alpha = from.alpha + percent * (to.alpha - from.alpha)
-        return NSColor(red: red, green: green, blue: blue, alpha: alpha)
+        return NSColor(red: red, green: green, blue: blue, alpha: alpha).usingColorSpace(.sRGB)!
     }
     
     class func miredDistance(lhs: NSColor, rhs: NSColor) -> CGFloat {
@@ -53,7 +72,7 @@ extension NSColor {
         
         self.getHue(&currentHue, saturation: &currentSaturation, brightness: &currentBrigthness, alpha: &currentAlpha)
         
-        return NSColor(hue: min(currentHue + hue, 1.0), saturation: min(currentSaturation + saturation, 1.0), brightness: min(currentBrigthness + brightness, 1.0), alpha: min(currentAlpha + alpha, 1.0))
+        return NSColor(hue: min(currentHue + hue, 1.0), saturation: min(currentSaturation + saturation, 1.0), brightness: min(currentBrigthness + brightness, 1.0), alpha: min(currentAlpha + alpha, 1.0)).usingColorSpace(.sRGB)!
     }
 }
 

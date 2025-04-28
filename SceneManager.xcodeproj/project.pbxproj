@@ -66,6 +66,7 @@
 		3A93B0432AD2F7290038600F /* SceneManagerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A93B0422AD2F7290038600F /* SceneManagerApp.swift */; };
 		3A93B0452AD2F7290038600F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A93B0442AD2F7290038600F /* ContentView.swift */; };
 		3A93B0472AD2F72B0038600F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A93B0462AD2F72B0038600F /* Assets.xcassets */; };
+		3AC28F6A2DBFCF4800E817B7 /* BrightnessSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC28F692DBFCF4800E817B7 /* BrightnessSlider.swift */; };
 		3AD18D0F2DA2C91800AC1CC8 /* christmas.json in Resources */ = {isa = PBXBuildFile; fileRef = 3AD18D0C2DA2C91800AC1CC8 /* christmas.json */; };
 		3AD18D102DA2C91800AC1CC8 /* underwater.json in Resources */ = {isa = PBXBuildFile; fileRef = 3AD18D0E2DA2C91800AC1CC8 /* underwater.json */; };
 		3AD18D112DA2C91800AC1CC8 /* halloween.json in Resources */ = {isa = PBXBuildFile; fileRef = 3AD18D0D2DA2C91800AC1CC8 /* halloween.json */; };
@@ -184,6 +185,7 @@
 		3A93B0462AD2F72B0038600F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3A93B0492AD2F72B0038600F /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		3A93B04B2AD2F72B0038600F /* SceneManager.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SceneManager.entitlements; sourceTree = "<group>"; };
+		3AC28F692DBFCF4800E817B7 /* BrightnessSlider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessSlider.swift; sourceTree = "<group>"; };
 		3AD18D0C2DA2C91800AC1CC8 /* christmas.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = christmas.json; sourceTree = "<group>"; };
 		3AD18D0D2DA2C91800AC1CC8 /* halloween.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = halloween.json; sourceTree = "<group>"; };
 		3AD18D0E2DA2C91800AC1CC8 /* underwater.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = underwater.json; sourceTree = "<group>"; };
@@ -249,6 +251,7 @@
 			isa = PBXGroup;
 			children = (
 				3A1430EE2DBEA30100D19460 /* Extensions.swift */,
+				3AC28F692DBFCF4800E817B7 /* BrightnessSlider.swift */,
 				3A1430EC2DBEA30100D19460 /* ColorGradientPicker.swift */,
 				3A1430ED2DBEA30100D19460 /* ColorTemperaturePicker.swift */,
 				3A1430EF2DBEA30100D19460 /* PickerDropper.swift */,
@@ -715,6 +718,7 @@
 				3A1430F22DBEA30100D19460 /* ColorGradientPicker.swift in Sources */,
 				3A1430F32DBEA30100D19460 /* ColorTemperaturePicker.swift in Sources */,
 				3A1EDD732AE3B449001637BD /* Initializers.swift in Sources */,
+				3AC28F6A2DBFCF4800E817B7 /* BrightnessSlider.swift in Sources */,
 				3A4F8AF52DB7C4D300C6FD91 /* PresetsModel.swift in Sources */,
 				3A635B5B2CD749B700018B40 /* Settings.swift in Sources */,
 				3A93B0452AD2F7290038600F /* ContentView.swift in Sources */,

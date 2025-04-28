@@ -42,8 +42,6 @@ class PickerDropper: Identifiable, Hashable {
 struct PickerDropperView: View {
     @Binding var dropper: PickerDropper
     
-    private let shadowColor: Color = .init(red: 0.1, green: 0.1, blue: 0.1, opacity: 0.85)
-    
     var onLocationChanged = {}
     
     var body: some View {
@@ -56,7 +54,7 @@ struct PickerDropperView: View {
                 .onChange(of: dropper.location) { oldValue, newValue in
                     self.onLocationChanged()
                 }
-                .shadow(color: shadowColor, radius: 3, y: 1)
+                .shadow(color: Color("shadow"), radius: 3, y: 1)
                 .id(dropper.id)
             
             if let image = dropper.image {
