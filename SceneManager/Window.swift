@@ -57,15 +57,18 @@ class WindowItem {
     var modelRefreshedSubscription: AnyCancellable? = nil
         
     init() {
-        modelRefreshedSubscription = RESTModel.shared.onDataRefreshed.sink { [weak self] _ in
-            // Clear this WindowItem's state
-            self?.navigationTitle = nil
-            self?.navigationSubtitle = nil
-            self?.groupId = nil
-            self?.sceneId = nil
-            self?.selectedEditorTab = .sceneState
-            self?.stateEditorText = ""
-            self?.dynamicsEditorText = ""
+        modelRefreshedSubscription = RESTModel.shared.onDataRefreshed.sink { [weak self] isReload in
+            if isReload {
+                // If the model is signalling a reload, rather than just an update, clear
+                // the WindowItem's state.
+                self?.navigationTitle = nil
+                self?.navigationSubtitle = nil
+                self?.groupId = nil
+                self?.sceneId = nil
+                self?.selectedEditorTab = .sceneState
+                self?.stateEditorText = ""
+                self?.dynamicsEditorText = ""
+            }
             
             // Keep any SidebarItem UUIDs that are expanded to restore their state later
             let expandedIds = self?.sidebar?.items.compactMap({ $0.isExpanded ? $0.id : nil }) ?? []

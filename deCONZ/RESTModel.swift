@@ -18,7 +18,7 @@ public final class RESTModel {
     private var _scenes: [Int: [Int: Scene]] = [:]
     
     // Combine Publishers
-    public let onDataRefreshed = PassthroughSubject<Date, Never>()
+    public let onDataRefreshed = PassthroughSubject<Bool, Never>()
     
     private var _client: RESTClient
     public let activity = RESTActivity()
@@ -514,9 +514,9 @@ public final class RESTModel {
     
     // MARK: Refresh
     
-    public func signalUpdate() {
+    public func signalUpdate(isReload: Bool = false) {
         Task {
-            self.onDataRefreshed.send(Date())
+            self.onDataRefreshed.send(isReload)
         }
     }
     
@@ -534,7 +534,7 @@ public final class RESTModel {
             restGroups = try await _client.getAllGroups()
             restScenes = try await _client.getAllScenes()
         } catch {
-            signalUpdate()
+            signalUpdate(isReload: true)
             
             throw error
         }
@@ -570,6 +570,6 @@ public final class RESTModel {
             groupDictionary[groupEntry.0] = Group(from: groupEntry.1, id: groupEntry.0, lightIds: groupLightIds, sceneIds: groupSceneIds)
         })
         
-        signalUpdate()
+        signalUpdate(isReload: true)
     }
 }
