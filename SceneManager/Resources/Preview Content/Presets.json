@@ -1,47 +1,102 @@
 [
     {
-        "name" : "Purple",
-        "state" : {
-            "bri" : 1,
-            "on" : true,
-            "transitiontime" : 4,
-            "xy" : [0.3328, 0.2288]
+      "name" : "Recall",
+      "image": "scene-energise",
+      "state" : {
+        "bri" : 254,
+        "ct" : 156,
+        "on" : true,
+        "transitiontime" : 4
+      }
+    },
+    {
+        "name" : "Dynamic",
+        "dynamics" : {
+            "auto_dynamic": false,
+            "bri": 122,
+            "ct": 455,
+            "effect_speed": 0.70,
+            "scene_apply": "sequence",
+            "transitiontime": 4,
+            "xy": [
+                [
+                    0.4418,
+                    0.3496
+                ],
+                [
+                    0.4658,
+                    0.3667
+                ],
+                [
+                    0.4777,
+                    0.3856
+                ],
+                [
+                    0.5068,
+                    0.3702
+                ],
+                [
+                    0.5321,
+                    0.3630
+                ]
+            ]
         }
     },
     {
-        "name" : "Blue",
-        "state" : {
-            "bri" : 1,
-            "on" : true,
-            "transitiontime" : 4,
-            "xy" : [0.2330, 0.2353]
-        }
+      "name" : "Recall effect",
+      "state" : {
+        "bri" : 122,
+        "ct" : 156,
+        "effect" : "glisten",
+        "xy" : [
+            0.2412,
+            0.1171
+          ],
+        "on" : true,
+        "transitiontime" : 4
+      }
     },
     {
-        "name" : "Green",
-        "state" : {
-            "bri" : 1,
-            "on" : true,
-            "transitiontime" : 4,
-            "xy" : [0.2822, 0.4419]
-        }
-    },
-    {
-        "name" : "Yellow",
-        "state" : {
-            "bri" : 1,
-            "on" : true,
-            "transitiontime" : 4,
-            "xy" : [0.4546, 0.4393]
-        }
-    },
-    {
-        "name" : "Red",
-        "state" : {
-            "bri" : 1,
-            "on" : true,
-            "transitiontime" : 4,
-            "xy" : [0.5188, 0.3296]
+        "name" : "Dynamic effect",
+        "dynamics" : {
+            "auto_dynamic": false,
+            "bri": 102,
+            "ct": 384,
+            "effect_speed": 0.75,
+            "effects": [
+                {
+                    "effect": "prism",
+                    "effect_speed": 0.5,
+                    "xy": [
+                        0.2116,
+                        0.0759
+                    ]
+                }
+            ],
+            "scene_apply": "sequence",
+            "transitiontime": 4,
+            "xy": [
+                [
+                    0.1559,
+                    0.1523
+                ],
+                [
+                    0.4667,
+                    0.2380
+                ],
+                [
+                    0.5924,
+                    0.3248
+                ],
+                [
+                    0.4925,
+                    0.4285
+                ],
+                [
+                    0.1889,
+                    0.5027
+                ]
+            ]
         }
     }
 ]

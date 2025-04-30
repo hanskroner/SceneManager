@@ -505,7 +505,7 @@ struct AddPresetView: View {
                         case .sceneState:
                             guard let sceneData = window.stateEditorText.data(using: .utf8) else {
                                 // FIXME: Error handling
-                                logger.error("Could not convert string to data.")
+                                logger.error("\("Could not convert string to data.", privacy: .public)")
                                 return
                             }
                             
@@ -513,7 +513,7 @@ struct AddPresetView: View {
                         case .dynamicScene:
                             guard let sceneData = window.dynamicsEditorText.data(using: .utf8) else {
                                 // FIXME: Error handling
-                                logger.error("Could not convert string to data.")
+                                logger.error("\("Could not convert string to data.", privacy: .public)")
                                 return
                             }
                             
@@ -607,11 +607,13 @@ struct AddPresetView: View {
 // MARK: - Previews
 
 #Preview("Presets") {
-        let contentURL = Bundle.main.url(forResource: "Presets", withExtension: "json")
-        let contentData = try! Data(contentsOf: contentURL!)
-        let presets = Presets(json: contentData)
-        
-        return PresetsView()
-            .frame(width: 200, height: 420, alignment: .center)
-            .environment(presets)
+    let contentURL = Bundle.main.url(forResource: "Presets", withExtension: "json")
+    let contentData = try! Data(contentsOf: contentURL!)
+    let presets = Presets(json: contentData)
+    let window = WindowItem()
+    
+    PresetsView()
+        .frame(width: 200, height: 420, alignment: .center)
+        .environment(presets)
+        .environment(window)
 }
