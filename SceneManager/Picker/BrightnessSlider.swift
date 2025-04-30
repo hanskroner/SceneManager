@@ -140,6 +140,7 @@ private struct SliderView: View {
 
     private var sliderThumb: some View {
         RoundedRectangle(cornerRadius: 6)
+            .strokeBorder(isDark(sliderColor) ? .white : Color(NSColor.windowBackgroundColor), lineWidth: isDragging || isTapping ? 1.5 : 0)
             .frame(width: size.width + 6, height: Constant.thumbHeight)
             .foregroundStyle(.clear)
             .overlay {
