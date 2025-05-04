@@ -116,7 +116,7 @@ struct LightStateView: View {
                         // Modify all the lights in the scene to the attributes in the State Editor
                         guard let data = window.stateEditorText.data(using: .utf8) else {
                             // FIXME: Error handling
-                            logger.error("Could not convert string to data.")
+                            logger.error("\("Could not convert string to data.", privacy: .public)")
                             return
                         }
                         
@@ -138,7 +138,7 @@ struct LightStateView: View {
                         // The order in which attributes are applied depends on some of the attributes themselves
                         guard let data = window.dynamicsEditorText.data(using: .utf8) else {
                             // FIXME: Error handling
-                            logger.error("Could not convert string to data.")
+                            logger.error("\("Could not convert string to data.", privacy: .public)")
                             return
                         }
                         
@@ -165,7 +165,7 @@ struct LightStateView: View {
                 Button("Apply to Selected") {
                     guard let data = window.stateEditorText.data(using: .utf8) else {
                         // FIXME: Error handling
-                        logger.error("Could not convert string to data.")
+                        logger.error("\("Could not convert string to data.", privacy: .public)")
                         return
                     }
                     
