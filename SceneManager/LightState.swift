@@ -19,8 +19,6 @@ enum Tab: Hashable {
 }
 
 struct LightStateView: View {
-    var light: LightItem?
-    
     @Environment(Sidebar.self) private var sidebar
     @Environment(Lights.self) private var lights
     @Environment(WindowItem.self) private var window
@@ -192,7 +190,9 @@ struct LightStateView: View {
         }
         .frame(minWidth: 250)
         .padding(.bottom, 8)
-        .onChange(of: light) { oldValue, newValue in
+        .onChange(of: lights.selectedLightItems) { oldValue, newValue in
+            let newValue = newValue.first
+            
             window.clearWarnings()
             Task {
                 do {
@@ -241,7 +241,7 @@ extension View {
     let lights = Lights()
     let window = WindowItem()
 
-    LightStateView(light: LightItem(lightId: 1, name: "1"))
+    LightStateView()
             .frame(width: 250, height: 420, alignment: .center)
             .environment(sidebar)
             .environment(lights)

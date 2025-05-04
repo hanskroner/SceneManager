@@ -68,7 +68,7 @@ struct ContentView: View {
                 HStack(spacing: 16) {
                     LightView()
                     
-                    LightStateView(light: window.lights?.selectedLightItems.first)
+                    LightStateView()
                 }
                 .padding(.horizontal)
                 .padding(.top, 8)
