@@ -29,6 +29,8 @@ class PickerDropper: Identifiable, Hashable {
     var isDragging: Bool = false
     var isSelected: Bool = false
     
+    var zIndex: Double = 0
+    
     init(id: UUID = UUID(), color: Color = .white, location: CGPoint = CGPoint(x: 0, y: 0), image: String? = nil) {
         self.id = id
         
@@ -47,7 +49,7 @@ struct PickerDropperView: View {
     var body: some View {
         ZStack {
             Dropper()
-                .strokeBorder(isDark(dropper.color) ? .white : Color(NSColor.windowBackgroundColor), lineWidth: dropper.isSelected ? 3 : 0)
+                .strokeBorder(isDark(dropper.color) ? .white : .black, lineWidth: dropper.isSelected ? 3 : 0)
                 .fill(dropper.color)
                 .aspectRatio(contentMode: .fit)
                 .rotationEffect(Angle(degrees: 180), anchor: .center)
@@ -61,11 +63,12 @@ struct PickerDropperView: View {
                 Image(image)
                     .resizable()
                     .scaledToFit()
-                    .foregroundStyle(isDark(dropper.color) ? .white : Color(NSColor.windowBackgroundColor))
+                    .foregroundStyle(isDark(dropper.color) ? .white : .black)
                     .padding(6)
                     .padding(.bottom, 6)
             }
         }
+        .zIndex(dropper.isSelected ? 10 : dropper.zIndex)
     }
     
     func onLocationChanged(_ callback: @escaping () -> ()) -> some View {

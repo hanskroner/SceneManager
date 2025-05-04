@@ -7,63 +7,28 @@
 
 import SwiftUI
 
-// MARK: - Color
+// MARK: - GradientError
 
-extension Color {
-    func adjust(hue: CGFloat = 0, saturation: CGFloat = 0, brightness: CGFloat = 0, opacity: CGFloat = 1) -> Color {
-        let color = NSColor(self).usingColorSpace(.sRGB)!
-        var currentHue: CGFloat = 0
-        var currentSaturation: CGFloat = 0
-        var currentBrigthness: CGFloat = 0
-        var currentOpacity: CGFloat = 0
+enum GradientError: Error {
+    case percentNotInGradient(percent: Double)
+    case colorNotInGradient(color: NSColor)
+}
 
-        color.getHue(&currentHue, saturation: &currentSaturation, brightness: &currentBrigthness, alpha: &currentOpacity)
-        
-        return Color(hue: currentHue + hue,
-                     saturation: currentSaturation + saturation,
-                     brightness: currentBrigthness + brightness,
-                     opacity: currentOpacity + opacity)
+extension GradientError: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .percentNotInGradient(let percent):
+            return "'\(percent)' does not have a transition."
+
+        case .colorNotInGradient(let color):
+            return "'\(color)' is not contained in the gradient."
+        }
     }
 }
 
 // MARK: - NSColor
 
 extension NSColor {
-    struct RGBA {
-        var red: CGFloat = 0.0
-        var green: CGFloat = 0.0
-        var blue: CGFloat = 0.0
-        var alpha: CGFloat = 0.0
-        
-        init(color: NSColor) {
-            color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-        }
-    }
-
-    var rgba: RGBA {
-        return RGBA(color: self)
-    }
-
-    // Linear Interpolation
-    class func lerp(from: RGBA, to: RGBA, percent: CGFloat) -> NSColor {
-        let red = from.red + percent * (to.red - from.red)
-        let green = from.green + percent * (to.green - from.green)
-        let blue = from.blue + percent * (to.blue - from.blue)
-        let alpha = from.alpha + percent * (to.alpha - from.alpha)
-        return NSColor(red: red, green: green, blue: blue, alpha: alpha).usingColorSpace(.sRGB)!
-    }
-    
-    class func miredDistance(lhs: NSColor, rhs: NSColor) -> CGFloat {
-        let lhsMired = mired(fromColor: lhs)
-        let rhsMired = mired(fromColor: rhs)
-        
-        return CGFloat(abs(lhsMired - rhsMired))
-    }
-    
-    class func hueDistance(lhs: NSColor, rhs: NSColor) -> CGFloat {
-        return abs(lhs.hueComponent - rhs.hueComponent)
-    }
-    
     func adjust(hue: CGFloat = 0, saturation: CGFloat = 0, brightness: CGFloat = 0, alpha: CGFloat = 1) -> NSColor {
         var currentHue: CGFloat = 0
         var currentSaturation: CGFloat = 0
@@ -72,7 +37,17 @@ extension NSColor {
         
         self.getHue(&currentHue, saturation: &currentSaturation, brightness: &currentBrigthness, alpha: &currentAlpha)
         
-        return NSColor(hue: min(currentHue + hue, 1.0), saturation: min(currentSaturation + saturation, 1.0), brightness: min(currentBrigthness + brightness, 1.0), alpha: min(currentAlpha + alpha, 1.0)).usingColorSpace(.sRGB)!
+        return NSColor(hue: min(currentHue + hue, 1.0), saturation: min(currentSaturation + saturation, 1.0), brightness: min(currentBrigthness + brightness, 1.0), alpha: min(currentAlpha + alpha, 1.0))
+    }
+}
+
+// MARK: - Color
+
+extension Color {
+    func adjust(hue: CGFloat = 0, saturation: CGFloat = 0, brightness: CGFloat = 0, alpha: CGFloat = 1) -> Color {
+        let color = NSColor(self).usingColorSpace(.sRGB)!
+        
+        return Color(color.adjust(hue: hue, saturation: saturation, brightness: brightness, alpha: alpha).usingColorSpace(.sRGB)!)
     }
 }
 

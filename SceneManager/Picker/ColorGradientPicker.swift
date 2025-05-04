@@ -24,16 +24,68 @@ struct ColorGradientPickerView: View {
     
     @State private var size: CGFloat = 0.0
     @State private var transitions: [Transition] = []
+    
+    @State private var zIndexDroppers: [PickerDropper] = []
+    
+    private func zIndexSort(top: PickerDropper) {
+        if let index = zIndexDroppers.firstIndex(of: top) {
+            zIndexDroppers.move(fromOffsets: IndexSet(integer: index), toOffset: 0)
+        } else {
+            zIndexDroppers.insert(top, at: 0)
+        }
+        
+        for (index, dropper) in zIndexDroppers.reversed().enumerated() {
+            dropper.zIndex = Double(index)
+        }
+    }
 
-    private struct Transition {
+    private struct Transition: Equatable {
         let fromLocation: Double
         let toLocation: Double
         let fromColor: NSColor
         let toColor: NSColor
+        
+        func contains(color: NSColor) -> Bool {
+            let max = max(fromColor.hueComponent, toColor.hueComponent)
+            let min = min(fromColor.hueComponent, toColor.hueComponent)
+            let inRange = min <= color.hueComponent && max >= color.hueComponent
+            
+            // Use the hue distance between ranges to determine if we should be looking
+            // for colors within the range of the transition (clockwise transition) or
+            // outside the range (counter-clockwise transition).
+            return (max - min) <= 0.5 ? inRange : !inRange
+        }
 
         func color(forPercent percent: Double) -> NSColor {
-            let normalizedPercent = percent.convert(fromMin: fromLocation, max: toLocation, toMin: 0.0, max: 1.0)
-            return NSColor.lerp(from: fromColor.rgba, to: toColor.rgba, percent: CGFloat(normalizedPercent))
+            // Linear interpolation in HSB
+            // Determine clockwise and counter-clockwise distance between hues
+            let fromHue = fromColor.hueComponent
+            let toHue = toColor.hueComponent
+            let distCCW = (fromHue >= toHue) ? fromHue - toHue : 1 + fromHue - toHue
+            let distCW = (fromHue >= toHue) ? 1 + toHue - fromHue : toHue - fromHue
+            
+            var hue = (distCW <= distCCW) ? fromHue + (distCW * percent) : fromHue - (distCCW * percent)
+            if hue < 0 { hue = 1 + hue }
+            if hue > 1 { hue = hue - 1 }
+            
+            let satuartion = fromColor.saturationComponent + percent * (toColor.saturationComponent - fromColor.saturationComponent)
+            let brightness = fromColor.brightnessComponent + percent * (toColor.brightnessComponent - fromColor.brightnessComponent)
+            let alpha = fromColor.alphaComponent + percent * (toColor.alphaComponent - fromColor.alphaComponent)
+            
+            return NSColor(hue: hue, saturation: satuartion, brightness: brightness, alpha: alpha).usingColorSpace(.sRGB)!
+        }
+        
+        func percent(forColor color: NSColor) -> Double {
+            let max = max(fromColor.hueComponent, toColor.hueComponent)
+            let min = min(fromColor.hueComponent, toColor.hueComponent)
+            
+            if (max - min) <= 0.5 {
+                // clockwise
+                return (fromColor.hueComponent - color.hueComponent) / (fromColor.hueComponent - toColor.hueComponent)
+            } else {
+                // counter-clockwise
+                return (color.hueComponent - fromColor.hueComponent) / (1 - fromColor.hueComponent + toColor.hueComponent)
+            }
         }
     }
     
@@ -108,14 +160,29 @@ struct ColorGradientPickerView: View {
                 
                 PickerDropperView(dropper: $dropper)
                     .onLocationChanged {
-                        dropper.color = colorAt(dropper.location)
+                        do {
+                            dropper.color = try colorAt(dropper.location)
+                        } catch {
+                            logger.error("\(error, privacy: .public)")
+                            
+                            dropper.color = .black
+                        }
                     }
                     .frame(height: size * 0.16)
                     .offset(x: 0, y: -size * 0.08)
                     .position(constrainToBounds(dropper.location))
                     .gesture(dragGesture)
                     .task {
-                        dropper.location = locationFor(color: dropper.color)
+                        // Add to zIndex Array
+                        zIndexSort(top: dropper)
+                        
+                        do {
+                            dropper.location = try location(forColor: NSColor(dropper.color))
+                        } catch {
+                            logger.error("\(error, privacy: .public)")
+                            
+                            dropper.location = .zero
+                        }
                     }
             }
         }
@@ -130,6 +197,11 @@ struct ColorGradientPickerView: View {
                 selection.isSelected = false
                 self.selection = nil
             }
+        }
+        .onChange(of: selection) { previousDropper, newDropper in
+            // Sort zIndex array
+            guard let newDropper else { return }
+            zIndexSort(top: newDropper)
         }
     }
     
@@ -159,19 +231,29 @@ struct ColorGradientPickerView: View {
         }
     }
     
-    private func color(forAngle angle: Double) -> NSColor {
+    private func color(forAngle angle: Double) throws -> NSColor {
         if self.transitions.isEmpty { loadTransitions() }
+
+        // Convert the angle to a percentage of the overall gradient. Then convert that
+        // to a percentage relative to the transition where the color is located and
+        // obtain the color at that location.
         let percent = angle.convert(fromZeroToMax: 2 * .pi, toZeroToMax: 1.0)
-
+        
         // FIXME: Throw instead of fatalError
-        guard let transition = transition(forPercent: percent) else { fatalError("No transition") }
+        guard let transition = transition(forPercent: percent) else { throw GradientError.percentNotInGradient(percent: percent) }
+        
+        let normalizedPercent = percent.convert(fromMin: transition.fromLocation,
+                                                max: transition.toLocation,
+                                                toMin: 0.0,
+                                                max: 1.0)
 
-        return transition.color(forPercent: percent)
+        return transition.color(forPercent: normalizedPercent)
     }
     
     private func transition(forPercent percent: Double) -> Transition? {
         let filtered = transitions.filter { percent >= $0.fromLocation && percent < $0.toLocation }
         let defaultTransition = percent <= 0.5 ? transitions.first : transitions.last
+        
         return filtered.first ?? defaultTransition
     }
     
@@ -194,104 +276,69 @@ struct ColorGradientPickerView: View {
         return location
     }
     
-    private func closestColor(inTransition transition: Transition, toColor color: NSColor) -> NSColor {
-        let from = transition.fromColor.rgba
-        let to = transition.toColor.rgba
-        let outside = color.rgba
-        
-        // The passed-in color might not exist exactly in the transition. The challenge
-        // becomes how to determine which color that does exist in the transition is
-        // closest to the passed-in one. To do this, we will imagine the RGB components of
-        // the colors at the extremes of the transition as points in 3D space and draw a
-        // line between them. The passed-in color will also be a point in that 3D space,
-        // likely close to that line. To pick to closests color, we project the point onto
-        // the line using the shortest posible distance. The closest color will be at the
-        // point where the projected point and the line intersect.
-        
-        // Point 'A' represents that starting color of the transition, and point 'B'
-        // represents the end color. Together, they create the line segment 'AB' onto
-        // which point 'C' - which represents the passed-in color - will be projected.
-        // Use SIMD for 3D Vector math
-        let A = SIMD3(Float(from.red), Float(from.green), Float(from.blue))
-        let B = SIMD3(Float(to.red), Float(to.green), Float(to.blue))
-        let C = SIMD3(Float(outside.red), Float(outside.green), Float(outside.blue))
-        
-        // 'B' minus 'A' (BmA) and 'C' minus 'A' (CmA) are two vectors that represent the
-        // direction from 'B' to 'A' and 'C' to 'A' respectively. They can be throught of
-        // as two sides of a triangle, where the third side is made of of the projection
-        // of 'C' onto 'AB' and is perpendicular to 'AB'.
-        // 'D' is what we're looking for: the a point on 'AB' that is closests to 'C'.
-        let BmA = B - A
-        let CmA = C - A
-        let t = dot(CmA, BmA) / dot(BmA, BmA)
-        let D = A + BmA * t
-        
-        let closestColor = NSColor(red: CGFloat(D.x), green: CGFloat(D.y), blue: CGFloat(D.z), alpha: 1.0)
-        
-        return closestColor
-    }
-    
-    private func locationFor(color: Color) -> CGPoint {
-        let saturatedColor = NSColor(color)
-        let redDistance = NSColor(hue: saturatedColor.hueComponent, saturation: saturatedColor.saturationComponent, brightness: 1.0, alpha: 1.0)
-        
-        // Determine which transition contains the 'fromColor' that is closest in 'hue'
-        // to the color.
+    private func location(forColor color: NSColor) throws -> CGPoint {
         if self.transitions.isEmpty { loadTransitions() }
-        guard let closestTransition = transitions.enumerated()
-            .map({ ($0, NSColor.hueDistance(lhs: redDistance, rhs: $1.fromColor)) })
-            .sorted(by: { $0.1 < $1.1 })
-            .first
-        // FIXME: Throw instead of fatalError
-        else { fatalError("Color not in any transition") }
+        let transitionsInRange: [(index: Int, transition: Transition, location: CGPoint, color: NSColor)] = try transitions.enumerated()
+            // Multiple transitions can contain the hue of the passed-in color. This happens
+            // because the last transition in the gradient goes 'from' the last color in the
+            // array beck 'to' the first color.
+            .filter({ (index, transition) in
+                transition.contains(color: color)
+            })
+            // To decide which of the (potentially) two possible transitions is a better
+            // candidate to contain the passed-in color, it is necessary to obtain the
+            // color that would result if each transition was chosen - and pick the transition
+            // that has the closest color.
+            .map({ (index, transition) in
+                // Find out where in the transition the passed-in color's hue is.
+                let radius = size / 2
+                let percent = transition.percent(forColor: color)
+                
+                // Convert the percentage to an angle.
+                let percentWheel = percent.convert(fromMin: 0.0, max: 1.0, toMin: transition.fromLocation, max: transition.toLocation)
+                var convertedRadians = percentWheel.convert(fromZeroToMax: 1.0, toZeroToMax: 2 * .pi)
+                
+                // The colors gradient has been set to start at 270º instead of 0º, so this needs
+                // to move forward (clockwise) 90º (𝜋/2) by subtracting 𝜋/2 - modulo 2𝜋.
+                convertedRadians = (convertedRadians - (.pi / 2)).truncatingRemainder(dividingBy: 2 * .pi)
+                convertedRadians = convertedRadians > 0 ? convertedRadians : (2 * .pi + convertedRadians)
+                
+                let normalizedPercent = percentWheel.convert(fromMin: transition.fromLocation, max: transition.toLocation, toMin: 0.0, max: 1.0)
+                let maxSaturation = transition.color(forPercent: normalizedPercent).saturationComponent
+                let convertedSaturation = Double(color.saturationComponent).convert(fromZeroToMax: maxSaturation, toZeroToMax: radius)
+                
+                // Convert to cartesian
+                let origin = CGPoint(x: radius, y: radius)
+                let location = CGPoint(x: (convertedSaturation * cos(convertedRadians)) + origin.x,
+                                       y: (convertedSaturation * sin(convertedRadians)) + origin.y)
+                
+                return (index, transition, location, NSColor(try colorAt(location)))
+            })
+            // Sort the possible options by how close they match the passed-in color.
+            // !!!: Colors may exist multiple places in the wheel
+            //      Some identical colors might exist at multiple locations. This is most
+            //      obvious with wheels that have the same start and end colors, and only
+            //      a single color between them. In these cases, the location of the
+            //      passed-in color may not be consistently the same.
+            .sorted(by: { (arg0, arg1) in
+                let (_, _, _, lhsTargetColor) = arg0
+                let (_, _, _, rhsTargetColor) = arg1
+                let lhs = lhsTargetColor
+                let rhs = rhsTargetColor
+                
+                return (abs(lhs.hueComponent - color.hueComponent),abs(lhs.saturationComponent - color.saturationComponent), abs(lhs.brightnessComponent - color.brightnessComponent)) < (abs(rhs.hueComponent - color.hueComponent), abs(rhs.saturationComponent - color.saturationComponent), abs(rhs.brightnessComponent - color.brightnessComponent))
+            })
         
-        // The passed-in color may not be one that exists in the color wheel. Find the
-        // closest color in the color wheel to the passed-in color.
-        let from = transitions[closestTransition.0].fromColor.rgba
-        let to = transitions[closestTransition.0].toColor.rgba
-        let closestColor = closestColor(inTransition: transitions[closestTransition.0], toColor: redDistance)
-        let distance = closestColor.rgba
+        guard let desiredSelection = transitionsInRange.first else { throw GradientError.colorNotInGradient(color: color)}
         
-        // Determine what percentage of the transition the color belongs to by reversing
-        // the calculations done to linearly interpolate between the transition's colors.
-        // Because the passed-in color has been "pulled in" to the interpolation line, the
-        // percentages of each color should be very nearly-identical - any one can be used.
-        let pRed = Double(distance.red).convert(fromMin: from.red, max: to.red, toMin: 0, max: 1.0)
-        let pGreen = Double(distance.green).convert(fromMin: from.green, max: to.green, toMin: 0, max: 1.0)
-        let pBlue = Double(distance.blue).convert(fromMin: from.blue, max: to.blue, toMin: 0, max: 1.0)
-        
-        let percentage = pRed != 0 ? pRed :
-        pGreen != 0 ? pGreen :
-        pBlue != 0 ? pBlue : 0
-        
-        // Convert the percentage to an angle.
-        var convertedRadians = percentage.convert(fromMin: 0.0, max: 1.0, toMin: transitions[closestTransition.0].fromLocation, max: transitions[closestTransition.0].toLocation)
-        convertedRadians = convertedRadians.convert(fromZeroToMax: 1.0, toZeroToMax: 2 * .pi)
-        
-        // The colors gradient has been set to start at 270º instead of 0º, so this needs
-        // to move forward (clockwise) 90º (𝜋/2) by subtracting 𝜋/2 - modulo 2𝜋.
-        convertedRadians = (convertedRadians - (.pi / 2)).truncatingRemainder(dividingBy: 2 * .pi)
-        convertedRadians = convertedRadians > 0 ? convertedRadians : (2 * .pi + convertedRadians)
-        
-        // Correct saturation
-        // 'saturation' is a value between 0.0 and 1.0 that indicates how far along the
-        // radius the tap happened. When getting a color, it should be the percentage of
-        // the saturation of the color in the gradient.
-        let maxSaturationForColor = transitions[closestTransition.0].fromColor.saturationComponent
-        let convertedSaturation = (saturatedColor.saturationComponent / maxSaturationForColor) * size / 2
-        
-        // Convert to cartesian
-        let origin = CGPoint(x: size / 2, y: size / 2)
-        let x = (convertedSaturation * cos(convertedRadians)) + origin.x
-        let y = (convertedSaturation * sin(convertedRadians)) + origin.y
-        
-        return CGPoint(x: x, y: y)
+        return desiredSelection.location
     }
     
-    private func colorAt(_ location: CGPoint) -> Color {
+    private func colorAt(_ location: CGPoint) throws -> Color {
         let origin = CGPoint(x: size / 2, y: size / 2)
         let radius = size / 2
         
+        // Convert the incoming location to polar coordinates.
         let constrainted = constrainToBounds(location)
         let hue = atan2(constrainted.y - origin.y, constrainted.x - origin.x)
         let hueRadians = hue > 0 ? hue : (2 * .pi + hue)
@@ -299,12 +346,22 @@ struct ColorGradientPickerView: View {
         
         // The colors gradient has been set to start at 270º instead of 0º, so this needs
         // to move back (counter-clockwise) 90º (𝜋/2) by adding 𝜋/2 - modulo 2𝜋.
-        
         // 'saturation' is a value between 0.0 and 1.0 that indicates how far along the
-        // radius the tap happened. When getting a color, it shoudl be the percentage of
+        // radius the tap happened. When getting a color, it should be the percentage of
         // the saturation of the color in the gradient.
-        let coloratAngle = color(forAngle: (hueRadians + (.pi / 2)).truncatingRemainder(dividingBy: 2 * .pi))
-        let colorAt = NSColor(hue: coloratAngle.hueComponent, saturation: coloratAngle.saturationComponent * (saturation / radius), brightness: 1.0, alpha: 1.0)
+        if self.transitions.isEmpty { loadTransitions() }
+        let angle = Double((hueRadians + (.pi / 2)).truncatingRemainder(dividingBy: 2 * .pi))
+        let colorAtAngle = try color(forAngle: angle)
+        
+        // The saturation value of the color found in the gradient needs to be converted
+        // to be in the range of '0' to 'maxSaturation'.
+        let maxSaturation = colorAtAngle.saturationComponent
+        let saturationValue = Double(saturation).convert(fromZeroToMax: radius, toZeroToMax: maxSaturation)
+        
+        let colorAt = NSColor(hue: colorAtAngle.hueComponent,
+                              saturation: saturationValue,
+                              brightness: colorAtAngle.brightnessComponent,
+                              alpha: 1.0).usingColorSpace(.sRGB)!
         
         return Color(nsColor: colorAt)
     }

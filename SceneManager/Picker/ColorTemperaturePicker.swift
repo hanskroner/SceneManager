@@ -11,8 +11,6 @@ import OSLog
 
 private let logger = Logger(subsystem: "com.hanskroner.picker", category: "temperature-picker")
 
-// MARK: - Color Temperature Picker
-
 struct ColorTemperaturePickerView: View {
     let gradient: [NSColor]
     
@@ -29,8 +27,16 @@ struct ColorTemperaturePickerView: View {
         let toColor: NSColor
 
         func color(forPercent percent: Double) -> NSColor {
-            let normalizedPercent = percent.convert(fromMin: fromLocation, max: toLocation, toMin: 0.0, max: 1.0)
-            return NSColor.lerp(from: fromColor.rgba, to: toColor.rgba, percent: CGFloat(normalizedPercent))
+            // Linear interpolation in RGB
+            let red = fromColor.redComponent + percent * (toColor.redComponent - fromColor.redComponent)
+            let green = fromColor.greenComponent + percent * (toColor.greenComponent - fromColor.greenComponent)
+            let blue = fromColor.blueComponent + percent * (toColor.blueComponent - fromColor.blueComponent)
+            let alpha = fromColor.alphaComponent + percent * (toColor.alphaComponent - fromColor.alphaComponent)
+            
+            return NSColor(red: red,
+                           green: green,
+                           blue: blue,
+                           alpha: alpha)
         }
     }
     
@@ -92,14 +98,26 @@ struct ColorTemperaturePickerView: View {
                 
                 PickerDropperView(dropper: $dropper)
                     .onLocationChanged {
-                        dropper.color = colorAt(dropper.location)
+                        do {
+                            dropper.color = try colorAt(dropper.location)
+                        } catch {
+                            logger.error("\(error, privacy: .public)")
+                            
+                            dropper.color = .black
+                        }
                     }
                     .frame(height: size * 0.16)
                     .offset(x: 0, y: -size * 0.08)
                     .position(constrainToBounds(dropper.location))
                     .gesture(dragGesture)
                     .task {
-                        dropper.location = locationFor(color: dropper.color)
+                        do {
+                            dropper.location = try locationFor(color: NSColor(dropper.color))
+                        } catch {
+                            logger.error("\(error, privacy: .public)")
+                            
+                            dropper.location = .zero
+                        }
                     }
             }
         }
@@ -143,19 +161,28 @@ struct ColorTemperaturePickerView: View {
         }
     }
     
-    private func color(forY y: Double) -> NSColor {
+    private func color(forY y: Double) throws -> NSColor {
         if self.transitions.isEmpty { loadTransitions() }
+        
+        // Convert the percentage, which is a percentage of the overall gradient, to a
+        // percentage relative to the transition where the color is located and obtain the
+        // color at that location.
         let percent = y.convert(fromZeroToMax: size, toZeroToMax: 1.0)
 
-        // FIXME: Throw instead of fatalError
-        guard let transition = transition(forPercent: percent) else { fatalError("No transition") }
+        guard let transition = transition(forPercent: percent) else { throw GradientError.percentNotInGradient(percent: percent) }
 
-        return transition.color(forPercent: percent)
+        let normalizedPercent = percent.convert(fromMin: transition.fromLocation,
+                                                max: transition.toLocation,
+                                                toMin: 0.0,
+                                                max: 1.0)
+        
+        return transition.color(forPercent: normalizedPercent)
     }
     
     private func transition(forPercent percent: Double) -> Transition? {
         let filtered = transitions.filter { percent >= $0.fromLocation && percent < $0.toLocation }
         let defaultTransition = percent <= 0.5 ? transitions.first : transitions.last
+        
         return filtered.first ?? defaultTransition
     }
     
@@ -179,10 +206,6 @@ struct ColorTemperaturePickerView: View {
     }
     
     private func closestColor(inTransition transition: Transition, toColor color: NSColor) -> NSColor {
-        let from = transition.fromColor.rgba
-        let to = transition.toColor.rgba
-        let outside = color.rgba
-        
         // The passed-in color might not exist exactly in the transition. The challenge
         // becomes how to determine which color that does exist in the transition is
         // closest to the passed-in one. To do this, we will imagine the RGB components of
@@ -196,9 +219,15 @@ struct ColorTemperaturePickerView: View {
         // represents the end color. Together, they create the line segment 'AB' onto
         // which point 'C' - which represents the passed-in color - will be projected.
         // Use SIMD for 3D Vector math
-        let A = SIMD3(Float(from.red), Float(from.green), Float(from.blue))
-        let B = SIMD3(Float(to.red), Float(to.green), Float(to.blue))
-        let C = SIMD3(Float(outside.red), Float(outside.green), Float(outside.blue))
+        let A = SIMD3(Float(transition.fromColor.redComponent),
+                      Float(transition.fromColor.greenComponent),
+                      Float(transition.fromColor.blueComponent))
+        let B = SIMD3(Float(transition.toColor.redComponent),
+                      Float(transition.toColor.greenComponent),
+                      Float(transition.toColor.blueComponent))
+        let C = SIMD3(Float(color.redComponent),
+                      Float(color.greenComponent),
+                      Float(color.blueComponent))
         
         // 'B' minus 'A' (BmA) and 'C' minus 'A' (CmA) are two vectors that represent the
         // direction from 'B' to 'A' and 'C' to 'A' respectively. They can be throught of
@@ -210,55 +239,65 @@ struct ColorTemperaturePickerView: View {
         let t = dot(CmA, BmA) / dot(BmA, BmA)
         let D = A + BmA * t
         
-        let closestColor = NSColor(red: CGFloat(D.x), green: CGFloat(D.y), blue: CGFloat(D.z), alpha: 1.0)
-        
-        return closestColor
+        return NSColor(red: CGFloat(D.x), green: CGFloat(D.y), blue: CGFloat(D.z), alpha: 1.0).usingColorSpace(.sRGB)!
     }
     
-    private func locationFor(color: Color) -> CGPoint {
+    private func locationFor(color: NSColor) throws -> CGPoint {
         // Determine which transition contains the 'fromColor' that is closest in 'hue'
         // to the color.
         if self.transitions.isEmpty { loadTransitions() }
         guard let closestTransition = transitions.enumerated()
-            .map({ ($0, NSColor.miredDistance(lhs: NSColor(color), rhs: $1.fromColor)) })
+            .map({
+                // Add distance between the two mired values
+                let colorMired = mired(fromColor: color)
+                let fromColorMired = mired(fromColor: $1.fromColor)
+
+                return ($0, abs(colorMired - fromColorMired))
+            })
             .sorted(by: { $0.1 < $1.1 })
             .first
-        // FIXME: Throw instead of fatalError
-        else { fatalError("Color not in any transition") }
+        else { throw GradientError.colorNotInGradient(color: color) }
         
         // The passed-in color may not be one that exists in the color wheel. Find the
         // closest color in the color wheel to the passed-in color.
-        let from = transitions[closestTransition.0].fromColor.rgba
-        let to = transitions[closestTransition.0].toColor.rgba
-        let closestColor = closestColor(inTransition: transitions[closestTransition.0], toColor: NSColor(color))
-        let distance = closestColor.rgba
+        let transition = transitions[closestTransition.0]
+        let closestColor = closestColor(inTransition: transition, toColor: color)
         
         // Determine what percentage of the transition the color belongs to by reversing
         // the calculations done to linearly interpolate between the transition's colors.
         // Because the passed-in color has been "pulled in" to the interpolation line, the
         // percentages of each color should be very nearly-identical - any one can be used.
-        let pRed = Double(distance.red).convert(fromMin: from.red, max: to.red, toMin: 0, max: 1.0)
-        let pGreen = Double(distance.green).convert(fromMin: from.green, max: to.green, toMin: 0, max: 1.0)
-        let pBlue = Double(distance.blue).convert(fromMin: from.blue, max: to.blue, toMin: 0, max: 1.0)
+        let pRed = Double(closestColor.redComponent).convert(fromMin: transition.fromColor.redComponent,
+                                                             max: transition.toColor.redComponent,
+                                                             toMin: 0,
+                                                             max: 1.0)
+        let pGreen = Double(closestColor.greenComponent).convert(fromMin: transition.fromColor.greenComponent,
+                                                                 max: transition.toColor.greenComponent,
+                                                                 toMin: 0,
+                                                                 max: 1.0)
+        let pBlue = Double(closestColor.blueComponent).convert(fromMin: transition.fromColor.blueComponent,
+                                                               max: transition.toColor.blueComponent,
+                                                               toMin: 0,
+                                                               max: 1.0)
         
         let percentage = pRed != 0 ? pRed :
                          pGreen != 0 ? pGreen :
                          pBlue != 0 ? pBlue : 0
         
-        var convertedY = percentage.convert(fromMin: 0.0, max: 1.0, toMin: transitions[closestTransition.0].fromLocation, max: transitions[closestTransition.0].toLocation)
+        var convertedY = percentage.convert(fromMin: 0.0, max: 1.0, toMin: transition.fromLocation, max: transition.toLocation)
         convertedY = convertedY.convert(fromMin: 0.0, max: 1.0, toMin: 0, max: size)
         
         return CGPoint(x: size / 2, y: convertedY)
     }
     
-    private func colorAt(_ location: CGPoint) -> Color {
+    private func colorAt(_ location: CGPoint) throws -> Color {
         // The color temperature picker is a linear gradient that runs from .top to
         // .bottom. Only the 'y' coordinate of 'location' is needed.
         // Make sure the coordinates are contrained to the wheel, otherwise the
         // color of the dropper will continue changing to one that isn't represented
         // within the wheel.
         let constrainted = constrainToBounds(location)
-        let colorAtY = color(forY: constrainted.y)
+        let colorAtY = try color(forY: constrainted.y)
         return Color(nsColor: colorAtY)
     }
 }

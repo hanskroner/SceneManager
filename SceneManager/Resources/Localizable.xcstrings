@@ -91,7 +91,19 @@
     "Are you sure you want to delete the Dynamic Scene in '%@'?" : {
 
     },
+    "Brightness: %@%%" : {
+
+    },
     "Cancel" : {
+
+    },
+    "Color CT" : {
+
+    },
+    "Color Scene" : {
+
+    },
+    "Color XY" : {
 
     },
     "Configuration" : {
@@ -210,6 +222,9 @@
 
     },
     "Select a scene" : {
+
+    },
+    "Selected %@" : {
 
     },
     "Show in Finder" : {
