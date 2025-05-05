@@ -26,18 +26,66 @@ struct WarningView: View {
                     .textSelection(.enabled)
                     .font(.callout)
                     .fontDesign(.monospaced)
-                    .fixedSize(horizontal: false, vertical: true)
             }
+            // FIXME: Seems broken in macOS 15.4
+            //        Scrollbar won't bounce even if the content is big enough for it to.
+            .scrollBounceBehavior(.basedOnSize)
         }
         .frame(maxWidth: 340, maxHeight: 160, alignment: .leading)
-        .fixedSize()
-        .padding(.vertical, 20)
-        .padding(.horizontal, 16)
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(.top, 20)
+        .padding(.bottom, 12)
+        .padding(.leading, 14)
         .background(.ultraThickMaterial)
         .cornerRadius(8)
     }
 }
 
-#Preview {
+#Preview("Short Error") {
+    let window = WindowItem()
+    
     WarningView(showingPopover: .constant(true))
+        .padding(4)
+        .background(Color.yellow.padding(-80))
+        .environment(window)
+        .task {
+            window.warningTitle = "deCONZ REST API Error"
+            window.warningBody = """
+                address: /lights/8/config/bri/couple_ct
+                description: parameter, couple_ct, not available
+                """
+        }
+        .frame(width: 370, height: 300)
+}
+
+#Preview("Long Error") {
+    let window = WindowItem()
+    
+    WarningView(showingPopover: .constant(true))
+        .padding(4)
+        .background(Color.yellow.padding(-80))
+        .environment(window)
+        .task {
+            window.warningTitle = "deCONZ REST API Error"
+            window.warningBody = """
+                address: /lights/8/config/bri/couple_ct
+                description: parameter, couple_ct, not available
+
+                address: /lights/8/config/bri/execute_if_off
+                description: parameter, execute_if_off, not available
+
+                address: /lights/8/config/color/execute_if_off
+                description: parameter, execute_if_off, not available
+                
+                address: /lights/8/config/bri/couple_ct
+                description: parameter, couple_ct, not available
+
+                address: /lights/8/config/bri/execute_if_off
+                description: parameter, execute_if_off, not available
+
+                address: /lights/8/config/color/execute_if_off
+                description: parameter, execute_if_off, not available
+                """
+        }
+        .frame(width: 370, height: 300)
 }
