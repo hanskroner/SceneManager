@@ -339,20 +339,20 @@ struct ConfigurationView: View {
         // Hue Fixture replacements
         if modelId.contains("LCG")
             && lightName.localizedCaseInsensitiveContains("fugato") {
-            return "E00-C-57356"    // Hue Fugato Spots
+            return "single-spot"    // Hue Fugato Spots
         }
         
         // Hue Fixtures
-        if modelId.contains("929002966") { return "E002-57346" }    // Hue Surimu Panel
-        if modelId.contains("506313") { return "E00-C-57356" }      // Hue Fugato Spots
+        if modelId.contains("929002966") { return "ceiling-square" }    // Hue Surimu Panel
+        if modelId.contains("506313") { return "single-spot" }          // Hue Fugato Spots
         
         // Hue Products and Bulbs
-        if modelId.contains("LCG") { return "E027-57383" }  // GU10 bulbs
-        if modelId.contains("LCL") { return "E06-A-57450" } // Hue Lightstrip plus
-        if modelId.contains("LCT") { return "E015-57365" }  // E14 candle bulbs
-        if modelId.contains("LCU") { return "E025-57381" }  // E14 luster bulbs
-        if modelId.contains("LCA") { return "E028-57384" }  // A19 bulbs
-        if modelId.contains("LOM") { return "E04-D-57421" } // Hue Smart Plug
+        if modelId.contains("LCG") { return "gu10" }        // GU10 bulbs
+        if modelId.contains("LCL") { return "lightstrip" }  // Hue Lightstrip plus
+        if modelId.contains("LCT") { return "e14-candle" }  // E14 candle bulbs
+        if modelId.contains("LCU") { return "e14-luster" }  // E14 luster bulbs
+        if modelId.contains("LCA") { return "e27-a60" }     // E27 bulbs
+        if modelId.contains("LOM") { return "plug" }        // Hue Smart Plug
         
         return nil
     }

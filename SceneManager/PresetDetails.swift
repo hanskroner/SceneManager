@@ -31,11 +31,11 @@ struct PresetDetails: View {
     }
     
     @State var droppersColor: [PickerDropper] = [
-        PickerDropper(color: Color(nsColor: color(fromXY: CGPoint(x: 0.1547, y: 0.1045))), image: "E028-57384"),
-        PickerDropper(color: Color(nsColor: color(fromXY: CGPoint(x: 0.1743, y: 0.1333))), image: "E028-57384"),
-        PickerDropper(color: Color(nsColor: color(fromXY: CGPoint(x: 0.2044, y: 0.1640))), image: "E028-57384"),
-        PickerDropper(color: Color(nsColor: color(fromXY: CGPoint(x: 0.2789, y: 0.2025))), image: "E028-57384"),
-        PickerDropper(color: Color(nsColor: color(fromXY: CGPoint(x: 0.4802, y: 0.3112))), image: "E028-57384")
+        PickerDropper(color: Color(nsColor: color(fromXY: CGPoint(x: 0.1547, y: 0.1045))), image: "e27-a60"),
+        PickerDropper(color: Color(nsColor: color(fromXY: CGPoint(x: 0.1743, y: 0.1333))), image: "e27-a60"),
+        PickerDropper(color: Color(nsColor: color(fromXY: CGPoint(x: 0.2044, y: 0.1640))), image: "e27-a60"),
+        PickerDropper(color: Color(nsColor: color(fromXY: CGPoint(x: 0.2789, y: 0.2025))), image: "e27-a60"),
+        PickerDropper(color: Color(nsColor: color(fromXY: CGPoint(x: 0.4802, y: 0.3112))), image: "e27-a60")
         ]
     
     @State var selectedDropperColor: PickerDropper?
@@ -85,7 +85,7 @@ struct PresetDetails: View {
     ]
     
     @State var droppersCt: [PickerDropper] = [
-        PickerDropper(color: Color(color(fromMired: 255)!), image: "E028-57384")
+        PickerDropper(color: Color(color(fromMired: 255)!), image: "e27-a60")
     ]
     
     @State var selectedDropperCt: PickerDropper?
@@ -137,7 +137,7 @@ struct PresetDetails: View {
                 }
                 .padding(.top, 30)
                 
-                BrightnessSlider(image: "E028-57384", sliderColor: selectedDropperColor?.color ?? selectedDropperCt?.color ?? .white, value: $brightness)
+                BrightnessSlider(image: "e27-a60", sliderColor: selectedDropperColor?.color ?? selectedDropperCt?.color ?? .white, value: $brightness)
                     .frame(width: 75, height: 250)
             }
             
