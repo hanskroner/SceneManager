@@ -96,6 +96,15 @@ struct PresetDetails: View {
         return String(mired(fromColor: NSColor(selectedDropperCt.color)))
     }
     
+    var sliderColor: Color {
+        switch selectedPickerTab {
+        case .colorCt:
+            selectedDropperCt?.color ?? .white
+        default:
+            selectedDropperColor?.color ?? .white
+        }
+    }
+    
     // MARK: TabView
     
     enum PickerTab: Hashable {
@@ -137,7 +146,7 @@ struct PresetDetails: View {
                 }
                 .padding(.top, 30)
                 
-                BrightnessSlider(image: "e27-a60", sliderColor: selectedDropperColor?.color ?? selectedDropperCt?.color ?? .white, value: $brightness)
+                BrightnessSlider(image: "e27-a60", sliderColor: sliderColor, value: $brightness)
                     .frame(width: 75, height: 250)
             }
             
