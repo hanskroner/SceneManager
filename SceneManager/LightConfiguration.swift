@@ -337,14 +337,20 @@ struct ConfigurationView: View {
     // FIXME: Duplicated from LightItem model
     private func getImageName(modelId: String, lightName: String = "") -> String? {
         // Hue Fixture replacements
-        if modelId.contains("LCG")
-            && lightName.localizedCaseInsensitiveContains("fugato") {
-            return "single-spot"    // Hue Fugato Spots
+        if modelId.contains("LCG") {
+            if lightName.localizedCaseInsensitiveContains("fugato") {
+                return "single-spot"    // Hue Fugato Spots
+            }
+            
+            if lightName.localizedCaseInsensitiveContains("centris") {
+                return "centris"        // Hue Centris Spots
+            }
         }
         
         // Hue Fixtures
         if modelId.contains("929002966") { return "ceiling-square" }    // Hue Surimu Panel
         if modelId.contains("506313") { return "single-spot" }          // Hue Fugato Spots
+        if modelId.contains("5061031P7") { return "centris" }           // Hue Centris Panels and Spots
         
         // Hue Products and Bulbs
         if modelId.contains("LCG") { return "gu10" }        // GU10 bulbs
