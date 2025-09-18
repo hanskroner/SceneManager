@@ -85,11 +85,6 @@ struct SidebarView: View {
                         }
                     }
                 }
-                // 'safeAreaInsets' doesn't seem to allow the List's contents to "be seen"
-                // through the bottom bar's ultra-thin material. Instead, this spacer acts
-                // as the inset and the bottom bar is drawn in an overlay.
-                Spacer()
-                    .frame(height: 1)
             }
             .onKeyPress(.return) {
                 // !!!: Get selected sidebar item and set 'isRenaming'
@@ -114,6 +109,7 @@ struct SidebarView: View {
                 
                 return .ignored
             }
+            .safeAreaPadding(.bottom, 28)
             .listStyle(.sidebar)
             .onChange(of: sidebar.items) { previousValue, newValue in
                 self.selectionDidChange(to: sidebar.selectedSidebarItem)
