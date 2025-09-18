@@ -82,7 +82,7 @@ class PresetItemGroup: Identifiable, Codable {
 }
 
 @Observable
-class PresetItem: Identifiable, Codable, Transferable {
+final class PresetItem: Identifiable, Codable, Transferable {
     let id: UUID
     
     var name: String
