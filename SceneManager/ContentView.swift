@@ -98,6 +98,7 @@ struct ContentView: View {
                                 .padding(0)
                         }
                     }
+                    .padding(.horizontal, 20)
                     
                     if (window.hasWarning) {
                         Button(action: { window.isShowingWarning = true }) {
