@@ -66,6 +66,8 @@
 		3A93B0432AD2F7290038600F /* SceneManagerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A93B0422AD2F7290038600F /* SceneManagerApp.swift */; };
 		3A93B0452AD2F7290038600F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A93B0442AD2F7290038600F /* ContentView.swift */; };
 		3A93B0472AD2F72B0038600F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A93B0462AD2F72B0038600F /* Assets.xcassets */; };
+		3AB824A02E903C9B002468AE /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 3AB8249F2E903C9B002468AE /* AppIcon.icon */; };
+		3AB824A22E916241002468AE /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 3AB824A12E916241002468AE /* AppIcon.icon */; };
 		3AC28F6A2DBFCF4800E817B7 /* BrightnessSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC28F692DBFCF4800E817B7 /* BrightnessSlider.swift */; };
 		3AC28F6C2DC22F6500E817B7 /* PresetDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC28F6B2DC22F6500E817B7 /* PresetDetails.swift */; };
 		3AD18D0F2DA2C91800AC1CC8 /* christmas.json in Resources */ = {isa = PBXBuildFile; fileRef = 3AD18D0C2DA2C91800AC1CC8 /* christmas.json */; };
@@ -186,6 +188,8 @@
 		3A93B0462AD2F72B0038600F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3A93B0492AD2F72B0038600F /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		3A93B04B2AD2F72B0038600F /* SceneManager.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SceneManager.entitlements; sourceTree = "<group>"; };
+		3AB8249F2E903C9B002468AE /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		3AB824A12E916241002468AE /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		3AC28F692DBFCF4800E817B7 /* BrightnessSlider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessSlider.swift; sourceTree = "<group>"; };
 		3AC28F6B2DC22F6500E817B7 /* PresetDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetDetails.swift; sourceTree = "<group>"; };
 		3AD18D0C2DA2C91800AC1CC8 /* christmas.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = christmas.json; sourceTree = "<group>"; };
@@ -331,6 +335,7 @@
 		3A4193672D9EF98B007E76F1 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				3AB824A12E916241002468AE /* AppIcon.icon */,
 				3A4193642D9EF98B007E76F1 /* Assets.xcassets */,
 				3A4193652D9EF98B007E76F1 /* Info.plist */,
 				3A4193662D9EF98B007E76F1 /* SceneConverter.entitlements */,
@@ -352,6 +357,7 @@
 			children = (
 				3A1EDD5B2AE2C54B001637BD /* Presets */,
 				3A93B0482AD2F72B0038600F /* Preview Content */,
+				3AB8249F2E903C9B002468AE /* AppIcon.icon */,
 				3A93B0462AD2F72B0038600F /* Assets.xcassets */,
 				3A2BDF012CC7BD2400B582AA /* Info.plist */,
 				3A462A7D2D8FE84200760E44 /* InfoPlist.strings */,
@@ -620,6 +626,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3A4193682D9EF98B007E76F1 /* Assets.xcassets in Resources */,
+				3AB824A22E916241002468AE /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -646,6 +653,7 @@
 				3A93B0472AD2F72B0038600F /* Assets.xcassets in Resources */,
 				3A462A7E2D8FE84200760E44 /* InfoPlist.strings in Resources */,
 				3A1EDD672AE2C54B001637BD /* relax.json in Resources */,
+				3AB824A02E903C9B002468AE /* AppIcon.icon in Resources */,
 				3AD18D0F2DA2C91800AC1CC8 /* christmas.json in Resources */,
 				3AD18D102DA2C91800AC1CC8 /* underwater.json in Resources */,
 				3AD18D112DA2C91800AC1CC8 /* halloween.json in Resources */,
@@ -1105,6 +1113,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = SceneManager/Resources/SceneManager.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
@@ -1139,6 +1148,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = SceneManager/Resources/SceneManager.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
