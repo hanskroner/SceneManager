@@ -109,7 +109,6 @@ struct SidebarView: View {
                 
                 return .ignored
             }
-            .safeAreaPadding(.bottom, 28)
             .listStyle(.sidebar)
             .onChange(of: sidebar.items) { previousValue, newValue in
                 self.selectionDidChange(to: sidebar.selectedSidebarItem)
@@ -130,7 +129,7 @@ struct SidebarView: View {
                 }
             }
         }
-        .overlay(alignment: .bottom) {
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             SidebarBottomBarView()
         }
     }
@@ -162,7 +161,7 @@ struct SidebarBottomBarView: View {
                 Spacer()
             }
         }
-        .background(.thinMaterial)
+        .glassEffect(in: .rect())
     }
 }
 

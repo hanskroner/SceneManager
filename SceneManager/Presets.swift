@@ -212,24 +212,16 @@ struct PresetsView: View {
     var body: some View {
         ScrollViewReader { scrollReader in
             List {
-                // Empty section to keep filter results from "floating" up
-                // and hiding under the search bar.
-                Section { }
-                
                 ForEach(filteredPresetGroups, id: \.id) { $group in
                     Section {
                         ForEach($group.presets, id: \.id) { $item in
                             PresetItemView(presetItem: $item)
+                                .listRowSeparator(.hidden)
                         }
                     } header: {
-                        // Offset the list section
-                        // This allows the list to scroll under the search bar
-                        // added by the overlay, without being under it initially.
-                        // All sections need to be offset or they'll "float" to the
-                        // top when scrolling, overlapping the search bar.
                             Text(sectionTitle(forPresetItemGroup: group))
-                                .padding(.top, 38)
                     }
+                    .listSectionSeparator(.hidden, edges: .top)
                 }
             }
             .onChange(of: presets.scrollToPresetItemId) { previousItem, newItem in
@@ -239,12 +231,12 @@ struct PresetsView: View {
                     }
                 }
             }
-            .overlay {
+            .safeAreaInset(edge: .top, spacing: 0) {
                 SearchField(text: $presetsSearchText, prompt: "Filter Presets")
                     .image(.filter)
                     .padding(.vertical, 10)
                     .padding(.horizontal, 16)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .frame(alignment: .top)
             }
         }
     }

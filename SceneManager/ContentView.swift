@@ -18,9 +18,8 @@ struct ContentView: View {
     
     @State private var window = WindowItem()
     
-//    @Environment(Sidebar.self) private var sidebar
-//    @Environment(Lights.self) private var lights
-//    @Environment(WindowItem.self) private var window
+    private let _decoder = JSONDecoder()
+    private let _encoder = JSONEncoder()
     
     @Environment(\.appearsActive) private var appearsActive
     
@@ -65,13 +64,14 @@ struct ContentView: View {
             SidebarView()
         } detail: {
             HStack {
-                HStack(spacing: 16) {
+                HSplitView {
                     LightView()
+                        .padding(.trailing, 8)
                     
                     LightStateView()
+                        .padding(.leading, 8)
                 }
-                .padding(.horizontal)
-                .padding(.top, 8)
+                .padding(8)
             }
             .navigationTitle("")
             .navigationSubtitle("")
@@ -121,17 +121,106 @@ struct ContentView: View {
                 }
                 
                 ToolbarItemGroup(placement: .primaryAction) {
+                    Button(action: {
+                        switch window.selectedEditorTab {
+                        case .sceneState:
+                            // Modify all the lights in the scene to the attributes in the State Editor
+                            guard let data = window.stateEditorText.data(using: .utf8) else {
+                                // FIXME: Error handling
+                                logger.error("\("Could not convert string to data.", privacy: .public)")
+                                return
+                            }
+                            
+                            window.clearWarnings()
+                            Task {
+                                do {
+                                    let recall = try _decoder.decode(PresetState.self, from: data)
+                                    
+                                    try await window.applyState(.recall(recall), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
+                                } catch {
+                                    logger.error("\(error, privacy: .public)")
+                                    
+                                    window.handleError(error)
+                                }
+                            }
+                            
+                        case .dynamicScene:
+                            // Modify all the lights in the scene to attributes in the Dynamics Editor
+                            // The order in which attributes are applied depends on some of the attributes themselves
+                            guard let data = window.dynamicsEditorText.data(using: .utf8) else {
+                                // FIXME: Error handling
+                                logger.error("\("Could not convert string to data.", privacy: .public)")
+                                return
+                            }
+                            
+                            window.clearWarnings()
+                            Task {
+                                do {
+                                    let dynamic = try _decoder.decode(PresetDynamics.self, from: data)
+                                    
+                                    try await window.applyState(.dynamic(dynamic), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.items.map{ $0.lightId })
+                                } catch {
+                                    logger.error("\(error, privacy: .public)")
+                                    
+                                    window.handleError(error)
+                                }
+                            }
+                        }
+                    }) {
+                        Label("Apply to Scene", systemImage: "party.popper")
+                    }
+                    .disabled(sidebar.selectedSidebarItem == nil
+                              || sidebar.selectedSidebarItem?.kind != .scene
+                              || (window.selectedEditorTab == .sceneState && window.stateEditorText.isEmpty)
+                              || (window.selectedEditorTab == .dynamicScene && window.dynamicsEditorText.isEmpty))
+                    .help("Apply to Scene")
+                    
+                    Button(action: {
+                        guard let data = window.stateEditorText.data(using: .utf8) else {
+                            // FIXME: Error handling
+                            logger.error("\("Could not convert string to data.", privacy: .public)")
+                            return
+                        }
+                        
+                        window.clearWarnings()
+                        Task {
+                            do {
+                                let recall = try _decoder.decode(PresetState.self, from: data)
+                                
+                                try await window.applyState(.recall(recall), toGroupId: window.groupId!, sceneId: window.sceneId!, lightIds: lights.selectedLightItems.map{ $0.lightId })
+                            } catch {
+                                logger.error("\(error, privacy: .public)")
+                                
+                                window.handleError(error)
+                            }
+                        }
+                    }) {
+                        Label("Apply to Selected", systemImage: "lightbulb.2")
+                    }
+                    .disabled(sidebar.selectedSidebarItem == nil
+                              || sidebar.selectedSidebarItem?.kind != .scene
+                              || lights.selectedLightItems.isEmpty
+                              || window.stateEditorText.isEmpty
+                              || window.selectedEditorTab == .dynamicScene)
+                    .help("Apply to Selected")
+                    
+                    Spacer()
+                    
                     Button(action: { recallSelectedScene() }) {
                         Label("Recall Scene", systemImage: "play")
                     }
                     .disabled(sidebar.selectedSidebarItem == nil
                               || sidebar.selectedSidebarItem?.kind != .scene)
+                    .help("Recall Scene")
                     
                     Button(action: { turnSelectedGroupOff() }) {
                         Label("Turn Group Off", systemImage: "stop")
                         
                     }
                     .disabled(sidebar.selectedSidebarItem == nil)
+                    .help("Turn Group Off")
+                    
+                    Spacer()
                     
                     Button(action: { showingPopover = true }) {
                         Label("Create Scene Preset", systemImage: "rectangle.stack")
@@ -150,11 +239,9 @@ struct ContentView: View {
         .inspector(isPresented: $showInspector) {
             PresetsView()
             .toolbar {
-                ToolbarItem {
+                ToolbarItemGroup(placement: .automatic) {
                     Spacer()
-                }
-                
-                ToolbarItem(placement: .automatic) {
+                    
                     Button(action: { withAnimation { showInspector.toggle() }}) {
                         Label("Toggle Inspector", systemImage: "sidebar.right")
                     }

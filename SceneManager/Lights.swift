@@ -54,12 +54,6 @@ struct LightView: View {
     var body: some View {
         @Bindable var lights = lights
         VStack(alignment: .leading) {
-            Text("Lights")
-                .font(.title2)
-                .padding(.horizontal)
-                .padding(.top, 4)
-                .padding(.bottom, -4)
-            
             ScrollViewReader { scrollReader in
                 List($lights.items, id: \.self, selection: $selectedLightItemIds) { $item in
                     LightItemView(lightItem: $item)
@@ -109,6 +103,7 @@ struct LightView: View {
                 LightBottomBarView(isPresentingSheet: $isPresentingSheet)
             }
         }
+        .glassEffect(in: .rect(cornerRadius: 16.0))
         .frame(minWidth: 250)
         .sheet(isPresented: $isPresentingSheet) {
         } content: {
@@ -284,8 +279,8 @@ struct LightBottomBarView: View {
                 
                 Spacer()
             }
-            .background(.ultraThinMaterial)
         }
+        .glassEffect(in: .rect())
     }
 }
 
