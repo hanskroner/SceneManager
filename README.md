@@ -24,7 +24,7 @@ where needed.
 ## Requirements
 
 Besides easing the administrative burden of managing Scenes, a secondary goal for this project was to
-familiarize myself with SwiftUI and Swift Concurrency. Scene Manager requires at least macOS 15.0 to run
+familiarize myself with SwiftUI and Swift Concurrency. Scene Manager requires at least macOS 26 to run
 and is currently built with Swift 6 and its strict concurrency model.
 
 Scene Manager also requires a recent version of the deCONZ REST API with a few additions that remain to
