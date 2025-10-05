@@ -25,6 +25,8 @@ class Presets {
     
     var modelRefreshedSubscription: AnyCancellable? = nil
     
+    var presetsSearchText: String = ""
+    
     init() {
         modelRefreshedSubscription = PresetsModel.shared.onPresetsUpdated.sink { [weak self] groups in
             // 'groups', being an array, is a value type - but PresetItemGroup is a class (reference type).
@@ -178,21 +180,19 @@ extension UTType {
 struct PresetsView: View {
     @Environment(Presets.self) private var presets
     
-    @State private var presetsSearchText: String = ""
-    
     private func sectionTitle(forPresetItemGroup group: PresetItemGroup) -> String {
         return group.name.replacing("_", with: " ").capitalized
     }
     
     private var filteredPresetGroups: Binding<[PresetItemGroup]> {
         Binding {
-            guard !presetsSearchText.isEmpty else { return presets.groups }
+            guard !presets.presetsSearchText.isEmpty else { return presets.groups }
             
             var displayPresetGroups: [PresetItemGroup] = []
             
             for group in presets.groups {
                 let filteredPresets = group.presets.filter {
-                    $0.name.localizedCaseInsensitiveContains(presetsSearchText)
+                    $0.name.localizedCaseInsensitiveContains(presets.presetsSearchText)
                 }
                 guard !filteredPresets.isEmpty else { continue }
                 displayPresetGroups.append(PresetItemGroup(name: group.name,
@@ -213,6 +213,7 @@ struct PresetsView: View {
         ScrollViewReader { scrollReader in
             List {
                 ForEach(filteredPresetGroups, id: \.id) { $group in
+                    // !!!: Sections break Xcode 26.0.1 Previews
                     Section {
                         ForEach($group.presets, id: \.id) { $item in
                             PresetItemView(presetItem: $item)
@@ -230,13 +231,6 @@ struct PresetsView: View {
                         scrollReader.scrollTo(item, anchor: .center)
                     }
                 }
-            }
-            .safeAreaInset(edge: .top, spacing: 0) {
-                SearchField(text: $presetsSearchText, prompt: "Filter Presets")
-                    .image(.filter)
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 16)
-                    .frame(alignment: .top)
             }
         }
     }

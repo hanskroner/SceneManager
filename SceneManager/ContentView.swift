@@ -59,6 +59,7 @@ struct ContentView: View {
     
     var body: some View {
         @Bindable var window = window
+        @Bindable var presets = presets
         
         NavigationSplitView {
             SidebarView()
@@ -241,14 +242,25 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItemGroup(placement: .automatic) {
                     Spacer()
-                    
+                }
+                
+                if (showInspector) {
+                    ToolbarItemGroup(placement: .automatic) {
+                        SearchField(text: $presets.presetsSearchText, prompt: "Filter Presets")
+                        // !!!: Not working in macOS 26
+                        // .image(.filter)
+                            .frame(width: 150)
+                    }
+                }
+                
+                ToolbarItemGroup(placement: .automatic) {
                     Button(action: { withAnimation { showInspector.toggle() }}) {
                         Label("Toggle Inspector", systemImage: "sidebar.right")
                     }
                     .help("Hide or show the Scene Presets")
                 }
             }
-            .inspectorColumnWidth(min: 200, ideal: 200, max: 200)
+            .inspectorColumnWidth(min: 210, ideal: 210, max: 210)
         }
         .sheet(isPresented: $window.isPresentingStartupConfiguration) {
             LightConfigurationView()
