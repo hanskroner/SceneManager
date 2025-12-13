@@ -54,53 +54,62 @@ struct LightView: View {
     var body: some View {
         @Bindable var lights = lights
         VStack(alignment: .leading) {
-            ScrollViewReader { scrollReader in
-                List($lights.items, id: \.self, selection: $selectedLightItemIds) { $item in
-                    LightItemView(lightItem: $item)
-                    .id(item.id)
-                    .listRowSeparator(.hidden)
+            if sidebar.selectedSidebarItemId == nil {
+                ContentUnavailableView {
+                    Label("No Selection", systemImage: "lightbulb.slash")
+                } description: {
+                    Text("Select a Group or Scene to display its lights")
                 }
-                .onChange(of: lights.items) { previousValue, newValue in
-                    // Ensure at least one of the selected items is visible when
-                    // the list of available lights changes.
-                    if let firstItem = selectedLightItemIds.first {
-                        Task { @MainActor in
-                            scrollReader.scrollTo(firstItem, anchor: .center)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollViewReader { scrollReader in
+                    List($lights.items, id: \.self, selection: $selectedLightItemIds) { $item in
+                        LightItemView(lightItem: $item)
+                        .id(item.id)
+                        .listRowSeparator(.hidden)
+                    }
+                    .onChange(of: lights.items) { previousValue, newValue in
+                        // Ensure at least one of the selected items is visible when
+                        // the list of available lights changes.
+                        if let firstItem = selectedLightItemIds.first {
+                            Task { @MainActor in
+                                scrollReader.scrollTo(firstItem, anchor: .center)
+                            }
+                            
+                            return
                         }
                         
-                        return
-                    }
-                    
-                    if let firstItem = lights.items.first {
-                        Task { @MainActor in
-                            scrollReader.scrollTo(firstItem, anchor: .center)
+                        if let firstItem = lights.items.first {
+                            Task { @MainActor in
+                                scrollReader.scrollTo(firstItem, anchor: .center)
+                            }
+                            
+                            return
                         }
-                        
-                        return
                     }
-                }
-                .onChange(of: selectedLightItemIds) { previousValue, newValue in
-                    selectionDidChange(to: newValue)
-                }
-                .onChange(of: lights.selectedLightItemIds) { previousValue, newValue in
-                    // Apply changes to selection donw directly in the model to the View
-                    selectedLightItemIds = newValue
-                }
-                // Use 'scrollToLightItemId' to scroll a specific item into view.
-                // Note that for the ScrollViewReader proxy to know what item to scroll to, ".id()"
-                // must be set in LightView's view builder.
-                .onChange(of: lights.scrollToLightItemId) {
-                    if let item = lights.scrollToLightItemId {
-                        lights.scrollToLightItemId = nil
-                        
-                        withAnimation {
-                            scrollReader.scrollTo(item, anchor: .center)
+                    .onChange(of: selectedLightItemIds) { previousValue, newValue in
+                        selectionDidChange(to: newValue)
+                    }
+                    .onChange(of: lights.selectedLightItemIds) { previousValue, newValue in
+                        // Apply changes to selection donw directly in the model to the View
+                        selectedLightItemIds = newValue
+                    }
+                    // Use 'scrollToLightItemId' to scroll a specific item into view.
+                    // Note that for the ScrollViewReader proxy to know what item to scroll to, ".id()"
+                    // must be set in LightView's view builder.
+                    .onChange(of: lights.scrollToLightItemId) {
+                        if let item = lights.scrollToLightItemId {
+                            lights.scrollToLightItemId = nil
+                            
+                            withAnimation {
+                                scrollReader.scrollTo(item, anchor: .center)
+                            }
                         }
                     }
                 }
-            }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                LightBottomBarView(isPresentingSheet: $isPresentingSheet)
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    LightBottomBarView(isPresentingSheet: $isPresentingSheet)
+                }
             }
         }
         .glassEffect(in: .rect(cornerRadius: 16.0))

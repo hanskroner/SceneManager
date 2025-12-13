@@ -48,11 +48,15 @@ struct LightStateView: View {
                         if (lights.selectedLightItems.isEmpty
                             && focus != .state
                             && window.stateEditorText.isEmpty) {
-                            Text("Select a light or" + (sidebar.selectedSidebarItem?.kind == .scene ? "\n type a state" : " scene"))
-                                .multilineTextAlignment(.center)
-                                .font(.body)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.secondary)
+                            ContentUnavailableView {
+                                Label(sidebar.selectedSidebarItem?.kind == .scene ? "Empty Definition" : "No Selection",
+                                      systemImage: "text.page.slash")
+                            } description: {
+                                Text("Select a Light or " + (sidebar.selectedSidebarItem?.kind == .scene ? "type in a State" : "Scene"))
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            // Try to align with LightsView
+                            .padding(.bottom, 24)
                         }
                     }
                     .tabItem {
@@ -69,11 +73,15 @@ struct LightStateView: View {
                         
                         if ((sidebar.selectedSidebarItem?.kind != .scene || focus != .dynamics)
                             && window.dynamicsEditorText.isEmpty) {
-                            Text((sidebar.selectedSidebarItem?.kind == .scene ? "Type a dynamic state" : "Select a scene"))
-                                .multilineTextAlignment(.center)
-                                .font(.body)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.secondary)
+                            ContentUnavailableView {
+                                Label(sidebar.selectedSidebarItem?.kind == .scene ? "Empty Definition" : "No Scene Selected",
+                                      systemImage: "text.page.slash")
+                            } description: {
+                                Text(sidebar.selectedSidebarItem?.kind == .scene ? "Type a dynamic state" : "Select a Scene")
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            // Try to align with LightsView
+                            .padding(.bottom, 24)
                         }
                     }
                     .tabItem {
