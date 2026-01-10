@@ -191,12 +191,20 @@ struct PresetsView: View {
             var displayPresetGroups: [PresetItemGroup] = []
             
             for group in presets.groups {
-                let filteredPresets = group.presets.filter {
-                    $0.name.localizedCaseInsensitiveContains(presets.presetsSearchText)
+                // Check if the group name matches the search text
+                if group.name.localizedCaseInsensitiveContains(presets.presetsSearchText) {
+                    // Include all presets from this group
+                    displayPresetGroups.append(PresetItemGroup(name: group.name,
+                                                               presets: group.presets))
+                } else {
+                    // Filter presets by name
+                    let filteredPresets = group.presets.filter {
+                        $0.name.localizedCaseInsensitiveContains(presets.presetsSearchText)
+                    }
+                    guard !filteredPresets.isEmpty else { continue }
+                    displayPresetGroups.append(PresetItemGroup(name: group.name,
+                                                               presets: filteredPresets))
                 }
-                guard !filteredPresets.isEmpty else { continue }
-                displayPresetGroups.append(PresetItemGroup(name: group.name,
-                                                           presets: filteredPresets))
             }
             
             return displayPresetGroups
