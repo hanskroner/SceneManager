@@ -234,33 +234,40 @@ struct ContentView: View {
                               || (window.selectedEditorTab == .sceneState && window.stateEditorText.isEmpty)
                               || (window.selectedEditorTab == .dynamicScene && window.dynamicsEditorText.isEmpty))
                     .help("Store as Preset")
+                    
+                    // Show the Toggle Inspector button in the main toolbar when inspector is hidden
+                    if !showInspector {
+                        Spacer()
+                        
+                        Button(action: { withAnimation { showInspector.toggle() }}) {
+                            Label("Toggle Inspector", systemImage: "sidebar.right")
+                        }
+                        .help("Hide or show the Scene Presets")
+                    }
                 }
             }
         }
         .inspector(isPresented: $showInspector) {
             PresetsView()
             .toolbar {
-                ToolbarItemGroup(placement: .automatic) {
-                    Spacer()
-                }
-                
-                if (showInspector) {
-                    ToolbarItemGroup(placement: .automatic) {
+                // Show the search field and Toggle Inspector button when inspector is visible
+                if showInspector {
+                    ToolbarItem(placement: .principal) {
                         SearchField(text: $presets.presetsSearchText, prompt: "Filter Presets")
                         // !!!: Not working in macOS 26
-                        // .image(.filter)
-                            .frame(width: 150)
+                        //.image(.filter)
+                        .frame(width: 150)
                     }
-                }
-                
-                ToolbarItemGroup(placement: .automatic) {
-                    Button(action: { withAnimation { showInspector.toggle() }}) {
-                        Label("Toggle Inspector", systemImage: "sidebar.right")
+                    
+                    ToolbarItem(placement: .status) {
+                        Button(action: { withAnimation { showInspector.toggle() }}) {
+                            Label("Toggle Inspector", systemImage: "sidebar.right")
+                        }
+                        .help("Hide or show the Scene Presets")
                     }
-                    .help("Hide or show the Scene Presets")
                 }
             }
-            .inspectorColumnWidth(min: 210, ideal: 210, max: 210)
+            .inspectorColumnWidth(min: 220, ideal: 220, max: 220)
         }
         .sheet(isPresented: $window.isPresentingStartupConfiguration) {
             LightConfigurationView()
