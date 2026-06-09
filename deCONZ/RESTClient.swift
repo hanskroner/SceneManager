@@ -163,11 +163,11 @@ actor RESTClient {
             
             let configuration = try decoder.decode(RESTConfiguration.self, from: data)
             
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             return configuration
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -204,11 +204,11 @@ actor RESTClient {
             }()
             
             guard let username else { throw APIError.unknownResponse(data: data, response: response) }
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             return username
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -225,10 +225,10 @@ actor RESTClient {
             
             try check(data: data, from: response)
             
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -249,11 +249,11 @@ actor RESTClient {
             
             let allLights = try decoder.decode([Int: RESTLight].self, from: data).filter { $0.value.type != "Configuration tool" }
             
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             return allLights
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -272,11 +272,11 @@ actor RESTClient {
             
             let light = try decoder.decode(RESTLight.self, from: data)
             
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             return light.state
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -297,10 +297,10 @@ actor RESTClient {
             
             try check(data: data, from: response)
             
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -319,10 +319,10 @@ actor RESTClient {
             
             try check(data: data, from: response)
             
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -358,11 +358,11 @@ actor RESTClient {
             }()
             
             guard let responseId else { throw APIError.unknownResponse(data: data, response: response) }
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             return responseId
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -383,11 +383,11 @@ actor RESTClient {
             
             // Ignore Groups where `devicemembership` is not empty
             // These groups are created by switches or sensors.
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             return groups.filter { $0.1.devicemembership.isEmpty }
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -408,10 +408,10 @@ actor RESTClient {
             
             try check(data: data, from: response)
             
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -430,10 +430,10 @@ actor RESTClient {
             
             try check(data: data, from: response)
             
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -450,10 +450,10 @@ actor RESTClient {
             
             try check(data: data, from: response)
             
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -490,11 +490,11 @@ actor RESTClient {
             
             guard let responseId else { throw APIError.unknownResponse(data: data, response: response) }
             
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             return responseId
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -513,7 +513,7 @@ actor RESTClient {
             
             let groups = try decoder.decode([Int: RESTSceneGroup].self, from: data)
             
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             return groups.reduce(into: [Int: [Int: RESTScene]](), { groupDictionary, groupEntry in
                 groupDictionary[groupEntry.0] = groupEntry.1.scenes.reduce(into: [Int: RESTScene](), { sceneDictionary, sceneEntry in
                     sceneDictionary[sceneEntry.0] = sceneEntry.1
@@ -521,7 +521,7 @@ actor RESTClient {
             })
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -582,11 +582,11 @@ actor RESTClient {
                 }
             }
             
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             return RESTSceneAttributes(dynamics: attrContainer.dynamics, lights: restLightDict, name: attrContainer.name)
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -607,10 +607,10 @@ actor RESTClient {
             
             try check(data: data, from: response)
             
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -634,10 +634,10 @@ actor RESTClient {
                 
                 try check(data: data, from: response)
                 
-                self.activity?.append(activity)
+                await self.activity?.append(activity)
             } catch {
                 activity.outcome = .failure(description: error.localizedDescription)
-                self.activity?.append(activity)
+                await self.activity?.append(activity)
                 
                 throw error
             }
@@ -665,10 +665,10 @@ actor RESTClient {
                 
                 try check(data: data, from: response)
                 
-                self.activity?.append(activity)
+                await self.activity?.append(activity)
             } catch {
                 activity.outcome = .failure(description: error.localizedDescription)
-                self.activity?.append(activity)
+                await self.activity?.append(activity)
                 
                 throw error
             }
@@ -689,10 +689,10 @@ actor RESTClient {
             
             try check(data: data, from: response)
             
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -709,10 +709,10 @@ actor RESTClient {
             
             try check(data: data, from: response)
             
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }
@@ -729,10 +729,10 @@ actor RESTClient {
             
             try check(data: data, from: response)
             
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
         } catch {
             activity.outcome = .failure(description: error.localizedDescription)
-            self.activity?.append(activity)
+            await self.activity?.append(activity)
             
             throw error
         }

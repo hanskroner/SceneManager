@@ -41,8 +41,9 @@ public struct RESTActivityEntry: Identifiable, Codable {
     }
 }
 
+@MainActor
 @Observable
-public class RESTActivity {
+public final class RESTActivity {
     private var _entries: [RESTActivityEntry]
     
     public var entries: [RESTActivityEntry] {
