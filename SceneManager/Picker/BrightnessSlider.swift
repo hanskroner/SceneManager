@@ -21,14 +21,16 @@ public struct BrightnessSlider: View {
     @Binding private var value: Double
 
     private let image: String
+    private let imageScale: CGFloat
     private let sliderColor: Color
     private let range: ClosedRange<Double>
     
     @State private var size: CGSize = .zero
     @State private var offset: CGFloat = 0
 
-    public init(image: String, sliderColor: Color = .white, value: Binding<Double>) {
+    public init(image: String, imageScale: CGFloat = 1.0, sliderColor: Color = .white, value: Binding<Double>) {
         self.image = image
+        self.imageScale = imageScale
         self.sliderColor = sliderColor
         self._value = value
         self.range = 0...100
@@ -42,6 +44,7 @@ public struct BrightnessSlider: View {
                     size: proxy.size,
                     sliderColor: sliderColor,
                     image: image,
+                    imageScale: imageScale,
                     onChange: updateValue
                 )
                 .onAppear {
@@ -74,6 +77,7 @@ private struct SliderView: View {
     let size: CGSize
     let sliderColor: Color
     let image: String
+    let imageScale: CGFloat
     let onChange: () -> Void
     
     @GestureState private var dragOffsetY: CGFloat = 0
@@ -144,10 +148,13 @@ private struct SliderView: View {
             .frame(width: size.width + 6, height: Constant.thumbHeight)
             .foregroundStyle(.clear)
             .overlay {
+                let pad = 1.0 / imageScale
                 Image(image)
                     .resizable()
                     .scaledToFit()
                     .foregroundStyle(isDark(sliderColor) ? .white : .black)
+                    .padding(pad)
+                    .padding(.bottom, pad)
             }
             .background {
                 LinearGradient(gradient: Gradient(colors: [
@@ -167,7 +174,7 @@ private struct SliderView: View {
     @Previewable @State var value: Double = 50.0
     
     VStack {
-        BrightnessSlider(image: "E00-D-57357", sliderColor: .red, value: $value)
+        BrightnessSlider(image: "table-wash", imageScale: 0.75, sliderColor: .red, value: $value)
             .frame(width: 75, height: 300)
             .padding(.horizontal, 30)
             .padding(.top, 20)

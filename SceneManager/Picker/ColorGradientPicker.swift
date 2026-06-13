@@ -153,21 +153,18 @@ struct ColorGradientPickerView: View {
                         
                         dropper.location = value.location
                         dropper.isDragging = true
-                    }
-                    .onEnded { _ in
-                        dropper.isDragging = false
-                    }
-                
-                PickerDropperView(dropper: $dropper)
-                    .onLocationChanged {
                         do {
                             dropper.color = try colorAt(dropper.location)
                         } catch {
                             logger.error("\(error, privacy: .public)")
-                            
                             dropper.color = .black
                         }
                     }
+                    .onEnded { _ in
+                        dropper.isDragging = false
+                    }
+
+                PickerDropperView(dropper: $dropper)
                     .frame(height: size * 0.16)
                     .offset(x: 0, y: -size * 0.08)
                     .position(constrainToBounds(dropper.location))
@@ -202,6 +199,19 @@ struct ColorGradientPickerView: View {
             // Sort zIndex array
             guard let newDropper else { return }
             zIndexSort(top: newDropper)
+        }
+        .onAppear {
+            // .task on each PickerDropperView handles first-appear (size == 0 then).
+            // This handles re-appear when switching back to a tab.
+            guard size > 0 else { return }
+            for dropper in droppers {
+                do {
+                    dropper.location = try location(forColor: NSColor(dropper.color))
+                } catch {
+                    logger.error("\(error, privacy: .public)")
+                    dropper.location = .zero
+                }
+            }
         }
     }
     
@@ -373,9 +383,9 @@ struct ColorGradientPickerView: View {
     // Swift color names to sRGB Color
     // !!!: Colors must be using sRGB color space
     @Previewable @State var droppers: [PickerDropper] = [
-        PickerDropper(color: Color(nsColor: NSColor(.yellow).usingColorSpace(.sRGB)!)),
-        PickerDropper(color: Color(nsColor: NSColor(.cyan).usingColorSpace(.sRGB)!)),
-        PickerDropper(color: Color(nsColor: NSColor(.purple).usingColorSpace(.sRGB)!))
+        PickerDropper(color: Color(nsColor: NSColor(.yellow).usingColorSpace(.sRGB)!), image: "table-wash", imageScale: 2),
+        PickerDropper(color: Color(nsColor: NSColor(.cyan).usingColorSpace(.sRGB)!), image: "table-wash", imageScale: 2),
+        PickerDropper(color: Color(nsColor: NSColor(.purple).usingColorSpace(.sRGB)!), image: "table-wash", imageScale: 2)
     ]
     
     // Swift color names to sRGB Color

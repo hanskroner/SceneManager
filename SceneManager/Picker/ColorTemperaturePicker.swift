@@ -91,21 +91,18 @@ struct ColorTemperaturePickerView: View {
                         
                         dropper.location = value.location
                         dropper.isDragging = true
-                    }
-                    .onEnded { _ in
-                        dropper.isDragging = false
-                    }
-                
-                PickerDropperView(dropper: $dropper)
-                    .onLocationChanged {
                         do {
                             dropper.color = try colorAt(dropper.location)
                         } catch {
                             logger.error("\(error, privacy: .public)")
-                            
                             dropper.color = .black
                         }
                     }
+                    .onEnded { _ in
+                        dropper.isDragging = false
+                    }
+
+                PickerDropperView(dropper: $dropper)
                     .frame(height: size * 0.16)
                     .offset(x: 0, y: -size * 0.08)
                     .position(constrainToBounds(dropper.location))
@@ -307,7 +304,7 @@ struct ColorTemperaturePickerView: View {
 #Preview {
     // !!!: Colors must be using sRGB color space
     @Previewable @State var droppers: [PickerDropper] = [
-        PickerDropper(color: Color(color(fromMired: 153)!))
+        PickerDropper(color: Color(color(fromMired: 153)!), image: "table-wash", imageScale: 2)
     ]
     
     // Color Temperatures in the range of Hue Gamut C bulbs

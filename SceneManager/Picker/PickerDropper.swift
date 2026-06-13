@@ -25,26 +25,26 @@ class PickerDropper: Identifiable, Hashable {
     var location: CGPoint
     
     var image: String?
+    var imageScale: CGFloat = 1.0
     
     var isDragging: Bool = false
     var isSelected: Bool = false
     
     var zIndex: Double = 0
     
-    init(id: UUID = UUID(), color: Color = .white, location: CGPoint = CGPoint(x: 0, y: 0), image: String? = nil) {
+    init(id: UUID = UUID(), color: Color = .white, location: CGPoint = CGPoint(x: 0, y: 0), image: String? = nil, imageScale: CGFloat = 1.0) {
         self.id = id
         
         self.color = color
         self.location = location
         
         self.image = image
+        self.imageScale = imageScale
     }
 }
 
 struct PickerDropperView: View {
     @Binding var dropper: PickerDropper
-    
-    var onLocationChanged = {}
     
     var body: some View {
         ZStack {
@@ -53,27 +53,22 @@ struct PickerDropperView: View {
                 .fill(dropper.color)
                 .aspectRatio(contentMode: .fit)
                 .rotationEffect(Angle(degrees: 180), anchor: .center)
-                .onChange(of: dropper.location) { oldValue, newValue in
-                    self.onLocationChanged()
-                }
                 .shadow(color: Color("shadow"), radius: 3, y: 1)
                 .id(dropper.id)
             
             if let image = dropper.image {
+                let pad = 6.0 / dropper.imageScale
                 Image(image)
                     .resizable()
                     .scaledToFit()
                     .foregroundStyle(isDark(dropper.color) ? .white : .black)
-                    .padding(6)
-                    .padding(.bottom, 6)
+                    .padding(pad)
+                    .padding(.bottom, pad)
             }
         }
         .zIndex(dropper.isSelected ? 10 : dropper.zIndex)
     }
     
-    func onLocationChanged(_ callback: @escaping () -> ()) -> some View {
-        PickerDropperView(dropper: $dropper, onLocationChanged: callback)
-    }
 }
 
 // MARK: - Dropper Shape
