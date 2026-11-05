@@ -129,39 +129,33 @@ struct SidebarView: View {
                 }
             }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            SidebarBottomBarView()
+        .safeAreaBar(edge: .bottom, alignment: .leading) {
+            SidebarAddButton()
         }
     }
 }
 
-// MARK: - SidebarBottomBar View
+// MARK: - SidebarAddButton View
 
-struct SidebarBottomBarView: View {
+struct SidebarAddButton: View {
     @Environment(Sidebar.self) private var sidebar
     
     var body: some View {
-        VStack {
-            Divider()
-            HStack {
-                Button(action: {
-                    // New SidebarItem (Group)
-                    withAnimation {
-                        _ = sidebar.createSidebarItem()
-                    }
-                }) {
-                    Label("", systemImage: "plus")
-                        .padding([.leading, .bottom], 8)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .font(.system(size: 14))
-                .help("New Group")
-                
-                Spacer()
+        Button {
+            // New SidebarItem (Group)
+            withAnimation {
+                _ = sidebar.createSidebarItem()
             }
+        } label: {
+            Label("New Group", systemImage: "plus")
+                .labelStyle(.iconOnly)
+                .font(.system(size: 13, weight: .regular))
+                .frame(width: 18, height: 18)
         }
-        .glassEffect(in: .rect())
+        .buttonStyle(.glass)
+        .buttonBorderShape(.circle)
+        .help("New Group")
+        .padding([.leading, .bottom], 10)
     }
 }
 
