@@ -71,8 +71,11 @@ struct ContentView: View {
                     
                     LightStateView()
                         .padding(.leading, 8)
+                        .padding(.bottom, 8)
                 }
-                .padding(8)
+                // LightView runs to the window's bottom edge, so its floating
+                // buttons line up with the ones in the Sidebar.
+                .padding([.top, .horizontal], 8)
             }
             .navigationTitle("")
             .navigationSubtitle("")
@@ -89,7 +92,7 @@ struct ContentView: View {
                             Text(window.navigationTitle ?? "Scene Manager")
                                 .foregroundStyle(appearsActive ? .primary : Color(.disabledControlTextColor))
                                 .font(.headline)
-                                .fontWeight(.bold)
+                                .fontWeight(.semibold)
                                 .padding(0)
                             
                             Text(window.navigationSubtitle ?? "")
@@ -120,6 +123,9 @@ struct ContentView: View {
                         }
                     }
                 }
+                // The title is plain text, not a control, so it shouldn't sit
+                // in the glass capsule the toolbar gives its items.
+                .sharedBackgroundVisibility(.hidden)
                 
                 ToolbarItemGroup(placement: .primaryAction) {
                     Button(action: {
