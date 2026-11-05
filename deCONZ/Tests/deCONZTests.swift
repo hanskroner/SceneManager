@@ -95,7 +95,7 @@ struct deCONZTests {
     }
     
     @Test func testLightState() async throws {
-        let lightState = try await client.getLightState(lightID: 5)
+        let lightState = try await client.getLightState(lightId: 5)
         
         let encoded = try encoder.encode(lightState)
         let decoded = try decoder.decode(JSON.self, from: encoded)

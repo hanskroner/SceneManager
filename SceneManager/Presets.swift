@@ -83,8 +83,11 @@ class PresetItemGroup: Identifiable, Codable {
     }
 }
 
+// 'Transferable' requires 'Sendable'. PresetItems are only ever mutated from the
+// main actor (by the UI and 'PresetsModel'), and drag-and-drop transfers an
+// encoded snapshot rather than sharing the instance across isolation domains.
 @Observable
-final class PresetItem: Identifiable, Codable, Transferable {
+final class PresetItem: Identifiable, Codable, Transferable, @unchecked Sendable {
     let id: UUID
     
     var name: String

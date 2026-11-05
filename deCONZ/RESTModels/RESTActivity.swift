@@ -11,12 +11,12 @@ private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: 
 
 // MARK: Activity Log
 
-public enum RESTActivityOutcome: Codable {
+public enum RESTActivityOutcome: Codable, Sendable {
     case success
     case failure(description: String)
 }
 
-public struct RESTActivityEntry: Identifiable, Codable {
+public struct RESTActivityEntry: Identifiable, Codable, Sendable {
     public let id = UUID()
     public let timestamp: Date
     
@@ -41,6 +41,8 @@ public struct RESTActivityEntry: Identifiable, Codable {
     }
 }
 
+// Isolated to the main actor because SwiftUI observes it; RESTClient hops
+// here to append entries, so only Sendable RESTActivityEntry values cross.
 @MainActor
 @Observable
 public final class RESTActivity {

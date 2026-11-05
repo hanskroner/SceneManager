@@ -62,7 +62,14 @@ struct deCONZCommandMenu: Commands {
         CommandMenu("deCONZ") {
             Button("Reload") {
                 Task {
-                    try await RESTModel.shared.refreshCache()
+                    do {
+                        activeWindow?.clearWarnings()
+                        try await RESTModel.shared.refreshCache()
+                    } catch {
+                        logger.error("\(error, privacy: .public)")
+                        
+                        activeWindow?.handleError(error)
+                    }
                 }
             }.keyboardShortcut("r", modifiers: .command)
             
@@ -72,12 +79,19 @@ struct deCONZCommandMenu: Commands {
                 guard let activeWindow else { return }
                 
                 Task {
-                    let allKeys = try await RESTModel.shared.allAPIKeys()
-                    activeWindow.phosconKeys = allKeys.filter({ $0.name.hasPrefix("Phoscon#") }).map({ $0.key })
-                    
-                    // FIXME: Don't show if 'count' is 0
-                    //        Instead, show a dialog saying there are not Phoscon Keys.
-                    activeWindow.isPresentingPhosconDelete = true
+                    do {
+                        activeWindow.clearWarnings()
+                        let allKeys = try await RESTModel.shared.allAPIKeys()
+                        activeWindow.phosconKeys = allKeys.filter({ $0.name.hasPrefix("Phoscon#") }).map({ $0.key })
+                        
+                        // FIXME: Don't show if 'count' is 0
+                        //        Instead, show a dialog saying there are not Phoscon Keys.
+                        activeWindow.isPresentingPhosconDelete = true
+                    } catch {
+                        logger.error("\(error, privacy: .public)")
+                        
+                        activeWindow.handleError(error)
+                    }
                 }
             }
         }

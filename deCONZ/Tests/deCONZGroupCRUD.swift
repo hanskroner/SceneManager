@@ -16,6 +16,10 @@ private let apiURL = ProcessInfo.processInfo.environment["DECONZ_API_URL"] ?? ""
 private let decoder = JSONDecoder()
 private let encoder = JSONEncoder()
 
+// Tests share IDs through static state and depend on running in order, so the
+// suite is serialized and main-actor isolated to make that state concurrency-safe.
+@Suite(.serialized)
+@MainActor
 struct deCONZGroupCRUD {
     
     private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: "tests")

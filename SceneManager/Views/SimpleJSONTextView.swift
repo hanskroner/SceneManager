@@ -308,12 +308,9 @@ class LineNumberRulerView: NSRulerView {
 
 #if DEBUG
 
-struct MacEditorTextView_Previews: PreviewProvider {
-    
-    static var previews: some View {
-        Group {
-            SimpleJSONTextView(
-                text: .constant(
+#Preview("Dark Mode") {
+    SimpleJSONTextView(
+        text: .constant(
 """
 {
   "bri" : 229,
@@ -322,15 +319,16 @@ struct MacEditorTextView_Previews: PreviewProvider {
   "transitiontime" : 4
 }
 """
-                ),
-                isEditable: true,
-                font: .monospacedSystemFont(ofSize: 12, weight: .medium)
-            )
-            .environment(\.colorScheme, .dark)
-            .previewDisplayName("Dark Mode")
-            
-            SimpleJSONTextView(
-                text: .constant(
+        ),
+        isEditable: true,
+        font: .monospacedSystemFont(ofSize: 12, weight: .medium)
+    )
+    .environment(\.colorScheme, .dark)
+}
+
+#Preview("Light Mode") {
+    SimpleJSONTextView(
+        text: .constant(
 """
 {
   "bri" : 229,
@@ -339,13 +337,10 @@ struct MacEditorTextView_Previews: PreviewProvider {
   "transitiontime" : 4
 }
 """
-                ),
-                isEditable: false
-            )
-            .environment(\.colorScheme, .light)
-            .previewDisplayName("Light Mode")
-        }
-    }
+        ),
+        isEditable: false
+    )
+    .environment(\.colorScheme, .light)
 }
 
 #endif
