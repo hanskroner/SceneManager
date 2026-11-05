@@ -132,14 +132,14 @@ struct LightView: View {
                         }
                     }
                 }
-                .safeAreaInset(edge: .bottom, spacing: 0) {
+                .safeAreaBar(edge: .bottom, alignment: .leading) {
                     if style == .window {
-                        LightBottomBarView(isPresentingSheet: $isPresentingSheet)
+                        LightAddRemoveButtons(isPresentingSheet: $isPresentingSheet)
                     }
                 }
             }
         }
-        .glassEffect(in: .rect(cornerRadius: 16.0))
+        .modifier(PickerBorder(isEnabled: style == .picker))
         .frame(minWidth: 250)
         .sheet(isPresented: $isPresentingSheet) {
         } content: {
@@ -225,9 +225,25 @@ struct LightItemView: View {
     }
 }
 
-// MARK: - Light Bottom Bar View
+// MARK: - Picker Border
 
-struct LightBottomBarView: View {
+/// Keeps the rounded glass container around lists shown side by side in a
+/// sheet, so they remain visually separate. The Window's list stays flat.
+private struct PickerBorder: ViewModifier {
+    let isEnabled: Bool
+    
+    func body(content: Content) -> some View {
+        if isEnabled {
+            content.glassEffect(in: .rect(cornerRadius: 16.0))
+        } else {
+            content
+        }
+    }
+}
+
+// MARK: - Light Add/Remove Buttons View
+
+struct LightAddRemoveButtons: View {
     @Environment(Sidebar.self) private var sidebar
     @Environment(Lights.self) private var lights
     @Environment(WindowItem.self) private var window
@@ -262,64 +278,72 @@ struct LightBottomBarView: View {
         return false
     }
     
-    var body: some View {
-        VStack {
-            Divider()
-            HStack(alignment: .firstTextBaseline, spacing: 0) {
-                Button(action: {
-                    isPresentingSheet = true
-                }) {
-                    Label("", systemImage: "plus")
-                        .padding([.leading, .bottom], 8)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .font(.system(size: 14))
-                .help("Add Lights")
-                .disabled(shouldDisableAddButton())
-                
-                Button(action: {
-                    window.clearWarnings()
+    func removeSelectedLights() {
+        window.clearWarnings()
+        
+        // Remove selection
+        let lightIds = Array(lights.selectedLightItems).map({ $0.lightId })
+        lights.selectedLightItemIds.removeAll()
+        
+        Task {
+            do {
+                switch (sidebar.selectedSidebarItem?.kind) {
+                case .group:
+                    try await RESTModel.shared.removeLightsFromGroup(groupId: window.groupId!,
+                                                                     lightIds: lightIds)
                     
-                    // Remove selection
-                    let lightIds = Array(lights.selectedLightItems).map({ $0.lightId })
-                    lights.selectedLightItemIds.removeAll()
-                    
-                    Task {
-                        do {
-                            switch (sidebar.selectedSidebarItem?.kind) {
-                            case .group:
-                                try await RESTModel.shared.removeLightsFromGroup(groupId: window.groupId!,
-                                                                                 lightIds: lightIds)
-                                
-                            case .scene:
-                                try await RESTModel.shared.removeLightsFromScene(groupId: window.groupId!,
-                                                                                 sceneId: window.sceneId!,
-                                                                                 lightIds: lightIds)
-                            default:
-                                break
-                            }
-                        } catch {
-                            logger.error("\(error, privacy: .public)")
-                            
-                            window.handleError(error)
-                        }
-                    }
-                }) {
-                    Label("", systemImage: "minus")
-                        .padding(.bottom, 4)
-                        .padding([.leading, .bottom], 8)
-                        .contentShape(Rectangle())
+                case .scene:
+                    try await RESTModel.shared.removeLightsFromScene(groupId: window.groupId!,
+                                                                     sceneId: window.sceneId!,
+                                                                     lightIds: lightIds)
+                default:
+                    break
                 }
-                .buttonStyle(.plain)
-                .font(.system(size: 14))
-                .help("Remove Lights")
-                .disabled(shouldDisableRemoveButton())
+            } catch {
+                logger.error("\(error, privacy: .public)")
                 
-                Spacer()
+                window.handleError(error)
             }
         }
-        .glassEffect(in: .rect())
+    }
+    
+    // Each half is sized so the pill is as tall as the circular button in
+    // 'SidebarAddButton' (18pt label + 5pt padding on each side), which lets
+    // the two sit on the same line across the Sidebar and the Lights list.
+    private func pillLabel(_ title: LocalizedStringKey, systemImage: String) -> some View {
+        Label(title, systemImage: systemImage)
+            .labelStyle(.iconOnly)
+            .font(.system(size: 13, weight: .regular))
+            .frame(width: 18, height: 18)
+            .padding(5)
+            .padding(.horizontal, 4)
+            .contentShape(.capsule)
+    }
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            Button {
+                isPresentingSheet = true
+            } label: {
+                pillLabel("Add Lights", systemImage: "plus")
+            }
+            .help("Add Lights")
+            .disabled(shouldDisableAddButton())
+            
+            Divider()
+                .frame(height: 14)
+            
+            Button {
+                removeSelectedLights()
+            } label: {
+                pillLabel("Remove Lights", systemImage: "minus")
+            }
+            .help("Remove Lights")
+            .disabled(shouldDisableRemoveButton())
+        }
+        .buttonStyle(.plain)
+        .glassEffect(.regular.interactive(), in: .capsule)
+        .padding([.leading, .bottom], 10)
     }
 }
 
