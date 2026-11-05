@@ -71,7 +71,6 @@ struct ContentView: View {
                     
                     LightStateView()
                         .padding(.leading, 8)
-                        .padding(.bottom, 8)
                 }
                 // LightView runs to the window's bottom edge, so its floating
                 // buttons line up with the ones in the Sidebar.

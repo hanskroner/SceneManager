@@ -32,22 +32,45 @@ struct LightStateView: View {
     
     @FocusState private var focus: EditorField?
     
+    /// Only a Scene's definition can be edited. For a Group (or no selection)
+    /// the editors are read-only, but text can still be selected and scrolled.
+    private var isEditable: Bool {
+        sidebar.selectedSidebarItem?.kind == .scene
+    }
+    
+    /// Whether the "empty definition" notice covers each editor. The editor's
+    /// line numbers are hidden while it is showing.
+    private var isStateNoticeVisible: Bool {
+        lights.selectedLightItems.isEmpty
+            && focus != .state
+            && window.stateEditorText.isEmpty
+    }
+    
+    private var isDynamicsNoticeVisible: Bool {
+        (sidebar.selectedSidebarItem?.kind != .scene || focus != .dynamics)
+            && window.dynamicsEditorText.isEmpty
+    }
+    
+    private enum Constant {
+        /// Keeps the first line of the editors clear of the floating tab selector.
+        static let editorTopInset: CGFloat = 52
+    }
+    
     var body: some View {
         @Bindable var window = window
         VStack(alignment: .leading) {
             
             ZStack {
-                TabView(selection: $window.selectedEditorTab) {
+                // Both editors stay alive and only the selected one is shown.
+                // Rebuilding the underlying NSTextView on every tab switch would
+                // lose its undo history, selection and scroll position.
+                ZStack {
                     ZStack {
-                        SimpleJSONTextView(text: $window.stateEditorText, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
+                        SimpleJSONTextView(text: $window.stateEditorText, isEditable: isEditable, font: .monospacedSystemFont(ofSize: 12, weight: .medium), topContentInset: Constant.editorTopInset, showsLineNumbers: !isStateNoticeVisible)
                             .clipped()
                             .focused($focus, equals: .state)
-                            .disabled(sidebar.selectedSidebarItem == nil
-                                      || sidebar.selectedSidebarItem?.kind != .scene)
                         
-                        if (lights.selectedLightItems.isEmpty
-                            && focus != .state
-                            && window.stateEditorText.isEmpty) {
+                        if isStateNoticeVisible {
                             ContentUnavailableView {
                                 Label(sidebar.selectedSidebarItem?.kind == .scene ? "Empty Definition" : "No Selection",
                                       systemImage: "text.page.slash")
@@ -55,24 +78,18 @@ struct LightStateView: View {
                                 Text("Select a Light or " + (sidebar.selectedSidebarItem?.kind == .scene ? "type in a State" : "Scene"))
                             }
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            // Try to align with LightsView
-                            .padding(.bottom, 24)
                         }
                     }
-                    .tabItem {
-                        Text("Scene State")
-                    }
-                    .tag(Tab.sceneState)
+                    .opacity(window.selectedEditorTab == .sceneState ? 1 : 0)
+                    .allowsHitTesting(window.selectedEditorTab == .sceneState)
+                    .accessibilityHidden(window.selectedEditorTab != .sceneState)
                     
                     ZStack {
-                        SimpleJSONTextView(text: $window.dynamicsEditorText, isEditable: true, font: .monospacedSystemFont(ofSize: 12, weight: .medium))
+                        SimpleJSONTextView(text: $window.dynamicsEditorText, isEditable: isEditable, font: .monospacedSystemFont(ofSize: 12, weight: .medium), topContentInset: Constant.editorTopInset, showsLineNumbers: !isDynamicsNoticeVisible)
                             .clipped()
                             .focused($focus, equals: .dynamics)
-                            .disabled(sidebar.selectedSidebarItem == nil
-                                      || sidebar.selectedSidebarItem?.kind != .scene)
                         
-                        if ((sidebar.selectedSidebarItem?.kind != .scene || focus != .dynamics)
-                            && window.dynamicsEditorText.isEmpty) {
+                        if isDynamicsNoticeVisible {
                             ContentUnavailableView {
                                 Label(sidebar.selectedSidebarItem?.kind == .scene ? "Empty Definition" : "No Scene Selected",
                                       systemImage: "text.page.slash")
@@ -80,14 +97,17 @@ struct LightStateView: View {
                                 Text(sidebar.selectedSidebarItem?.kind == .scene ? "Type a dynamic state" : "Select a Scene")
                             }
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            // Try to align with LightsView
-                            .padding(.bottom, 24)
                         }
                     }
-                    .tabItem {
-                        Text("Dynamic Scene")
-                    }
-                    .tag(Tab.dynamicScene)
+                    .opacity(window.selectedEditorTab == .dynamicScene ? 1 : 0)
+                    .allowsHitTesting(window.selectedEditorTab == .dynamicScene)
+                    .accessibilityHidden(window.selectedEditorTab != .dynamicScene)
+                }
+                // An overlay, not 'safeAreaBar': a bar reserves space and pushes the
+                // editors down, while the pill should float over the text.
+                .overlay(alignment: .top) {
+                    EditorTabPicker(selection: $window.selectedEditorTab)
+                        .padding(.top, 10)
                 }
                 
                 // !!!: Transparent view to recieve 'PresetItem' drag'n'drops
@@ -132,6 +152,43 @@ struct LightStateView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Editor Tab Picker
+
+/// A floating Liquid Glass pill that switches between the editor tabs. Built
+/// from plain buttons, like 'LightAddRemoveButtons', so both pills match.
+struct EditorTabPicker: View {
+    @Binding var selection: Tab
+    
+    private func tabButton(_ title: LocalizedStringKey, tab: Tab) -> some View {
+        Button {
+            selection = tab
+        } label: {
+            Text(title)
+                .font(.system(size: 13, weight: .regular))
+                .foregroundStyle(selection == tab ? .primary : .secondary)
+                .padding(.horizontal, 12)
+                .frame(height: 28)
+                .background {
+                    if selection == tab {
+                        Capsule().fill(.primary.opacity(0.22))
+                    }
+                }
+                .contentShape(.capsule)
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selection == tab ? .isSelected : [])
+    }
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            tabButton("Scene State", tab: .sceneState)
+            tabButton("Dynamic Scene", tab: .dynamicScene)
+        }
+        .padding(2)
+        .glassEffect(.regular.interactive(), in: .capsule)
     }
 }
 
