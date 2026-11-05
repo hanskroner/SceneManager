@@ -275,6 +275,13 @@ struct ContentView: View {
                 .frame(width: 680)
                 .padding(12)
         }
+        .sheet(isPresented: $window.isPresentingCopyLightConfiguration) {
+            CopyLightConfigurationView()
+                .environment(window)
+                .environment(sidebar)
+                .frame(width: 560)
+                .padding(12)
+        }
         .confirmationDialog("Are you sure you want to delete \(window.phosconKeys.count) Phoscon keys?", isPresented: $window.isPresentingPhosconDelete) {
             Button("Delete \(window.phosconKeys.count) Keys", role: .destructive) {
                 // Call on the REST API to perform deletion

@@ -426,3 +426,49 @@ public struct ConfigurationAPIKey: Identifiable {
     public let created: Date
     public let lastUsed: Date
 }
+
+// MARK: - Light Copy
+
+/// A single API operation that is part of copying the group and scene
+/// memberships (and scene states) of one light onto another.
+public struct LightCopyStep: Identifiable, Sendable {
+    enum Action: Sendable {
+        case removeFromScene(groupId: Int, sceneId: Int)
+        case removeFromGroup(groupId: Int)
+        case addToGroup(groupId: Int)
+        case setSceneState(groupId: Int, sceneId: Int, state: RESTLightState)
+    }
+    
+    public let id: UUID = UUID()
+    
+    /// Human-readable description of the operation.
+    public let description: String
+    
+    // Kept internal so 'RESTLightState' (which, unlike 'LightState', carries
+    // attributes like 'hue' and 'sat') doesn't leak into the public API.
+    let action: Action
+}
+
+/// The ordered list of operations required to make the destination light's
+/// group and scene memberships identical to the source light's.
+public struct LightCopyPlan: Sendable {
+    public let sourceLightId: Int
+    public let destinationLightId: Int
+    public let steps: [LightCopyStep]
+    
+    public var removedSceneCount: Int {
+        steps.filter { if case .removeFromScene = $0.action { return true } else { return false } }.count
+    }
+    
+    public var removedGroupCount: Int {
+        steps.filter { if case .removeFromGroup = $0.action { return true } else { return false } }.count
+    }
+    
+    public var addedGroupCount: Int {
+        steps.filter { if case .addToGroup = $0.action { return true } else { return false } }.count
+    }
+    
+    public var addedSceneCount: Int {
+        steps.filter { if case .setSceneState = $0.action { return true } else { return false } }.count
+    }
+}

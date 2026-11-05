@@ -63,6 +63,7 @@
 		3A739F8C2D913EDD003D39D3 /* deCONZGroupCRUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A739F8B2D913EDD003D39D3 /* deCONZGroupCRUD.swift */; };
 		3A739F8E2D9145A8003D39D3 /* deCONZSceneCRUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A739F8D2D9145A8003D39D3 /* deCONZSceneCRUD.swift */; };
 		3A848E2D2D04686C00BE19C6 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 3A848E2C2D04686C00BE19C6 /* Localizable.xcstrings */; };
+		3A91BB95309C79D8008E41AF /* CopyLightConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A91BB94309C79D8008E41AF /* CopyLightConfiguration.swift */; };
 		3A93B0432AD2F7290038600F /* SceneManagerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A93B0422AD2F7290038600F /* SceneManagerApp.swift */; };
 		3A93B0452AD2F7290038600F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A93B0442AD2F7290038600F /* ContentView.swift */; };
 		3A93B0472AD2F72B0038600F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A93B0462AD2F72B0038600F /* Assets.xcassets */; };
@@ -182,6 +183,7 @@
 		3A739F8B2D913EDD003D39D3 /* deCONZGroupCRUD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = deCONZGroupCRUD.swift; sourceTree = "<group>"; };
 		3A739F8D2D9145A8003D39D3 /* deCONZSceneCRUD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = deCONZSceneCRUD.swift; sourceTree = "<group>"; };
 		3A848E2C2D04686C00BE19C6 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		3A91BB94309C79D8008E41AF /* CopyLightConfiguration.swift */ = {isa = PBXFileReference; path = CopyLightConfiguration.swift; sourceTree = "<group>"; };
 		3A93B03F2AD2F7290038600F /* SceneManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SceneManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A93B0422AD2F7290038600F /* SceneManagerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneManagerApp.swift; sourceTree = "<group>"; };
 		3A93B0442AD2F7290038600F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -413,6 +415,7 @@
 				3A848E2E2D046D8600BE19C6 /* Resources */,
 				3A1EDD552AE2BBCF001637BD /* Colors.swift */,
 				3A635B6B2CDF831100018B40 /* Tests */,
+				3A91BB94309C79D8008E41AF /* CopyLightConfiguration.swift */,
 			);
 			path = SceneManager;
 			sourceTree = "<group>";
@@ -734,6 +737,7 @@
 				3A4F8AF52DB7C4D300C6FD91 /* PresetsModel.swift in Sources */,
 				3A635B5B2CD749B700018B40 /* Settings.swift in Sources */,
 				3A93B0452AD2F7290038600F /* ContentView.swift in Sources */,
+				3A91BB95309C79D8008E41AF /* CopyLightConfiguration.swift in Sources */,
 				3A4193722DA041E4007E76F1 /* SearchField.swift in Sources */,
 				3A1EDD542AE2BB81001637BD /* Presets.swift in Sources */,
 				3A1EDD5A2AE2BD9D001637BD /* Sidebar.swift in Sources */,

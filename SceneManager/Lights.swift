@@ -13,10 +13,21 @@ private let logger = Logger(subsystem: "com.hanskroner.scenemanager", category: 
 
 // MARK: - Light View
 
+enum LightViewStyle {
+    /// The lights of the Group or Scene selected in the Window's sidebar,
+    /// with multi-selection, renaming, and add/remove controls.
+    case window
+    /// A plain, single-selection list of the lights in the injected 'Lights'
+    /// model, for use when a light needs to be picked (e.g. in a sheet).
+    case picker
+}
+
 struct LightView: View {
     @Environment(Sidebar.self) private var sidebar
     @Environment(Lights.self) private var lights
     @Environment(WindowItem.self) private var window
+    
+    var style: LightViewStyle = .window
     
     @State private var isPresentingSheet: Bool = false
     @State private var selectedLightItemIds = Set<UUID>()
@@ -29,9 +40,18 @@ struct LightView: View {
     // selected. To avoid this, the selected lights are intersected with the
     // lights visible in the Window and the selection stored in 'Lights' is
     // only what is selected and visible.
-    func selectionDidChange(to selectedItemIds: Set<UUID>) {
+    func selectionDidChange(from previousItemIds: Set<UUID>, to selectedItemIds: Set<UUID>) {
         let lightsSet = Set(lights.items.map(\.self.id))
-        lights.selectedLightItemIds = lightsSet.intersection(selectedItemIds)
+        var visibleItemIds = lightsSet.intersection(selectedItemIds)
+        
+        // Pickers only allow a single light to be selected. Keep the most
+        // recently selected light.
+        if style == .picker && visibleItemIds.count > 1 {
+            let addedItemIds = visibleItemIds.subtracting(previousItemIds)
+            visibleItemIds = Set([addedItemIds.first ?? visibleItemIds.first!])
+        }
+        
+        lights.selectedLightItemIds = visibleItemIds
     }
     
     private var missingLightItems: [LightItem] {
@@ -54,17 +74,22 @@ struct LightView: View {
     var body: some View {
         @Bindable var lights = lights
         VStack(alignment: .leading) {
-            if sidebar.selectedSidebarItemId == nil {
+            if style == .window && sidebar.selectedSidebarItemId == nil {
                 ContentUnavailableView {
                     Label("No Selection", systemImage: "lightbulb.slash")
                 } description: {
                     Text("Select a Group or Scene to display its lights")
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if style == .picker && lights.items.isEmpty {
+                ContentUnavailableView {
+                    Label("No Lights", systemImage: "lightbulb.slash")
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollViewReader { scrollReader in
                     List($lights.items, id: \.self, selection: $selectedLightItemIds) { $item in
-                        LightItemView(lightItem: $item)
+                        LightItemView(lightItem: $item, allowsRenaming: style == .window)
                         .id(item.id)
                         .listRowSeparator(.hidden)
                     }
@@ -88,7 +113,7 @@ struct LightView: View {
                         }
                     }
                     .onChange(of: selectedLightItemIds) { previousValue, newValue in
-                        selectionDidChange(to: newValue)
+                        selectionDidChange(from: previousValue, to: newValue)
                     }
                     .onChange(of: lights.selectedLightItemIds) { previousValue, newValue in
                         // Apply changes to selection donw directly in the model to the View
@@ -108,7 +133,9 @@ struct LightView: View {
                     }
                 }
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    LightBottomBarView(isPresentingSheet: $isPresentingSheet)
+                    if style == .window {
+                        LightBottomBarView(isPresentingSheet: $isPresentingSheet)
+                    }
                 }
             }
         }
@@ -126,6 +153,7 @@ struct LightItemView: View {
     @Environment(WindowItem.self) private var window
     
     @Binding var lightItem: LightItem
+    var allowsRenaming: Bool = true
     
     @State private var isFocused: Bool = false
     
@@ -184,11 +212,13 @@ struct LightItemView: View {
                 Text(lightItem.name)
                     .fixedSize()
                     .contextMenu {
-                        Button(action: {
-                            lightItem.isRenaming = true
-                        }, label: {
-                            Text("Rename Light")
-                        })
+                        if allowsRenaming {
+                            Button(action: {
+                                lightItem.isRenaming = true
+                            }, label: {
+                                Text("Rename Light")
+                            })
+                        }
                     }
             }
         }

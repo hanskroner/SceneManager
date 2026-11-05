@@ -108,6 +108,12 @@ struct LightsCommandMenu: Commands {
                 
                 activeWindow.isPresentingStartupConfiguration = true
             }.keyboardShortcut("s", modifiers: .command)
+            
+            Button("Copy Light Configuration…") {
+                guard let activeWindow else { return }
+                
+                activeWindow.isPresentingCopyLightConfiguration = true
+            }
         }
     }
 }

@@ -512,8 +512,96 @@ public final class RESTModel {
         return self._scenes[groupId]?[sceneId]
     }
     
+    // MARK: Light Copy
+
+    /// Builds the list of operations needed to make the destination light's group and scene
+    /// memberships (and its states within those scenes) identical to the source light's.
+    /// The destination is first removed from every scene and group it's part of - including
+    /// those it shares with the source - so no stale scene attributes remain on the device.
+    public func lightCopyPlan(fromLightId sourceLightId: Int, toLightId destinationLightId: Int) async throws -> LightCopyPlan {
+        let sortedGroups = self._groups.values.sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+
+        func sortedScenes(forGroupId groupId: Int, containing lightId: Int) -> [Scene] {
+            return scenes(forGroupId: groupId)
+                .filter({ $0.lightIds.contains(lightId) })
+                .sorted(by: { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
+        }
+
+        var removeSceneSteps: [LightCopyStep] = []
+        var removeGroupSteps: [LightCopyStep] = []
+        var addGroupSteps: [LightCopyStep] = []
+        var addSceneSteps: [LightCopyStep] = []
+
+        // Remove the destination light from its current Scenes and Groups
+        for group in sortedGroups {
+            for scene in sortedScenes(forGroupId: group.groupId, containing: destinationLightId) {
+                removeSceneSteps.append(LightCopyStep(description: "Remove from scene '\(scene.name)' in '\(group.name)'",
+                                                      action: .removeFromScene(groupId: group.groupId, sceneId: scene.sceneId)))
+            }
+
+            if group.lightIds.contains(destinationLightId) {
+                removeGroupSteps.append(LightCopyStep(description: "Remove from group '\(group.name)'",
+                                                      action: .removeFromGroup(groupId: group.groupId)))
+            }
+        }
+
+        // Add the destination light to the source light's Groups and Scenes
+        for group in sortedGroups where group.lightIds.contains(sourceLightId) {
+            addGroupSteps.append(LightCopyStep(description: "Add to group '\(group.name)'",
+                                               action: .addToGroup(groupId: group.groupId)))
+
+            for scene in sortedScenes(forGroupId: group.groupId, containing: sourceLightId) {
+                // Fetch the scene's attributes from the gateway rather than relying on the
+                // cache - they are authoritative and include attributes 'LightState' lacks.
+                let attributes = try await self._client.getSceneAttributes(groupId: group.groupId, sceneId: scene.sceneId)
+                guard let state = attributes?.lights[sourceLightId] else {
+                    logger.warning("Light '\(sourceLightId, privacy: .public)' has no state in scene '\(scene.sceneId, privacy: .public)' of group '\(group.groupId, privacy: .public)'")
+                    continue
+                }
+
+                addSceneSteps.append(LightCopyStep(description: "Add to scene '\(scene.name)' in '\(group.name)'",
+                                                   action: .setSceneState(groupId: group.groupId, sceneId: scene.sceneId, state: state)))
+            }
+        }
+
+        return LightCopyPlan(sourceLightId: sourceLightId,
+                             destinationLightId: destinationLightId,
+                             steps: removeSceneSteps + removeGroupSteps + addGroupSteps + addSceneSteps)
+    }
+
+    public func executeLightCopyStep(_ step: LightCopyStep, in plan: LightCopyPlan) async throws {
+        let lightId = plan.destinationLightId
+
+        switch step.action {
+        case .removeFromScene(let groupId, let sceneId):
+            try await removeLightsFromScene(groupId: groupId, sceneId: sceneId, lightIds: [lightId])
+
+        case .removeFromGroup(let groupId):
+            try await removeLightsFromGroup(groupId: groupId, lightIds: [lightId])
+
+        case .addToGroup(let groupId):
+            try await addLightsToGroup(groupId: groupId, lightIds: [lightId])
+
+        case .setSceneState(let groupId, let sceneId, let state):
+            // Make use of the Hue-specific scene capabilities, which allow
+            // scenes with partial attributes (see 'modifyLightStateInScene').
+            if areHueLights(lightIds: [lightId]) {
+                try await self._client.modifyHueScene(groupId: groupId, sceneId: sceneId, lightIds: [lightId], lightState: state)
+            } else {
+                try await self._client.modifyScene(groupId: groupId, sceneId: sceneId, lightIds: [lightId], lightState: state)
+            }
+
+            // Update the model's cache
+            guard let cachedScene = self._scenes[groupId]?[sceneId] else { break }
+            cachedScene.lightIds = Array(Set(cachedScene.lightIds + [lightId])).sorted()
+            cachedScene.lightStates[lightId] = LightState(from: state)
+
+            signalUpdate()
+        }
+    }
+
     // MARK: Refresh
-    
+
     public func signalUpdate(isReload: Bool = false) {
         Task {
             self.onDataRefreshed.send(isReload)

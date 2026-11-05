@@ -310,12 +310,15 @@ struct ConfigurationProgressView: View {
     @Binding var progressTotal: Double
     @Binding var shouldCancel: Bool
     
+    // The kind of item whose progress is being reported (e.g. "light", "step")
+    var noun: String = "light"
+    
     var body: some View {
         VStack {
             ProgressView("", value: progressValue, total: progressTotal)
                 .padding(.horizontal, 18)
             
-            Text("Configured \(Int(progressValue)) out of ^[\(Int(progressTotal)) \("light")](inflect: true)")
+            Text("Configured \(Int(progressValue)) out of ^[\(Int(progressTotal)) \(noun)](inflect: true)")
             
             HStack {
                 Spacer()

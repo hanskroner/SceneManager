@@ -51,6 +51,7 @@ class WindowItem {
     
     // Menu Bar actions
     var isPresentingStartupConfiguration = false
+    var isPresentingCopyLightConfiguration = false
     var isPresentingPhosconDelete = false
     var phosconKeys: [String] = []
     
