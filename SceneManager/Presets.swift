@@ -220,21 +220,84 @@ struct PresetsView: View {
         }
     }
     
+    /// Where each inline section header's top edge is, in window coordinates.
+    /// Headers keep the last value they reported after they scroll out of view:
+    /// small for headers that left at the top, large for ones that left at the
+    /// bottom, which is all 'topGroup' needs.
+    @State private var headerTops: [UUID: CGFloat] = [:]
+    
+    /// The top bar's frame, in window coordinates.
+    @State private var barFrame: CGRect = .zero
+    
+    /// The group named in the top bar: the last one whose inline header has
+    /// reached the top of the bar. The first group has no inline header, so it's
+    /// named until the second group's header gets there.
+    private func topGroup(in groups: [PresetItemGroup]) -> PresetItemGroup? {
+        groups.last { group in
+            headerTops[group.id].map { $0 <= barFrame.minY } ?? false
+        } ?? groups.first
+    }
+    
+    /// How far the next group's inline header has pushed into the bar. The
+    /// bar's title moves up by this much, so the incoming header pushes it out,
+    /// and the title changes as the two line up.
+    private func pushOffset(in groups: [PresetItemGroup]) -> CGFloat {
+        let overlaps = groups.compactMap { headerTops[$0.id] }
+            .filter { $0 > barFrame.minY && $0 < barFrame.maxY }
+        guard let top = overlaps.min() else { return 0 }
+        return top - barFrame.maxY
+    }
+    
     var body: some View {
+        let groups = filteredPresetGroups.wrappedValue
+        
         ScrollViewReader { scrollReader in
+            // Section headers are ordinary rows rather than 'Section' headers: a
+            // List's pinned headers make AppKit draw an opaque bar over them and
+            // the toolbar. The pinned title lives in the top bar instead, which
+            // shares the toolbar's soft scroll edge effect.
             List {
                 ForEach(filteredPresetGroups, id: \.id) { $group in
-                    // !!!: Sections break Xcode 26.0.1 Previews
-                    Section {
-                        ForEach($group.presets, id: \.id) { $item in
-                            PresetItemView(presetItem: $item)
-                                .listRowSeparator(.hidden)
-                        }
-                    } header: {
-                            Text(sectionTitle(forPresetItemGroup: group))
+                    // The first group's title is always in the top bar, so it
+                    // doesn't get an inline header as well.
+                    if group.id != groups.first?.id {
+                        PresetsSectionHeader(title: sectionTitle(forPresetItemGroup: group))
+                            // Once the bar names this group, the inline header
+                            // would show through the toolbar's blur a second time.
+                            .opacity(headerTops[group.id].map { $0 <= barFrame.minY } ?? false ? 0 : 1)
+                            .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: {
+                                headerTops[group.id] = $0
+                            }
+                            .listRowSeparator(.hidden)
                     }
-                    .listSectionSeparator(.hidden, edges: .top)
+                    
+                    ForEach($group.presets, id: \.id) { $item in
+                        PresetItemView(presetItem: $item)
+                            .listRowSeparator(.hidden)
+                    }
                 }
+            }
+            // Lets the inspector's vibrant background show through the list.
+            .scrollContentBackground(.hidden)
+            .safeAreaBar(edge: .top) {
+                if let group = topGroup(in: groups) {
+                    PresetsSectionHeader(title: sectionTitle(forPresetItemGroup: group))
+                        .offset(y: pushOffset(in: groups))
+                        // Matches the inset List gives the inline headers' rows.
+                        .padding(.horizontal, 16)
+                        .clipped()
+                        .background {
+                            Color.clear
+                                .glassEffect(.regular, in: .rect)
+                                .ignoresSafeArea(edges: .top)
+                        }
+                        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
+                            barFrame = $0
+                        }
+                }
+            }
+            .safeAreaBar(edge: .bottom) {
+                PresetsBottomBar()
             }
             .onChange(of: presets.scrollToPresetItemId) { previousItem, newItem in
                 if let item = newItem {
@@ -244,6 +307,118 @@ struct PresetsView: View {
                 }
             }
         }
+        // Gives the inspector (and the part of the toolbar above it) the same
+        // translucent, vibrant background the Sidebar has.
+        .background {
+            InspectorBackground()
+                .ignoresSafeArea()
+        }
+    }
+}
+
+// MARK: - Presets Section Header View
+
+/// A group's title with a divider below it. Used both inline in the list and
+/// pinned in the top bar, so the two look the same.
+struct PresetsSectionHeader: View {
+    let title: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+                .padding(.top, 6)
+            
+            Divider()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// MARK: - Inspector Background
+
+/// The same behind-window vibrancy 'NavigationSplitView' gives its sidebar.
+private struct InspectorBackground: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = .sidebar
+        view.blendingMode = .behindWindow
+        view.state = .followsWindowActiveState
+        return view
+    }
+    
+    func updateNSView(_ view: NSVisualEffectView, context: Context) {}
+}
+
+// MARK: - Presets Bottom Bar View
+
+/// Floating Liquid Glass bar at the bottom of the Presets list: a round
+/// button to store the current state as a Preset, and a filter field.
+struct PresetsBottomBar: View {
+    @Environment(Presets.self) private var presets
+    @Environment(Sidebar.self) private var sidebar
+    @Environment(WindowItem.self) private var window
+    
+    @State private var isPresentingAddPreset = false
+    
+    private var shouldDisableAddButton: Bool {
+        sidebar.selectedSidebarItem?.kind != .scene
+            || (window.selectedEditorTab == .sceneState && window.stateEditorText.isEmpty)
+            || (window.selectedEditorTab == .dynamicScene && window.dynamicsEditorText.isEmpty)
+    }
+    
+    var body: some View {
+        @Bindable var presets = presets
+        
+        // Same 18pt label + 5pt padding as 'SidebarAddButton', so both controls
+        // are as tall as the filter field and sit on the same line as the
+        // ones in the Sidebar and the Lights list.
+        HStack(spacing: 8) {
+            Button {
+                isPresentingAddPreset = true
+            } label: {
+                Label("Store as Preset", systemImage: "plus")
+                    .labelStyle(.iconOnly)
+                    .font(.system(size: 13, weight: .regular))
+                    .frame(width: 18, height: 18)
+            }
+            .buttonStyle(.glass)
+            .buttonBorderShape(.circle)
+            .help("Store as Preset")
+            .disabled(shouldDisableAddButton)
+            .popover(isPresented: $isPresentingAddPreset, arrowEdge: .top) {
+                AddPresetView(showingPopover: $isPresentingAddPreset)
+            }
+            
+            HStack(spacing: 6) {
+                Image(systemName: "line.3.horizontal.decrease.circle")
+                    .foregroundStyle(.secondary)
+                
+                TextField("Filter", text: $presets.presetsSearchText)
+                    .textFieldStyle(.plain)
+                    .onExitCommand {
+                        presets.presetsSearchText = ""
+                    }
+                
+                if !presets.presetsSearchText.isEmpty {
+                    Button {
+                        presets.presetsSearchText = ""
+                    } label: {
+                        Label("Clear Filter", systemImage: "xmark.circle.fill")
+                            .labelStyle(.iconOnly)
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 10)
+            .frame(maxWidth: .infinity)
+            .frame(height: 28)
+            .glassEffect(.regular.interactive(), in: .capsule)
+        }
+        .padding([.horizontal, .bottom], 10)
     }
 }
 
@@ -608,9 +783,11 @@ struct AddPresetView: View {
     let contentData = try! Data(contentsOf: contentURL!)
     let presets = Presets(json: contentData)
     let window = WindowItem()
+    let sidebar = Sidebar()
     
     PresetsView()
         .frame(width: 200, height: 420, alignment: .center)
         .environment(presets)
         .environment(window)
+        .environment(sidebar)
 }

@@ -25,8 +25,6 @@ struct ContentView: View {
     
     @SceneStorage("inspector") private var showInspector = false
     
-    @State private var showingPopover = false
-    
     func recallSelectedScene() {
         guard let groupId = window.groupId, let sceneId = window.sceneId else { return }
         
@@ -59,7 +57,6 @@ struct ContentView: View {
     
     var body: some View {
         @Bindable var window = window
-        @Bindable var presets = presets
         
         NavigationSplitView {
             SidebarView()
@@ -226,20 +223,6 @@ struct ContentView: View {
                     .disabled(sidebar.selectedSidebarItem == nil)
                     .help("Turn Group Off")
                     
-                    Spacer()
-                    
-                    Button(action: { showingPopover = true }) {
-                        Label("Create Scene Preset", systemImage: "rectangle.stack")
-                    }
-                    .popover(isPresented: $showingPopover, arrowEdge: .bottom) {
-                        AddPresetView(showingPopover: $showingPopover)
-                    }
-                    .disabled((sidebar.selectedSidebarItem ==  nil
-                               || sidebar.selectedSidebarItem?.kind != .scene)
-                              || (window.selectedEditorTab == .sceneState && window.stateEditorText.isEmpty)
-                              || (window.selectedEditorTab == .dynamicScene && window.dynamicsEditorText.isEmpty))
-                    .help("Store as Preset")
-                    
                     // Show the Toggle Inspector button in the main toolbar when inspector is hidden
                     if !showInspector {
                         Spacer()
@@ -255,16 +238,14 @@ struct ContentView: View {
         .inspector(isPresented: $showInspector) {
             PresetsView()
             .toolbar {
-                // Show the search field and Toggle Inspector button when inspector is visible
+                // Show the Toggle Inspector button when inspector is visible
                 if showInspector {
-                    ToolbarItem(placement: .principal) {
-                        SearchField(text: $presets.presetsSearchText, prompt: "Filter Presets")
-                        // !!!: Not working in macOS 26
-                        //.image(.filter)
-                        .frame(width: 150)
-                    }
+                    // The inspector's toolbar area starts at its leading edge. The flexible
+                    // spacer pushes the button to the window's trailing edge, where it sits
+                    // when the inspector is closed.
+                    ToolbarSpacer(.flexible, placement: .primaryAction)
                     
-                    ToolbarItem(placement: .status) {
+                    ToolbarItem(placement: .primaryAction) {
                         Button(action: { withAnimation { showInspector.toggle() }}) {
                             Label("Toggle Inspector", systemImage: "sidebar.right")
                         }
