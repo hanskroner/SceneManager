@@ -380,7 +380,7 @@ struct SidebarItemView: View {
 }
 
 // MARK: - Preview
-
+#if DEBUG
 #Preview("Sidebar") {
     let contentURL = Bundle.main.url(forResource: "Sidebar", withExtension: "json")
     let contentData = try! Data(contentsOf: contentURL!)
@@ -392,3 +392,4 @@ struct SidebarItemView: View {
         .environment(sidebar)
         .environment(window)
 }
+#endif

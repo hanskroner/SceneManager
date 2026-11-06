@@ -443,7 +443,7 @@ struct AddLightView: View {
 }
 
 // MARK: - Previews
-
+#if DEBUG
 #Preview("LightView") {
     let contentURL = Bundle.main.url(forResource: "Lights", withExtension: "json")
     let contentData = try! Data(contentsOf: contentURL!)
@@ -462,3 +462,5 @@ struct AddLightView: View {
     return AddLightView(lightItems: [])
         .frame(width: 250, height: 420, alignment: .center)
 }
+#endif
+

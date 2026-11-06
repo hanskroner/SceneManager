@@ -777,7 +777,7 @@ struct AddPresetView: View {
 }
 
 // MARK: - Previews
-
+#if DEBUG
 #Preview("Presets") {
     let contentURL = Bundle.main.url(forResource: "Presets", withExtension: "json")
     let contentData = try! Data(contentsOf: contentURL!)
@@ -791,3 +791,5 @@ struct AddPresetView: View {
         .environment(window)
         .environment(sidebar)
 }
+#endif
+
